@@ -3,6 +3,14 @@
     "Depository": {
       "address": "0xfF8697d8d2998d6AA2e09B405795C6F4BEeB0C81",
       "startBlock": 17777168
+    },
+    "Tokenomics": {
+      "address": "0xc096362fa6f4A4B1a9ea68b1043416f3381ce300",
+      "startBlock": 16699195
+    },
+    "Dispenser": {
+      "address": "0xeED0000fE94d7cfeF4Dc0CA86a223f0F603A61B8",
+      "startBlock": 16699279
     }
   }
 }

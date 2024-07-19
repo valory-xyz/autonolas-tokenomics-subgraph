@@ -75,3 +75,216 @@ type TreasuryUpdated @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+type AgentRegistryUpdated @entity(immutable: true) {
+  id: Bytes!
+  agentRegistry: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ComponentRegistryUpdated @entity(immutable: true) {
+  id: Bytes!
+  componentRegistry: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type DepositoryUpdated @entity(immutable: true) {
+  id: Bytes!
+  depository: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type DispenserUpdated @entity(immutable: true) {
+  id: Bytes!
+  dispenser: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type DonatorBlacklistUpdated @entity(immutable: true) {
+  id: Bytes!
+  blacklist: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type EffectiveBondUpdated @entity(immutable: true) {
+  id: Bytes!
+  epochNumber: BigInt! # uint256
+  effectiveBond: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type EpochLengthUpdated @entity(immutable: true) {
+  id: Bytes!
+  epochLen: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type EpochSettled @entity(immutable: true) {
+  id: Bytes!
+  epochCounter: BigInt! # uint256
+  treasuryRewards: BigInt! # uint256
+  accountRewards: BigInt! # uint256
+  accountTopUps: BigInt! # uint256
+  effectiveBond: BigInt! # uint256
+  returnedStakingIncentive: BigInt! # uint256
+  totalStakingIncentive: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type IDFUpdated @entity(immutable: true) {
+  id: Bytes!
+  idf: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type IncentiveFractionsUpdateRequested @entity(immutable: true) {
+  id: Bytes!
+  epochNumber: BigInt! # uint256
+  rewardComponentFraction: BigInt! # uint256
+  rewardAgentFraction: BigInt! # uint256
+  maxBondFraction: BigInt! # uint256
+  topUpComponentFraction: BigInt! # uint256
+  topUpAgentFraction: BigInt! # uint256
+  stakingFraction: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type IncentiveFractionsUpdated @entity(immutable: true) {
+  id: Bytes!
+  epochNumber: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TokenomicsOwnerUpdated @entity(immutable: true) {
+  id: Bytes!
+  owner: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ServiceRegistryUpdated @entity(immutable: true) {
+  id: Bytes!
+  serviceRegistry: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type StakingParamsUpdateRequested @entity(immutable: true) {
+  id: Bytes!
+  epochNumber: BigInt! # uint256
+  maxStakingIncentive: BigInt! # uint256
+  minStakingWeight: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type StakingParamsUpdated @entity(immutable: true) {
+  id: Bytes!
+  epochNumber: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type StakingRefunded @entity(immutable: true) {
+  id: Bytes!
+  epochNumber: BigInt! # uint256
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TokenomicsImplementationUpdated @entity(immutable: true) {
+  id: Bytes!
+  implementation: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TokenomicsParametersUpdateRequested @entity(immutable: true) {
+  id: Bytes!
+  epochNumber: BigInt! # uint256
+  devsPerCapital: BigInt! # uint256
+  codePerDev: BigInt! # uint256
+  epsilonRate: BigInt! # uint256
+  epochLen: BigInt! # uint256
+  veOLASThreshold: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TokenomicsParametersUpdated @entity(immutable: true) {
+  id: Bytes!
+  epochNumber: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TokenomicsTreasuryUpdated @entity(immutable: true) {
+  id: Bytes!
+  treasury: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+type IncentivesClaimed @entity(immutable: true) {
+  id: Bytes!
+  owner: Bytes! # address
+  reward: BigInt! # uint256
+  topUp: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type DispenserOwnerUpdated @entity(immutable: true) {
+  id: Bytes!
+  owner: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type DispenserTokenomicsUpdated @entity(immutable: true) {
+  id: Bytes!
+  tokenomics: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type DispenserTreasuryUpdated @entity(immutable: true) {
+  id: Bytes!
+  treasury: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
