@@ -98,6 +98,8 @@ dataSources:
           handler: handleEpochLengthUpdated
         - event: EpochSettled(indexed uint256,uint256,uint256,uint256,uint256,uint256,uint256)
           handler: handleEpochSettled
+        - event: EpochSettled(indexed uint256,uint256,uint256,uint256)
+          handler: handleEpochSettledOld
         - event: IDFUpdated(uint256)
           handler: handleIDFUpdated
         - event: IncentiveFractionsUpdateRequested(indexed

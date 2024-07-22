@@ -138,9 +138,9 @@ type EpochSettled @entity(immutable: true) {
   treasuryRewards: BigInt! # uint256
   accountRewards: BigInt! # uint256
   accountTopUps: BigInt! # uint256
-  effectiveBond: BigInt! # uint256
-  returnedStakingIncentive: BigInt! # uint256
-  totalStakingIncentive: BigInt! # uint256
+  effectiveBond: BigInt # uint256
+  returnedStakingIncentive: BigInt # uint256
+  totalStakingIncentive: BigInt # uint256
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -287,4 +287,21 @@ type DispenserTreasuryUpdated @entity(immutable: true) {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+}
+
+type Epoch @entity {
+  id: ID!
+  counter: Int!
+  startBlock: BigInt!
+  endBlock: BigInt
+  devIncentives: [DevIncentive!] @derivedFrom(field: "epoch")
+  devIncentivesTotalTopUp: BigInt
+}
+
+type DevIncentive @entity {
+  id: ID!
+  epoch: Epoch!
+  owner: Bytes!
+  reward: BigInt!
+  topUp: BigInt!
 }
