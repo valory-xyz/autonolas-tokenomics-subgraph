@@ -61,7 +61,7 @@ export function handleIncentivesClaimed(event: IncentivesClaimedEvent): void {
     devIncentive.topUp = event.params.topUp;
     devIncentive.save();
 
-    // Update the total topUp in the epoch
+    // Update the total dev incentives topUp in the epoch
     if (!epoch.devIncentivesTotalTopUp) {
       epoch.devIncentivesTotalTopUp = event.params.topUp;
     } else {
@@ -69,6 +69,12 @@ export function handleIncentivesClaimed(event: IncentivesClaimedEvent): void {
         event.params.topUp
       );
     }
+
+    // Reduce available incentives in the epoch
+    epoch.availableDevIncentives = epoch.availableDevIncentives.minus(
+      event.params.topUp
+    );
+
     epoch.save();
   }
 }

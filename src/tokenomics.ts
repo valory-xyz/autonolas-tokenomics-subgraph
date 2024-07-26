@@ -45,6 +45,7 @@ import {
   TreasuryUpdated,
   Epoch,
 } from "../generated/schema";
+import { EpochMapper, handleEpochSave } from "./mappings";
 
 export function handleAgentRegistryUpdated(
   event: AgentRegistryUpdatedEvent
@@ -164,24 +165,13 @@ export function handleEpochSettled(event: EpochSettledEvent): void {
 
   entity.save();
 
-  // Epoch entity
-  let epoch = new Epoch(event.params.epochCounter.toString());
+  const epochParams = new EpochMapper(
+    event.block.number,
+    event.params.epochCounter,
+    event.params.accountTopUps
+  );
 
-  epoch.counter = event.params.epochCounter.toI32();
-  epoch.startBlock = event.block.number;
-  epoch.endBlock = null;
-
-  // Find the previous epoch and set its end block
-  if (epoch.counter > 1) {
-    let previousEpochId = (epoch.counter - 1).toString();
-    let previousEpoch = Epoch.load(previousEpochId);
-    if (previousEpoch) {
-      previousEpoch.endBlock = event.block.number.minus(BigInt.fromI32(1));
-      previousEpoch.save();
-    }
-  }
-
-  epoch.save();
+  handleEpochSave(epochParams);
 }
 
 export function handleEpochSettledOld(event: EpochSettledOldEvent): void {
@@ -199,24 +189,13 @@ export function handleEpochSettledOld(event: EpochSettledOldEvent): void {
 
   entity.save();
 
-  // Epoch entity
-  let epoch = new Epoch(event.params.epochCounter.toString());
+  const epochParams = new EpochMapper(
+    event.block.number,
+    event.params.epochCounter,
+    event.params.accountTopUps
+  );
 
-  epoch.counter = event.params.epochCounter.toI32();
-  epoch.startBlock = event.block.number;
-  epoch.endBlock = null;
-
-  // Find the previous epoch and set its end block
-  if (epoch.counter > 1) {
-    let previousEpochId = (epoch.counter - 1).toString();
-    let previousEpoch = Epoch.load(previousEpochId);
-    if (previousEpoch) {
-      previousEpoch.endBlock = event.block.number.minus(BigInt.fromI32(1));
-      previousEpoch.save();
-    }
-  }
-
-  epoch.save();
+  handleEpochSave(epochParams);
 }
 
 export function handleIDFUpdated(event: IDFUpdatedEvent): void {

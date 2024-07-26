@@ -294,8 +294,10 @@ type Epoch @entity {
   counter: Int!
   startBlock: BigInt!
   endBlock: BigInt
-  devIncentives: [DevIncentive!] @derivedFrom(field: "epoch")
+  accountTopUps: BigInt!
+  availableDevIncentives: BigInt!
   devIncentivesTotalTopUp: BigInt
+  devIncentives: [DevIncentive!] @derivedFrom(field: "epoch")
 }
 
 type DevIncentive @entity {
