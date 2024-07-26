@@ -50,7 +50,7 @@ export function handleEpochSave(params: EpochMapper): void {
       // Set previous Epoch's endBlock
       previousEpoch.endBlock = params.blockNumber.minus(BigInt.fromI32(1));
       previousEpoch.save();
-      availableDevIncentives = previousEpoch.availableDevIncentives!.plus(
+      availableDevIncentives = previousEpoch.availableDevIncentives.plus(
         adjustedAccountTopUps
       );
     }
