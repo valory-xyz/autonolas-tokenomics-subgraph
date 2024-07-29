@@ -47,6 +47,48 @@ dataSources:
           handler: handleTreasuryUpdated
       file: ./src/depository.ts
   - kind: ethereum
+    name: DepositoryOld
+    network: mainnet
+    source:
+      address: "0x52a043bcebdb2f939baef2e8b6f01652290eab3f"
+      abi: DepositoryOld
+      startBlock: 16699263
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - BondCalculatorUpdated
+        - CloseProduct
+        - CreateBond
+        - CreateProduct
+        - OwnerUpdated
+        - RedeemBond
+        - TokenomicsUpdated
+        - TreasuryUpdated
+      abis:
+        - name: DepositoryOld
+          file: ./abis/DepositoryOld.json
+      eventHandlers:
+        - event: BondCalculatorUpdated(indexed address)
+          handler: handleBondCalculatorUpdated
+        - event: CloseProduct(indexed address,indexed uint256)
+          handler: handleCloseProductOld
+        - event: CreateBond(indexed address,indexed uint256,indexed
+            address,uint256,uint256,uint256,uint256)
+          handler: handleCreateBondOld
+        - event: CreateProduct(indexed address,indexed uint256,uint256,uint256,uint256)
+          handler: handleCreateProductOld
+        - event: OwnerUpdated(indexed address)
+          handler: handleOwnerUpdated
+        - event: RedeemBond(indexed uint256,indexed address,uint256)
+          handler: handleRedeemBond
+        - event: TokenomicsUpdated(indexed address)
+          handler: handleTokenomicsUpdated
+        - event: TreasuryUpdated(indexed address)
+          handler: handleTreasuryUpdated
+      file: ./src/depository.ts
+  - kind: ethereum
     name: Tokenomics
     network: mainnet
     source:
@@ -94,6 +136,8 @@ dataSources:
           handler: handleDonatorBlacklistUpdated
         - event: EffectiveBondUpdated(indexed uint256,uint256)
           handler: handleEffectiveBondUpdated
+        - event: EffectiveBondUpdated(uint256)
+          handler: handleEffectiveBondUpdatedOld
         - event: EpochLengthUpdated(uint256)
           handler: handleEpochLengthUpdated
         - event: EpochSettled(indexed uint256,uint256,uint256,uint256,uint256,uint256,uint256)

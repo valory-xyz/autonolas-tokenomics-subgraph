@@ -13,6 +13,7 @@ import {
   TokenomicsUpdated,
   TreasuryUpdated,
 } from "../generated/schema";
+import { FindEpochMapper, findEpochId } from "./mappings";
 
 export function handleIncentivesClaimed(event: IncentivesClaimedEvent): void {
   let entity = new IncentivesClaimed(
@@ -29,53 +30,35 @@ export function handleIncentivesClaimed(event: IncentivesClaimedEvent): void {
   entity.save();
 
   // Update Epoch entity with devIncentive
-  let blockNumber = event.block.number;
-  let epoch: Epoch | null = null;
+  const findEpochParams = new FindEpochMapper(event.block.number);
+  const currentEpochId = findEpochId(findEpochParams);
+  if (currentEpochId) {
+    const epoch = Epoch.load(currentEpochId);
 
-  // Find the current epoch based on the block number
-  let epochCounter = 1;
-  while (true) {
-    let epochId = epochCounter.toString();
-    let currentEpoch = Epoch.load(epochId);
-    if (!currentEpoch) {
-      break;
-    }
+    if (epoch) {
+      let devIncentive = new DevIncentive(event.transaction.hash.toHex());
+      devIncentive.epoch = epoch.id;
+      devIncentive.owner = event.params.owner;
+      devIncentive.reward = event.params.reward;
+      devIncentive.topUp = event.params.topUp;
+      devIncentive.save();
 
-    // Check if IncentivesClaimed event happened during currentEpoch
-    if (
-      currentEpoch.startBlock.le(blockNumber) &&
-      (currentEpoch.endBlock === null || currentEpoch.endBlock!.ge(blockNumber))
-    ) {
-      epoch = currentEpoch;
-      break;
-    }
+      // Update the total dev incentives topUp in the epoch
+      if (!epoch.devIncentivesTotalTopUp) {
+        epoch.devIncentivesTotalTopUp = event.params.topUp;
+      } else {
+        epoch.devIncentivesTotalTopUp = epoch.devIncentivesTotalTopUp!.plus(
+          event.params.topUp
+        );
+      }
 
-    epochCounter++;
-  }
-
-  if (epoch) {
-    let devIncentive = new DevIncentive(event.transaction.hash.toHex());
-    devIncentive.epoch = epoch.id;
-    devIncentive.owner = event.params.owner;
-    devIncentive.reward = event.params.reward;
-    devIncentive.topUp = event.params.topUp;
-    devIncentive.save();
-
-    // Update the total dev incentives topUp in the epoch
-    if (!epoch.devIncentivesTotalTopUp) {
-      epoch.devIncentivesTotalTopUp = event.params.topUp;
-    } else {
-      epoch.devIncentivesTotalTopUp = epoch.devIncentivesTotalTopUp!.plus(
+      // Reduce available incentives in the epoch
+      epoch.availableDevIncentives = epoch.availableDevIncentives.minus(
         event.params.topUp
       );
+
+      epoch.save();
     }
-
-    // Reduce available incentives in the epoch
-    epoch.availableDevIncentives = epoch.availableDevIncentives.minus(
-      event.params.topUp
-    );
-
-    epoch.save();
   }
 }
 

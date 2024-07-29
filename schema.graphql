@@ -10,7 +10,7 @@ type CloseProduct @entity(immutable: true) {
   id: Bytes!
   token: Bytes! # address
   productId: BigInt! # uint256
-  supply: BigInt! # uint256
+  supply: BigInt # uint256
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -24,7 +24,9 @@ type CreateBond @entity(immutable: true) {
   bondId: BigInt! # uint256
   amountOLAS: BigInt! # uint256
   tokenAmount: BigInt! # uint256
-  maturity: BigInt! # uint256
+  maturity: BigInt # uint256
+  expiry: BigInt # uint256
+  epoch: Epoch
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -36,7 +38,9 @@ type CreateProduct @entity(immutable: true) {
   productId: BigInt! # uint256
   supply: BigInt! # uint256
   priceLP: BigInt! # uint256
-  vesting: BigInt! # uint256
+  vesting: BigInt # uint256
+  expiry: BigInt # uint256
+  epoch: Epoch
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -117,7 +121,7 @@ type DonatorBlacklistUpdated @entity(immutable: true) {
 
 type EffectiveBondUpdated @entity(immutable: true) {
   id: Bytes!
-  epochNumber: BigInt! # uint256
+  epochNumber: BigInt # uint256
   effectiveBond: BigInt! # uint256
   blockNumber: BigInt!
   blockTimestamp: BigInt!
@@ -298,6 +302,11 @@ type Epoch @entity {
   availableDevIncentives: BigInt!
   devIncentivesTotalTopUp: BigInt
   devIncentives: [DevIncentive!] @derivedFrom(field: "epoch")
+  effectiveBond: BigInt
+  createProducts: [CreateProduct!] @derivedFrom(field: "epoch")
+  totalCreateProductsSupply: BigInt
+  createBonds: [CreateBond!] @derivedFrom(field: "epoch")
+  totalCreateBondsAmountOLAS: BigInt
 }
 
 type DevIncentive @entity {
