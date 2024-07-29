@@ -6,6 +6,7 @@ import {
   DispenserUpdated as DispenserUpdatedEvent,
   DonatorBlacklistUpdated as DonatorBlacklistUpdatedEvent,
   EffectiveBondUpdated as EffectiveBondUpdatedEvent,
+  EffectiveBondUpdated1 as EffectiveBondUpdatedOldEvent,
   EpochLengthUpdated as EpochLengthUpdatedEvent,
   EpochSettled as EpochSettledEvent,
   EpochSettled1 as EpochSettledOldEvent,
@@ -45,7 +46,12 @@ import {
   TreasuryUpdated,
   Epoch,
 } from "../generated/schema";
-import { EpochMapper, handleEpochSave } from "./mappings";
+import {
+  EpochMapper,
+  FindEpochMapper,
+  findEpochId,
+  handleEpochSave,
+} from "./mappings";
 
 export function handleAgentRegistryUpdated(
   event: AgentRegistryUpdatedEvent
@@ -132,6 +138,46 @@ export function handleEffectiveBondUpdated(
   entity.transactionHash = event.transaction.hash;
 
   entity.save();
+
+  // Update epoch with effectiveBond from each event so that
+  // the epoch will eventually record the value of the last event
+  let epoch = Epoch.load(event.params.epochNumber.toString());
+
+  if (epoch) {
+    epoch.effectiveBond = event.params.effectiveBond;
+    epoch.save();
+  }
+}
+
+export function handleEffectiveBondUpdatedOld(
+  event: EffectiveBondUpdatedOldEvent
+): void {
+  let entity = new EffectiveBondUpdated(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  );
+  entity.effectiveBond = event.params.effectiveBond;
+
+  entity.blockNumber = event.block.number;
+  entity.blockTimestamp = event.block.timestamp;
+  entity.transactionHash = event.transaction.hash;
+
+  const findEpochParams = new FindEpochMapper(event.block.number);
+  const currentEpochId = findEpochId(findEpochParams);
+
+  if (currentEpochId) {
+    const epoch = Epoch.load(currentEpochId);
+    if (epoch) {
+      // Set epoch number
+      entity.epochNumber = BigInt.fromI32(epoch.counter);
+
+      // Update epoch with effectiveBond from each event so that
+      // the epoch will eventually record the value of the last event
+      epoch.effectiveBond = entity.effectiveBond;
+      epoch.save();
+    }
+  }
+
+  entity.save();
 }
 
 export function handleEpochLengthUpdated(event: EpochLengthUpdatedEvent): void {
@@ -166,6 +212,7 @@ export function handleEpochSettled(event: EpochSettledEvent): void {
   entity.save();
 
   const epochParams = new EpochMapper(
+    event.address,
     event.block.number,
     event.params.epochCounter,
     event.params.accountTopUps
@@ -190,6 +237,7 @@ export function handleEpochSettledOld(event: EpochSettledOldEvent): void {
   entity.save();
 
   const epochParams = new EpochMapper(
+    event.address,
     event.block.number,
     event.params.epochCounter,
     event.params.accountTopUps

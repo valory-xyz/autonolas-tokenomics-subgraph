@@ -1,16 +1,20 @@
-import { BigInt, ethereum } from "@graphprotocol/graph-ts";
+import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { Epoch } from "../generated/schema";
+import { Tokenomics } from "../generated/Tokenomics/Tokenomics";
 
 export class EpochMapper {
+  address: Address;
   blockNumber: BigInt;
   epochCounter: BigInt;
   accountTopUps: BigInt;
 
   constructor(
+    address: Address,
     blockNumber: BigInt,
     epochCounter: BigInt,
     accountTopUps: BigInt
   ) {
+    this.address = address;
     this.blockNumber = blockNumber;
     this.epochCounter = epochCounter;
     this.accountTopUps = accountTopUps;
@@ -43,7 +47,7 @@ export function handleEpochSave(params: EpochMapper): void {
   let availableDevIncentives = adjustedAccountTopUps;
 
   if (epoch.counter > 1) {
-    let previousEpochId = (epoch.counter - 1).toString();
+    const previousEpochId = (epoch.counter - 1).toString();
     let previousEpoch = Epoch.load(previousEpochId);
 
     if (previousEpoch) {
@@ -57,5 +61,44 @@ export function handleEpochSave(params: EpochMapper): void {
   }
 
   epoch.availableDevIncentives = availableDevIncentives;
+
+  // Access effectiveBond from the contract state when the epoch ends
+  const contract = Tokenomics.bind(params.address);
+  const effectiveBond = contract.effectiveBond();
+  epoch.effectiveBond = effectiveBond;
+
   epoch.save();
+}
+
+export class FindEpochMapper {
+  blockNumber: BigInt;
+
+  constructor(blockNumber: BigInt) {
+    this.blockNumber = blockNumber;
+  }
+}
+
+export function findEpochId(params: FindEpochMapper): string {
+  // Find the current epoch based on the block number
+  let epochCounter = 1;
+  while (true) {
+    let epochId = epochCounter.toString();
+    let currentEpoch = Epoch.load(epochId);
+    if (!currentEpoch) {
+      break;
+    }
+
+    // Check if EffectiveBondUpdated event happened during currentEpoch
+    if (
+      currentEpoch.startBlock.le(params.blockNumber) &&
+      (currentEpoch.endBlock === null ||
+        currentEpoch.endBlock!.ge(params.blockNumber))
+    ) {
+      return currentEpoch.id;
+    }
+
+    epochCounter++;
+  }
+
+  return "";
 }

@@ -201,6 +201,19 @@
       {
         "indexed": false,
         "internalType": "uint256",
+        "name": "effectiveBond",
+        "type": "uint256"
+      }
+    ],
+    "name": "EffectiveBondUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
         "name": "epochLen",
         "type": "uint256"
       }
