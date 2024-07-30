@@ -12,9 +12,13 @@
       "address": "0xc096362fa6f4A4B1a9ea68b1043416f3381ce300",
       "startBlock": 16699195
     },
-    "Dispenser": {
+    "DispenserV1": {
       "address": "0xeED0000fE94d7cfeF4Dc0CA86a223f0F603A61B8",
       "startBlock": 16699279
+    },
+    "DispenserV2": {
+      "address": "0x5650300fCBab43A0D7D02F8Cb5d0f039402593f0",
+      "startBlock": 20340783
     }
   }
 }

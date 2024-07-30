@@ -172,11 +172,11 @@ dataSources:
           handler: handleTreasuryUpdated
       file: ./src/tokenomics.ts
   - kind: ethereum
-    name: Dispenser
+    name: DispenserV1
     network: mainnet
     source:
       address: "0xeED0000fE94d7cfeF4Dc0CA86a223f0F603A61B8"
-      abi: Dispenser
+      abi: DispenserV1
       startBlock: 16699279
     mapping:
       kind: ethereum/events
@@ -188,8 +188,8 @@ dataSources:
         - DispenserTokenomicsUpdated
         - DispenserTreasuryUpdated
       abis:
-        - name: Dispenser
-          file: ./abis/Dispenser.json
+        - name: DispenserV1
+          file: ./abis/DispenserV1.json
       eventHandlers:
         - event: IncentivesClaimed(indexed address,uint256,uint256)
           handler: handleIncentivesClaimed

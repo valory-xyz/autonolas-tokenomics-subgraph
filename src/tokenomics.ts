@@ -215,7 +215,10 @@ export function handleEpochSettled(event: EpochSettledEvent): void {
     event.address,
     event.block.number,
     event.params.epochCounter,
-    event.params.accountTopUps
+    event.params.accountTopUps,
+    event.params.totalStakingIncentive.minus(
+      event.params.returnedStakingIncentive
+    )
   );
 
   handleEpochSave(epochParams);
@@ -240,7 +243,10 @@ export function handleEpochSettledOld(event: EpochSettledOldEvent): void {
     event.address,
     event.block.number,
     event.params.epochCounter,
-    event.params.accountTopUps
+    event.params.accountTopUps,
+    // old epochs don't have staking incentives data,
+    // so set to 0
+    BigInt.fromI32(0)
   );
 
   handleEpochSave(epochParams);

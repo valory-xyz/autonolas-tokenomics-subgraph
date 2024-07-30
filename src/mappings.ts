@@ -7,17 +7,20 @@ export class EpochMapper {
   blockNumber: BigInt;
   epochCounter: BigInt;
   accountTopUps: BigInt;
+  availableStakingIncentives: BigInt;
 
   constructor(
     address: Address,
     blockNumber: BigInt,
     epochCounter: BigInt,
-    accountTopUps: BigInt
+    accountTopUps: BigInt,
+    availableStakingIncentives: BigInt
   ) {
     this.address = address;
     this.blockNumber = blockNumber;
     this.epochCounter = epochCounter;
     this.accountTopUps = accountTopUps;
+    this.availableStakingIncentives = availableStakingIncentives;
   }
 }
 
@@ -66,6 +69,9 @@ export function handleEpochSave(params: EpochMapper): void {
   const contract = Tokenomics.bind(params.address);
   const effectiveBond = contract.effectiveBond();
   epoch.effectiveBond = effectiveBond;
+
+  // Save availableStakingIncentives
+  epoch.availableStakingIncentives = params.availableStakingIncentives;
 
   epoch.save();
 }

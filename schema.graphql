@@ -307,6 +307,7 @@ type Epoch @entity {
   totalCreateProductsSupply: BigInt
   createBonds: [CreateBond!] @derivedFrom(field: "epoch")
   totalCreateBondsAmountOLAS: BigInt
+  availableStakingIncentives: BigInt
 }
 
 type DevIncentive @entity {
