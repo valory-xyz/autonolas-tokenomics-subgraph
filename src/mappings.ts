@@ -32,7 +32,16 @@ export function handleEpochSave(params: EpochMapper): void {
     epoch = new Epoch(params.epochCounter.toString());
   }
 
+  epoch.counter = params.epochCounter.toI32();
+  epoch.endBlock = params.blockNumber;
+
   let adjustedAccountTopUps = params.accountTopUps;
+
+  // Manually set the first epoch startBlock and effectiveBond
+  if (epoch.counter == 1) {
+    epoch.startBlock = BigInt.fromString("16699195");
+    epoch.effectiveBond = BigInt.fromString("376744602072265367760000");
+  }
 
   // There was an error in the 2d epoch topUp calculation, manually reduce the value
   if (params.epochCounter.toI32() == 2) {
@@ -41,10 +50,7 @@ export function handleEpochSave(params: EpochMapper): void {
     );
   }
 
-  epoch.counter = params.epochCounter.toI32();
-  epoch.startBlock = params.blockNumber;
   epoch.accountTopUps = adjustedAccountTopUps;
-  epoch.endBlock = null;
 
   // Calculate availableDevIncentives
   let availableDevIncentives = adjustedAccountTopUps;
@@ -54,24 +60,39 @@ export function handleEpochSave(params: EpochMapper): void {
     let previousEpoch = Epoch.load(previousEpochId);
 
     if (previousEpoch) {
-      // Set previous Epoch's endBlock
-      previousEpoch.endBlock = params.blockNumber.minus(BigInt.fromI32(1));
-      previousEpoch.save();
       availableDevIncentives = previousEpoch.availableDevIncentives.plus(
         adjustedAccountTopUps
       );
     }
   }
 
+  // Reduce available incentives in the epoch by devIncentivesTotalTopUp
+  if (epoch.devIncentivesTotalTopUp) {
+    availableDevIncentives = availableDevIncentives.minus(
+      epoch.devIncentivesTotalTopUp!
+    );
+  }
+
+  // Save availableDevIncentives
   epoch.availableDevIncentives = availableDevIncentives;
+
+  // Save availableStakingIncentives
+  epoch.availableStakingIncentives = params.availableStakingIncentives;
+
+  // Manually create next epoch to collect all data from other events correctly
+  let nextEpoch = new Epoch((epoch.counter + 1).toString());
+  nextEpoch.counter = epoch.counter + 1;
+  nextEpoch.startBlock = params.blockNumber.plus(BigInt.fromI32(1));
+  nextEpoch.endBlock = null;
+  nextEpoch.accountTopUps = BigInt.fromI32(0);
+  nextEpoch.availableDevIncentives = BigInt.fromI32(0);
 
   // Access effectiveBond from the contract state when the epoch ends
   const contract = Tokenomics.bind(params.address);
   const effectiveBond = contract.effectiveBond();
-  epoch.effectiveBond = effectiveBond;
-
-  // Save availableStakingIncentives
-  epoch.availableStakingIncentives = params.availableStakingIncentives;
+  // The effectiveBond is calculated for the next epoch
+  nextEpoch.effectiveBond = effectiveBond;
+  nextEpoch.save();
 
   epoch.save();
 }
@@ -94,7 +115,6 @@ export function findEpochId(params: FindEpochMapper): string {
       break;
     }
 
-    // Check if EffectiveBondUpdated event happened during currentEpoch
     if (
       currentEpoch.startBlock.le(params.blockNumber) &&
       (currentEpoch.endBlock === null ||

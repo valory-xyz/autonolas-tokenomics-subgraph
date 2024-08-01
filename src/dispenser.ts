@@ -52,11 +52,6 @@ export function handleIncentivesClaimed(event: IncentivesClaimedEvent): void {
         );
       }
 
-      // Reduce available incentives in the epoch
-      epoch.availableDevIncentives = epoch.availableDevIncentives.minus(
-        event.params.topUp
-      );
-
       epoch.save();
     }
   }
