@@ -1,19 +1,43 @@
-import { BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { IncentivesClaimed as IncentivesClaimedEvent } from "../generated/Dispenser/Dispenser";
 import {
-  IncentivesClaimed as IncentivesClaimedEvent,
+  AddNomineeHash as AddNomineeHashEvent,
+  IncentivesClaimed as IncentivesClaimedV2Event,
   OwnerUpdated as OwnerUpdatedEvent,
+  PauseDispenser as PauseDispenserEvent,
+  RemoveNomineeHash as RemoveNomineeHashEvent,
+  Retained as RetainedEvent,
+  SetDepositProcessorChainIds as SetDepositProcessorChainIdsEvent,
+  StakingIncentivesBatchClaimed as StakingIncentivesBatchClaimedEvent,
+  StakingIncentivesClaimed as StakingIncentivesClaimedEvent,
   TokenomicsUpdated as TokenomicsUpdatedEvent,
   TreasuryUpdated as TreasuryUpdatedEvent,
-} from "../generated/Dispenser/Dispenser";
+  VoteWeightingUpdated as VoteWeightingUpdatedEvent,
+  WithheldAmountSynced as WithheldAmountSyncedEvent,
+} from "../generated/DispenserV2/DispenserV2";
 import {
-  DevIncentive,
+  AddNomineeHash,
   Epoch,
   IncentivesClaimed,
   OwnerUpdated,
   TokenomicsUpdated,
   TreasuryUpdated,
+  PauseDispenser,
+  RemoveNomineeHash,
+  Retained,
+  SetDepositProcessorChainIds,
+  StakingIncentivesBatchClaimed,
+  StakingIncentivesClaimed,
+  VoteWeightingUpdated,
+  WithheldAmountSynced,
+  StakingIncentive,
 } from "../generated/schema";
-import { FindEpochMapper, findEpochId } from "./mappings";
+import {
+  DevIncentiveMapper,
+  FindEpochMapper,
+  findEpochId,
+  handleDevIncentiveSave,
+} from "./mappings";
 
 export function handleIncentivesClaimed(event: IncentivesClaimedEvent): void {
   let entity = new IncentivesClaimed(
@@ -30,36 +54,45 @@ export function handleIncentivesClaimed(event: IncentivesClaimedEvent): void {
   entity.save();
 
   // Update Epoch entity with devIncentive
-  const findEpochParams = new FindEpochMapper(event.block.number);
-  const currentEpochId = findEpochId(findEpochParams);
-  if (currentEpochId) {
-    const epoch = Epoch.load(currentEpochId);
+  const devIncentiveParams = new DevIncentiveMapper(
+    event.block.number,
+    event.transaction.hash,
+    event.params.owner,
+    event.params.reward,
+    event.params.topUp
+  );
 
-    if (epoch) {
-      let devIncentive = new DevIncentive(event.transaction.hash.toHex());
-      devIncentive.epoch = epoch.id;
-      devIncentive.owner = event.params.owner;
-      devIncentive.reward = event.params.reward;
-      devIncentive.topUp = event.params.topUp;
-      devIncentive.save();
+  handleDevIncentiveSave(devIncentiveParams);
+}
 
-      // Update the total dev incentives topUp in the epoch
-      if (!epoch.devIncentivesTotalTopUp) {
-        epoch.devIncentivesTotalTopUp = event.params.topUp;
-      } else {
-        epoch.devIncentivesTotalTopUp = epoch.devIncentivesTotalTopUp!.plus(
-          event.params.topUp
-        );
-      }
+export function handleIncentivesClaimedV2(
+  event: IncentivesClaimedV2Event
+): void {
+  let entity = new IncentivesClaimed(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  );
+  entity.owner = event.params.owner;
+  entity.reward = event.params.reward;
+  entity.topUp = event.params.topUp;
+  entity.unitTypes = event.params.unitTypes;
+  entity.unitIds = event.params.unitIds;
 
-      // Reduce available incentives in the epoch
-      epoch.availableDevIncentives = epoch.availableDevIncentives.minus(
-        event.params.topUp
-      );
+  entity.blockNumber = event.block.number;
+  entity.blockTimestamp = event.block.timestamp;
+  entity.transactionHash = event.transaction.hash;
 
-      epoch.save();
-    }
-  }
+  entity.save();
+
+  // Update Epoch entity with devIncentive
+  const devIncentiveParams = new DevIncentiveMapper(
+    event.block.number,
+    event.transaction.hash,
+    event.params.owner,
+    event.params.reward,
+    event.params.topUp
+  );
+
+  handleDevIncentiveSave(devIncentiveParams);
 }
 
 export function handleOwnerUpdated(event: OwnerUpdatedEvent): void {
@@ -93,6 +126,223 @@ export function handleTreasuryUpdated(event: TreasuryUpdatedEvent): void {
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
   entity.treasury = event.params.treasury;
+
+  entity.blockNumber = event.block.number;
+  entity.blockTimestamp = event.block.timestamp;
+  entity.transactionHash = event.transaction.hash;
+
+  entity.save();
+}
+
+export function handleAddNomineeHash(event: AddNomineeHashEvent): void {
+  let entity = new AddNomineeHash(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  );
+  entity.nomineeHash = event.params.nomineeHash;
+
+  entity.blockNumber = event.block.number;
+  entity.blockTimestamp = event.block.timestamp;
+  entity.transactionHash = event.transaction.hash;
+
+  entity.save();
+}
+
+export function handlePauseDispenser(event: PauseDispenserEvent): void {
+  let entity = new PauseDispenser(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  );
+  entity.pauseState = event.params.pauseState;
+
+  entity.blockNumber = event.block.number;
+  entity.blockTimestamp = event.block.timestamp;
+  entity.transactionHash = event.transaction.hash;
+
+  entity.save();
+}
+
+export function handleRemoveNomineeHash(event: RemoveNomineeHashEvent): void {
+  let entity = new RemoveNomineeHash(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  );
+  entity.nomineeHash = event.params.nomineeHash;
+
+  entity.blockNumber = event.block.number;
+  entity.blockTimestamp = event.block.timestamp;
+  entity.transactionHash = event.transaction.hash;
+
+  entity.save();
+}
+
+export function handleRetained(event: RetainedEvent): void {
+  let entity = new Retained(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  );
+  entity.account = event.params.account;
+  entity.returnAmount = event.params.returnAmount;
+
+  entity.blockNumber = event.block.number;
+  entity.blockTimestamp = event.block.timestamp;
+  entity.transactionHash = event.transaction.hash;
+
+  entity.save();
+}
+
+export function handleSetDepositProcessorChainIds(
+  event: SetDepositProcessorChainIdsEvent
+): void {
+  let entity = new SetDepositProcessorChainIds(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  );
+
+  // Convert Address[] to Bytes[]
+  let depositProcessors: Bytes[] = event.params.depositProcessors.map<Bytes>(
+    (address: Address): Bytes => {
+      return address as Bytes;
+    }
+  );
+
+  entity.depositProcessors = depositProcessors;
+  entity.chainIds = event.params.chainIds.map<BigInt>((value) =>
+    BigInt.fromI32(value.toI32())
+  );
+
+  entity.blockNumber = event.block.number;
+  entity.blockTimestamp = event.block.timestamp;
+  entity.transactionHash = event.transaction.hash;
+
+  entity.save();
+}
+
+export function handleStakingIncentivesBatchClaimed(
+  event: StakingIncentivesBatchClaimedEvent
+): void {
+  let entity = new StakingIncentivesBatchClaimed(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  );
+  entity.account = event.params.account;
+  entity.chainIds = event.params.chainIds;
+  entity.stakingTargets = event.params.stakingTargets;
+  entity.stakingIncentives = event.params.stakingIncentives;
+  entity.totalStakingIncentive = event.params.totalStakingIncentive;
+  entity.totalTransferAmount = event.params.totalTransferAmount;
+  entity.totalReturnAmount = event.params.totalReturnAmount;
+
+  entity.blockNumber = event.block.number;
+  entity.blockTimestamp = event.block.timestamp;
+  entity.transactionHash = event.transaction.hash;
+
+  entity.save();
+
+  const findEpochParams = new FindEpochMapper(event.block.number);
+  const currentEpochId = findEpochId(findEpochParams);
+  if (currentEpochId) {
+    const epoch = Epoch.load(currentEpochId);
+
+    if (epoch) {
+      for (let i = 0; i < event.params.chainIds.length; i++) {
+        for (let j = 0; j < event.params.stakingTargets[i].length; j++) {
+          let stakingIncentive = new StakingIncentive(
+            `${epoch.id}_${event.params.chainIds[i]}_${event.params.stakingTargets[i][j]}`
+          );
+
+          stakingIncentive.epoch = epoch.id;
+          stakingIncentive.account = event.params.account;
+          stakingIncentive.chainId = event.params.chainIds[i];
+          stakingIncentive.stakingTarget = event.params.stakingTargets[i][j];
+          stakingIncentive.stakingIncentive =
+            event.params.stakingIncentives[i][j];
+          stakingIncentive.save();
+
+          // Update the total staking incentives in the epoch
+          if (!epoch.totalStakingIncentives) {
+            epoch.totalStakingIncentives = event.params.stakingIncentives[i][j];
+          } else {
+            epoch.totalStakingIncentives = epoch.totalStakingIncentives!.plus(
+              event.params.stakingIncentives[i][j]
+            );
+          }
+
+          epoch.save();
+        }
+      }
+    }
+  }
+}
+
+export function handleStakingIncentivesClaimed(
+  event: StakingIncentivesClaimedEvent
+): void {
+  let entity = new StakingIncentivesClaimed(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  );
+  entity.account = event.params.account;
+  entity.chainId = event.params.chainId;
+  entity.stakingTarget = event.params.stakingTarget;
+  entity.stakingIncentive = event.params.stakingIncentive;
+  entity.transferAmount = event.params.transferAmount;
+  entity.returnAmount = event.params.returnAmount;
+
+  entity.blockNumber = event.block.number;
+  entity.blockTimestamp = event.block.timestamp;
+  entity.transactionHash = event.transaction.hash;
+
+  entity.save();
+
+  const findEpochParams = new FindEpochMapper(event.block.number);
+  const currentEpochId = findEpochId(findEpochParams);
+  if (currentEpochId) {
+    const epoch = Epoch.load(currentEpochId);
+
+    if (epoch) {
+      let stakingIncentive = new StakingIncentive(
+        event.transaction.hash.toHex()
+      );
+      stakingIncentive.epoch = epoch.id;
+      stakingIncentive.account = event.params.account;
+      stakingIncentive.chainId = event.params.chainId;
+      stakingIncentive.stakingTarget = event.params.stakingTarget;
+      stakingIncentive.stakingIncentive = event.params.stakingIncentive;
+      stakingIncentive.save();
+
+      // Update the total staking incentives in the epoch
+      if (!epoch.totalStakingIncentives) {
+        epoch.totalStakingIncentives = event.params.stakingIncentive;
+      } else {
+        epoch.totalStakingIncentives = epoch.totalStakingIncentives!.plus(
+          event.params.stakingIncentive
+        );
+      }
+
+      epoch.save();
+    }
+  }
+}
+
+export function handleVoteWeightingUpdated(
+  event: VoteWeightingUpdatedEvent
+): void {
+  let entity = new VoteWeightingUpdated(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  );
+  entity.voteWeighting = event.params.voteWeighting;
+
+  entity.blockNumber = event.block.number;
+  entity.blockTimestamp = event.block.timestamp;
+  entity.transactionHash = event.transaction.hash;
+
+  entity.save();
+}
+
+export function handleWithheldAmountSynced(
+  event: WithheldAmountSyncedEvent
+): void {
+  let entity = new WithheldAmountSynced(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  );
+  entity.chainId = event.params.chainId;
+  entity.amount = event.params.amount;
+  entity.updatedWithheldAmount = event.params.updatedWithheldAmount;
+  entity.batchHash = event.params.batchHash;
 
   entity.blockNumber = event.block.number;
   entity.blockTimestamp = event.block.timestamp;

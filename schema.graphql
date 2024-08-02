@@ -259,11 +259,14 @@ type TokenomicsTreasuryUpdated @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+
 type IncentivesClaimed @entity(immutable: true) {
   id: Bytes!
   owner: Bytes! # address
   reward: BigInt! # uint256
   topUp: BigInt! # uint256
+  unitTypes: [BigInt!] # uint256[]
+  unitIds: [BigInt!] # uint256[]
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -307,6 +310,9 @@ type Epoch @entity {
   totalCreateProductsSupply: BigInt
   createBonds: [CreateBond!] @derivedFrom(field: "epoch")
   totalCreateBondsAmountOLAS: BigInt
+  availableStakingIncentives: BigInt
+  stakingIncentives: [StakingIncentive!] @derivedFrom(field: "epoch")
+  totalStakingIncentives: BigInt
 }
 
 type DevIncentive @entity {
@@ -315,4 +321,110 @@ type DevIncentive @entity {
   owner: Bytes!
   reward: BigInt!
   topUp: BigInt!
+}
+
+type StakingIncentive @entity {
+  id: ID!
+  epoch: Epoch!
+  account: Bytes!
+  chainId: BigInt!
+  stakingTarget: Bytes!
+  stakingIncentive: BigInt!
+}
+
+type AddNomineeHash @entity(immutable: true) {
+  id: Bytes!
+  nomineeHash: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PauseDispenser @entity(immutable: true) {
+  id: Bytes!
+  pauseState: Int! # uint8
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type RemoveNomineeHash @entity(immutable: true) {
+  id: Bytes!
+  nomineeHash: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Retained @entity(immutable: true) {
+  id: Bytes!
+  account: Bytes! # address
+  returnAmount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type SetDepositProcessorChainIds @entity(immutable: true) {
+  id: Bytes!
+  depositProcessors: [Bytes!]! # address[]
+  chainIds: [BigInt!]! # uint256[]
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type StakingIncentivesBatchClaimed @entity(immutable: true) {
+  id: Bytes!
+  account: Bytes! # address
+  chainIds: [BigInt!]! # uint256[]
+  stakingTargets: [[Bytes!]!]! # bytes32[][]
+  stakingIncentives: [[BigInt!]!]! # uint256[][]
+  totalStakingIncentive: BigInt! # uint256
+  totalTransferAmount: BigInt! # uint256
+  totalReturnAmount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type StakingIncentivesClaimed @entity(immutable: true) {
+  id: Bytes!
+  account: Bytes! # address
+  chainId: BigInt! # uint256
+  stakingTarget: Bytes! # bytes32
+  stakingIncentive: BigInt! # uint256
+  transferAmount: BigInt! # uint256
+  returnAmount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type DispenserV2StakingParamsUpdated @entity(immutable: true) {
+  id: Bytes!
+  maxNumClaimingEpochs: BigInt! # uint256
+  maxNumStakingTargets: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type VoteWeightingUpdated @entity(immutable: true) {
+  id: Bytes!
+  voteWeighting: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type WithheldAmountSynced @entity(immutable: true) {
+  id: Bytes!
+  chainId: BigInt! # uint256
+  amount: BigInt! # uint256
+  updatedWithheldAmount: BigInt! # uint256
+  batchHash: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
 }

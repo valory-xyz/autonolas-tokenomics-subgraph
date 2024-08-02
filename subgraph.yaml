@@ -5,12 +5,12 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum
-    name: Depository
+    name: DepositoryV1
     network: mainnet
     source:
-      address: "0xfF8697d8d2998d6AA2e09B405795C6F4BEeB0C81"
-      abi: Depository
-      startBlock: 17777168
+      address: "0x52a043bcebdb2f939baef2e8b6f01652290eab3f"
+      abi: DepositoryV1
+      startBlock: 16699263
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -25,12 +25,12 @@ dataSources:
         - TokenomicsUpdated
         - TreasuryUpdated
       abis:
-        - name: Depository
-          file: ./abis/Depository.json
+        - name: DepositoryV1
+          file: ./abis/DepositoryV1.json
       eventHandlers:
         - event: BondCalculatorUpdated(indexed address)
           handler: handleBondCalculatorUpdated
-        - event: CloseProduct(indexed address,indexed uint256,uint256)
+        - event: CloseProduct(indexed address,indexed uint256)
           handler: handleCloseProduct
         - event: CreateBond(indexed address,indexed uint256,indexed
             address,uint256,uint256,uint256,uint256)
@@ -47,12 +47,12 @@ dataSources:
           handler: handleTreasuryUpdated
       file: ./src/depository.ts
   - kind: ethereum
-    name: DepositoryOld
+    name: DepositoryV2
     network: mainnet
     source:
-      address: "0x52a043bcebdb2f939baef2e8b6f01652290eab3f"
-      abi: DepositoryOld
-      startBlock: 16699263
+      address: "0xfF8697d8d2998d6AA2e09B405795C6F4BEeB0C81"
+      abi: DepositoryV2
+      startBlock: 17777168
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -67,18 +67,18 @@ dataSources:
         - TokenomicsUpdated
         - TreasuryUpdated
       abis:
-        - name: DepositoryOld
-          file: ./abis/DepositoryOld.json
+        - name: DepositoryV2
+          file: ./abis/DepositoryV2.json
       eventHandlers:
         - event: BondCalculatorUpdated(indexed address)
           handler: handleBondCalculatorUpdated
-        - event: CloseProduct(indexed address,indexed uint256)
-          handler: handleCloseProductOld
+        - event: CloseProduct(indexed address,indexed uint256,uint256)
+          handler: handleCloseProductV2
         - event: CreateBond(indexed address,indexed uint256,indexed
             address,uint256,uint256,uint256,uint256)
-          handler: handleCreateBondOld
+          handler: handleCreateBondV2
         - event: CreateProduct(indexed address,indexed uint256,uint256,uint256,uint256)
-          handler: handleCreateProductOld
+          handler: handleCreateProductV2
         - event: OwnerUpdated(indexed address)
           handler: handleOwnerUpdated
         - event: RedeemBond(indexed uint256,indexed address,uint256)
@@ -135,15 +135,15 @@ dataSources:
         - event: DonatorBlacklistUpdated(indexed address)
           handler: handleDonatorBlacklistUpdated
         - event: EffectiveBondUpdated(indexed uint256,uint256)
-          handler: handleEffectiveBondUpdated
+          handler: handleEffectiveBondUpdatedV2
         - event: EffectiveBondUpdated(uint256)
-          handler: handleEffectiveBondUpdatedOld
+          handler: handleEffectiveBondUpdated
         - event: EpochLengthUpdated(uint256)
           handler: handleEpochLengthUpdated
         - event: EpochSettled(indexed uint256,uint256,uint256,uint256,uint256,uint256,uint256)
-          handler: handleEpochSettled
+          handler: handleEpochSettledV2
         - event: EpochSettled(indexed uint256,uint256,uint256,uint256)
-          handler: handleEpochSettledOld
+          handler: handleEpochSettled
         - event: IDFUpdated(uint256)
           handler: handleIDFUpdated
         - event: IncentiveFractionsUpdateRequested(indexed
@@ -172,11 +172,11 @@ dataSources:
           handler: handleTreasuryUpdated
       file: ./src/tokenomics.ts
   - kind: ethereum
-    name: Dispenser
+    name: DispenserV1
     network: mainnet
     source:
       address: "0xeED0000fE94d7cfeF4Dc0CA86a223f0F603A61B8"
-      abi: Dispenser
+      abi: DispenserV1
       startBlock: 16699279
     mapping:
       kind: ethereum/events
@@ -188,8 +188,8 @@ dataSources:
         - DispenserTokenomicsUpdated
         - DispenserTreasuryUpdated
       abis:
-        - name: Dispenser
-          file: ./abis/Dispenser.json
+        - name: DispenserV1
+          file: ./abis/DispenserV1.json
       eventHandlers:
         - event: IncentivesClaimed(indexed address,uint256,uint256)
           handler: handleIncentivesClaimed
@@ -199,4 +199,64 @@ dataSources:
           handler: handleTokenomicsUpdated
         - event: TreasuryUpdated(indexed address)
           handler: handleTreasuryUpdated
+      file: ./src/dispenser.ts
+  - kind: ethereum
+    name: DispenserV2
+    network: mainnet
+    source:
+      address: "0x5650300fCBab43A0D7D02F8Cb5d0f039402593f0"
+      abi: DispenserV2
+      startBlock: 20340783
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - AddNomineeHash
+        - DispenserV2IncentivesClaimed
+        - DispenserV2OwnerUpdated
+        - PauseDispenser
+        - RemoveNomineeHash
+        - Retained
+        - SetDepositProcessorChainIds
+        - StakingIncentivesBatchClaimed
+        - StakingIncentivesClaimed
+        - DispenserV2StakingParamsUpdated
+        - DispenserV2TokenomicsUpdated
+        - DispenserV2TreasuryUpdated
+        - VoteWeightingUpdated
+        - WithheldAmountSynced
+      abis:
+        - name: DispenserV2
+          file: ./abis/DispenserV2.json
+      eventHandlers:
+        - event: AddNomineeHash(indexed bytes32)
+          handler: handleAddNomineeHash
+        - event: IncentivesClaimed(indexed address,uint256,uint256,uint256[],uint256[])
+          handler: handleIncentivesClaimedV2
+        - event: OwnerUpdated(indexed address)
+          handler: handleOwnerUpdated
+        - event: PauseDispenser(uint8)
+          handler: handlePauseDispenser
+        - event: RemoveNomineeHash(indexed bytes32)
+          handler: handleRemoveNomineeHash
+        - event: Retained(indexed address,uint256)
+          handler: handleRetained
+        - event: SetDepositProcessorChainIds(address[],uint256[])
+          handler: handleSetDepositProcessorChainIds
+        - event: StakingIncentivesBatchClaimed(indexed
+            address,uint256[],bytes32[][],uint256[][],uint256,uint256,uint256)
+          handler: handleStakingIncentivesBatchClaimed
+        - event: StakingIncentivesClaimed(indexed address,uint256,bytes32,uint256,uint256,uint256)
+          handler: handleStakingIncentivesClaimed
+        - event: StakingParamsUpdated(uint256,uint256)
+          handler: handleStakingParamsUpdated
+        - event: TokenomicsUpdated(indexed address)
+          handler: handleTokenomicsUpdated
+        - event: TreasuryUpdated(indexed address)
+          handler: handleTreasuryUpdated
+        - event: VoteWeightingUpdated(indexed address)
+          handler: handleVoteWeightingUpdated
+        - event: WithheldAmountSynced(uint256,uint256,uint256,indexed bytes32)
+          handler: handleWithheldAmountSynced
       file: ./src/dispenser.ts
