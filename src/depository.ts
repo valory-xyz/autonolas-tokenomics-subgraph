@@ -1,18 +1,18 @@
 import {
   BondCalculatorUpdated as BondCalculatorUpdatedEvent,
-  CloseProduct as CloseProductEvent,
-  CreateBond as CreateBondEvent,
-  CreateProduct as CreateProductEvent,
+  CloseProduct as CloseProductV2Event,
+  CreateBond as CreateBondV2Event,
+  CreateProduct as CreateProductV2Event,
   OwnerUpdated as OwnerUpdatedEvent,
   RedeemBond as RedeemBondEvent,
   TokenomicsUpdated as TokenomicsUpdatedEvent,
   TreasuryUpdated as TreasuryUpdatedEvent,
-} from "../generated/Depository/Depository";
+} from "../generated/DepositoryV2/DepositoryV2";
 import {
-  CloseProduct as CloseProductOldEvent,
-  CreateBond as CreateBondOldEvent,
-  CreateProduct as CreateProductOldEvent,
-} from "../generated/DepositoryOld/DepositoryOld";
+  CloseProduct as CloseProductEvent,
+  CreateBond as CreateBondEvent,
+  CreateProduct as CreateProductEvent,
+} from "../generated/DepositoryV1/DepositoryV1";
 import {
   BondCalculatorUpdated,
   CloseProduct,
@@ -41,7 +41,7 @@ export function handleBondCalculatorUpdated(
   entity.save();
 }
 
-export function handleCloseProduct(event: CloseProductEvent): void {
+export function handleCloseProductV2(event: CloseProductV2Event): void {
   let entity = new CloseProduct(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
@@ -56,7 +56,7 @@ export function handleCloseProduct(event: CloseProductEvent): void {
   entity.save();
 }
 
-export function handleCloseProductOld(event: CloseProductOldEvent): void {
+export function handleCloseProduct(event: CloseProductEvent): void {
   let entity = new CloseProduct(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
@@ -70,7 +70,7 @@ export function handleCloseProductOld(event: CloseProductOldEvent): void {
   entity.save();
 }
 
-export function handleCreateBond(event: CreateBondEvent): void {
+export function handleCreateBondV2(event: CreateBondV2Event): void {
   let entity = new CreateBond(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
@@ -108,7 +108,7 @@ export function handleCreateBond(event: CreateBondEvent): void {
   entity.save();
 }
 
-export function handleCreateBondOld(event: CreateBondOldEvent): void {
+export function handleCreateBond(event: CreateBondEvent): void {
   let entity = new CreateBond(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
@@ -146,7 +146,7 @@ export function handleCreateBondOld(event: CreateBondOldEvent): void {
   entity.save();
 }
 
-export function handleCreateProduct(event: CreateProductEvent): void {
+export function handleCreateProductV2(event: CreateProductV2Event): void {
   let entity = new CreateProduct(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
@@ -183,7 +183,7 @@ export function handleCreateProduct(event: CreateProductEvent): void {
   entity.save();
 }
 
-export function handleCreateProductOld(event: CreateProductOldEvent): void {
+export function handleCreateProduct(event: CreateProductEvent): void {
   let entity = new CreateProduct(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );

@@ -5,11 +5,11 @@ import {
   DepositoryUpdated as DepositoryUpdatedEvent,
   DispenserUpdated as DispenserUpdatedEvent,
   DonatorBlacklistUpdated as DonatorBlacklistUpdatedEvent,
-  EffectiveBondUpdated as EffectiveBondUpdatedEvent,
-  EffectiveBondUpdated1 as EffectiveBondUpdatedOldEvent,
+  EffectiveBondUpdated as EffectiveBondUpdatedV2Event,
+  EffectiveBondUpdated1 as EffectiveBondUpdatedEvent,
   EpochLengthUpdated as EpochLengthUpdatedEvent,
-  EpochSettled as EpochSettledEvent,
-  EpochSettled1 as EpochSettledOldEvent,
+  EpochSettled as EpochSettledV2Event,
+  EpochSettled1 as EpochSettledEvent,
   IDFUpdated as IDFUpdatedEvent,
   IncentiveFractionsUpdateRequested as IncentiveFractionsUpdateRequestedEvent,
   IncentiveFractionsUpdated as IncentiveFractionsUpdatedEvent,
@@ -124,8 +124,8 @@ export function handleDonatorBlacklistUpdated(
   entity.save();
 }
 
-export function handleEffectiveBondUpdated(
-  event: EffectiveBondUpdatedEvent
+export function handleEffectiveBondUpdatedV2(
+  event: EffectiveBondUpdatedV2Event
 ): void {
   let entity = new EffectiveBondUpdated(
     event.transaction.hash.concatI32(event.logIndex.toI32())
@@ -149,8 +149,8 @@ export function handleEffectiveBondUpdated(
   }
 }
 
-export function handleEffectiveBondUpdatedOld(
-  event: EffectiveBondUpdatedOldEvent
+export function handleEffectiveBondUpdated(
+  event: EffectiveBondUpdatedEvent
 ): void {
   let entity = new EffectiveBondUpdated(
     event.transaction.hash.concatI32(event.logIndex.toI32())
@@ -193,7 +193,7 @@ export function handleEpochLengthUpdated(event: EpochLengthUpdatedEvent): void {
   entity.save();
 }
 
-export function handleEpochSettled(event: EpochSettledEvent): void {
+export function handleEpochSettledV2(event: EpochSettledV2Event): void {
   let entity = new EpochSettled(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
@@ -224,7 +224,7 @@ export function handleEpochSettled(event: EpochSettledEvent): void {
   handleEpochSave(epochParams);
 }
 
-export function handleEpochSettledOld(event: EpochSettledOldEvent): void {
+export function handleEpochSettled(event: EpochSettledEvent): void {
   let entity = new EpochSettled(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
