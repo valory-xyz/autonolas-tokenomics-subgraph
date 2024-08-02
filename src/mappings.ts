@@ -1,5 +1,5 @@
-import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { Epoch } from "../generated/schema";
+import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { DevIncentive, Epoch } from "../generated/schema";
 import { Tokenomics } from "../generated/Tokenomics/Tokenomics";
 
 export class EpochMapper {
@@ -86,6 +86,7 @@ export function handleEpochSave(params: EpochMapper): void {
   nextEpoch.endBlock = null;
   nextEpoch.accountTopUps = BigInt.fromI32(0);
   nextEpoch.availableDevIncentives = BigInt.fromI32(0);
+  nextEpoch.availableStakingIncentives = BigInt.fromI32(0);
 
   // Access effectiveBond from the contract state when the epoch ends
   const contract = Tokenomics.bind(params.address);
@@ -127,4 +128,54 @@ export function findEpochId(params: FindEpochMapper): string {
   }
 
   return "";
+}
+
+export class DevIncentiveMapper {
+  blockNumber: BigInt;
+  transactionHash: Bytes;
+  owner: Address;
+  reward: BigInt;
+  topUp: BigInt;
+
+  constructor(
+    blockNumber: BigInt,
+    transactionHash: Bytes,
+    owner: Address,
+    reward: BigInt,
+    topUp: BigInt
+  ) {
+    this.blockNumber = blockNumber;
+    this.transactionHash = transactionHash;
+    this.owner = owner;
+    this.reward = reward;
+    this.topUp = topUp;
+  }
+}
+
+export function handleDevIncentiveSave(params: DevIncentiveMapper): void {
+  const findEpochParams = new FindEpochMapper(params.blockNumber);
+  const currentEpochId = findEpochId(findEpochParams);
+  if (currentEpochId) {
+    const epoch = Epoch.load(currentEpochId);
+
+    if (epoch) {
+      let devIncentive = new DevIncentive(params.transactionHash.toHex());
+      devIncentive.epoch = epoch.id;
+      devIncentive.owner = params.owner;
+      devIncentive.reward = params.reward;
+      devIncentive.topUp = params.topUp;
+      devIncentive.save();
+
+      // Update the total dev incentives topUp in the epoch
+      if (!epoch.devIncentivesTotalTopUp) {
+        epoch.devIncentivesTotalTopUp = params.topUp;
+      } else {
+        epoch.devIncentivesTotalTopUp = epoch.devIncentivesTotalTopUp!.plus(
+          params.topUp
+        );
+      }
+
+      epoch.save();
+    }
+  }
 }

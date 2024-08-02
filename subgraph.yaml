@@ -200,3 +200,63 @@ dataSources:
         - event: TreasuryUpdated(indexed address)
           handler: handleTreasuryUpdated
       file: ./src/dispenser.ts
+  - kind: ethereum
+    name: DispenserV2
+    network: mainnet
+    source:
+      address: "0x5650300fCBab43A0D7D02F8Cb5d0f039402593f0"
+      abi: DispenserV2
+      startBlock: 20340783
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - AddNomineeHash
+        - DispenserV2IncentivesClaimed
+        - DispenserV2OwnerUpdated
+        - PauseDispenser
+        - RemoveNomineeHash
+        - Retained
+        - SetDepositProcessorChainIds
+        - StakingIncentivesBatchClaimed
+        - StakingIncentivesClaimed
+        - DispenserV2StakingParamsUpdated
+        - DispenserV2TokenomicsUpdated
+        - DispenserV2TreasuryUpdated
+        - VoteWeightingUpdated
+        - WithheldAmountSynced
+      abis:
+        - name: DispenserV2
+          file: ./abis/DispenserV2.json
+      eventHandlers:
+        - event: AddNomineeHash(indexed bytes32)
+          handler: handleAddNomineeHash
+        - event: IncentivesClaimed(indexed address,uint256,uint256,uint256[],uint256[])
+          handler: handleIncentivesClaimedV2
+        - event: OwnerUpdated(indexed address)
+          handler: handleOwnerUpdated
+        - event: PauseDispenser(uint8)
+          handler: handlePauseDispenser
+        - event: RemoveNomineeHash(indexed bytes32)
+          handler: handleRemoveNomineeHash
+        - event: Retained(indexed address,uint256)
+          handler: handleRetained
+        - event: SetDepositProcessorChainIds(address[],uint256[])
+          handler: handleSetDepositProcessorChainIds
+        - event: StakingIncentivesBatchClaimed(indexed
+            address,uint256[],bytes32[][],uint256[][],uint256,uint256,uint256)
+          handler: handleStakingIncentivesBatchClaimed
+        - event: StakingIncentivesClaimed(indexed address,uint256,bytes32,uint256,uint256,uint256)
+          handler: handleStakingIncentivesClaimed
+        - event: StakingParamsUpdated(uint256,uint256)
+          handler: handleStakingParamsUpdated
+        - event: TokenomicsUpdated(indexed address)
+          handler: handleTokenomicsUpdated
+        - event: TreasuryUpdated(indexed address)
+          handler: handleTreasuryUpdated
+        - event: VoteWeightingUpdated(indexed address)
+          handler: handleVoteWeightingUpdated
+        - event: WithheldAmountSynced(uint256,uint256,uint256,indexed bytes32)
+          handler: handleWithheldAmountSynced
+      file: ./src/dispenser.ts
