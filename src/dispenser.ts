@@ -31,6 +31,7 @@ import {
   VoteWeightingUpdated,
   WithheldAmountSynced,
   StakingIncentive,
+  StakingIncentivesBatch,
 } from "../generated/schema";
 import {
   DevIncentiveMapper,
@@ -220,9 +221,21 @@ export function handleStakingIncentivesBatchClaimed(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
   entity.account = event.params.account;
-  entity.chainIds = event.params.chainIds;
-  entity.stakingTargets = event.params.stakingTargets;
-  entity.stakingIncentives = event.params.stakingIncentives;
+
+  // It is currently impossible to handle nested arrays in event parameters.
+  // Convert them to flat arrays and save them into separate entities.
+  for (let i = 0; i < event.params.chainIds.length; i++) {
+    let stakingIncentivesBatch = new StakingIncentivesBatch(
+      `${event.transaction.hash.toHex()}_${i}`
+    );
+    stakingIncentivesBatch.batchClaim = entity.id;
+    stakingIncentivesBatch.chainId = event.params.chainIds[i];
+    stakingIncentivesBatch.stakingTargets = event.params.stakingTargets[i];
+    stakingIncentivesBatch.stakingIncentives =
+      event.params.stakingIncentives[i];
+    stakingIncentivesBatch.save();
+  }
+
   entity.totalStakingIncentive = event.params.totalStakingIncentive;
   entity.totalTransferAmount = event.params.totalTransferAmount;
   entity.totalReturnAmount = event.params.totalReturnAmount;
@@ -242,7 +255,7 @@ export function handleStakingIncentivesBatchClaimed(
       for (let i = 0; i < event.params.chainIds.length; i++) {
         for (let j = 0; j < event.params.stakingTargets[i].length; j++) {
           let stakingIncentive = new StakingIncentive(
-            `${epoch.id}_${event.params.chainIds[i]}_${event.params.stakingTargets[i][j]}`
+            `${event.transaction.hash.toHex()}_${event.params.chainIds[i]}_${j}`
           );
 
           stakingIncentive.epoch = epoch.id;
