@@ -377,15 +377,21 @@ type SetDepositProcessorChainIds @entity(immutable: true) {
 type StakingIncentivesBatchClaimed @entity(immutable: true) {
   id: Bytes!
   account: Bytes! # address
-  chainIds: [BigInt!]! # uint256[]
-  stakingTargets: [[Bytes!]!]! # bytes32[][]
-  stakingIncentives: [[BigInt!]!]! # uint256[][]
+  stakingIncentives: [StakingIncentivesBatch!] @derivedFrom(field: "batchClaim")
   totalStakingIncentive: BigInt! # uint256
   totalTransferAmount: BigInt! # uint256
   totalReturnAmount: BigInt! # uint256
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+}
+
+type StakingIncentivesBatch @entity {
+  id: ID!
+  batchClaim: StakingIncentivesBatchClaimed!
+  chainId: BigInt!
+  stakingTargets: [Bytes!]! # bytes32[]
+  stakingIncentives: [BigInt!]! # uint256[]
 }
 
 type StakingIncentivesClaimed @entity(immutable: true) {

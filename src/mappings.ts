@@ -66,7 +66,7 @@ export function handleEpochSave(params: EpochMapper): void {
     }
   }
 
-  // Reduce available incentives in the epoch by devIncentivesTotalTopUp
+  // Reduce available dev incentives in the epoch by devIncentivesTotalTopUp
   if (epoch.devIncentivesTotalTopUp) {
     availableDevIncentives = availableDevIncentives.minus(
       epoch.devIncentivesTotalTopUp!
@@ -76,8 +76,20 @@ export function handleEpochSave(params: EpochMapper): void {
   // Save availableDevIncentives
   epoch.availableDevIncentives = availableDevIncentives;
 
+  let availableStakingIncentives = params.availableStakingIncentives;
+
+  // Reduce available staking incentives in the epoch by totalStakingIncentives
+  if (
+    epoch.totalStakingIncentives &&
+    epoch.totalStakingIncentives!.gt(BigInt.fromI32(0))
+  ) {
+    availableStakingIncentives = availableStakingIncentives.minus(
+      epoch.totalStakingIncentives!
+    );
+  }
+
   // Save availableStakingIncentives
-  epoch.availableStakingIncentives = params.availableStakingIncentives;
+  epoch.availableStakingIncentives = availableStakingIncentives;
 
   // Manually create next epoch to collect all data from other events correctly
   let nextEpoch = new Epoch((epoch.counter + 1).toString());
