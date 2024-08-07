@@ -24,7 +24,7 @@ import {
   TokenomicsUpdated,
   TreasuryUpdated,
 } from "../generated/schema";
-import { FindEpochMapper, findEpochId } from "./mappings";
+import { findEpochId } from "./utils";
 
 export function handleBondCalculatorUpdated(
   event: BondCalculatorUpdatedEvent
@@ -86,8 +86,7 @@ export function handleCreateBondV2(event: CreateBondV2Event): void {
   entity.blockTimestamp = event.block.timestamp;
   entity.transactionHash = event.transaction.hash;
 
-  const findEpochParams = new FindEpochMapper(event.block.number);
-  const currentEpochId = findEpochId(findEpochParams);
+  const currentEpochId = findEpochId(event.block.number);
   if (currentEpochId) {
     entity.epoch = currentEpochId;
 
@@ -124,8 +123,7 @@ export function handleCreateBond(event: CreateBondEvent): void {
   entity.blockTimestamp = event.block.timestamp;
   entity.transactionHash = event.transaction.hash;
 
-  const findEpochParams = new FindEpochMapper(event.block.number);
-  const currentEpochId = findEpochId(findEpochParams);
+  const currentEpochId = findEpochId(event.block.number);
   if (currentEpochId) {
     entity.epoch = currentEpochId;
 
@@ -160,8 +158,7 @@ export function handleCreateProductV2(event: CreateProductV2Event): void {
   entity.blockTimestamp = event.block.timestamp;
   entity.transactionHash = event.transaction.hash;
 
-  const findEpochParams = new FindEpochMapper(event.block.number);
-  const currentEpochId = findEpochId(findEpochParams);
+  const currentEpochId = findEpochId(event.block.number);
   if (currentEpochId) {
     entity.epoch = currentEpochId;
 
@@ -197,8 +194,7 @@ export function handleCreateProduct(event: CreateProductEvent): void {
   entity.blockTimestamp = event.block.timestamp;
   entity.transactionHash = event.transaction.hash;
 
-  const findEpochParams = new FindEpochMapper(event.block.number);
-  const currentEpochId = findEpochId(findEpochParams);
+  const currentEpochId = findEpochId(event.block.number);
   if (currentEpochId) {
     entity.epoch = currentEpochId;
 

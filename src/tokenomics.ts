@@ -46,12 +46,8 @@ import {
   TreasuryUpdated,
   Epoch,
 } from "../generated/schema";
-import {
-  EpochMapper,
-  FindEpochMapper,
-  findEpochId,
-  handleEpochSave,
-} from "./mappings";
+import { EpochMapper, handleEpochSave } from "./mappings";
+import { findEpochId } from "./utils";
 
 export function handleAgentRegistryUpdated(
   event: AgentRegistryUpdatedEvent
@@ -161,8 +157,7 @@ export function handleEffectiveBondUpdated(
   entity.blockTimestamp = event.block.timestamp;
   entity.transactionHash = event.transaction.hash;
 
-  const findEpochParams = new FindEpochMapper(event.block.number);
-  const currentEpochId = findEpochId(findEpochParams);
+  const currentEpochId = findEpochId(event.block.number);
 
   if (currentEpochId) {
     const epoch = Epoch.load(currentEpochId);
@@ -216,9 +211,7 @@ export function handleEpochSettledV2(event: EpochSettledV2Event): void {
     event.block.number,
     event.params.epochCounter,
     event.params.accountTopUps,
-    event.params.totalStakingIncentive.minus(
-      event.params.returnedStakingIncentive
-    )
+    event.params.totalStakingIncentive
   );
 
   handleEpochSave(epochParams);
