@@ -1,6 +1,7 @@
 import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
 import { IncentivesClaimed as IncentivesClaimedEvent } from "../generated/Dispenser/Dispenser";
 import {
+  DispenserV2,
   AddNomineeHash as AddNomineeHashEvent,
   IncentivesClaimed as IncentivesClaimedV2Event,
   OwnerUpdated as OwnerUpdatedEvent,
@@ -33,12 +34,8 @@ import {
   StakingIncentive,
   StakingIncentivesBatch,
 } from "../generated/schema";
-import {
-  DevIncentiveMapper,
-  FindEpochMapper,
-  findEpochId,
-  handleDevIncentiveSave,
-} from "./mappings";
+import { DevIncentiveMapper, handleDevIncentiveSave } from "./mappings";
+import { getNomineeHash } from "./utils";
 
 export function handleIncentivesClaimed(event: IncentivesClaimedEvent): void {
   let entity = new IncentivesClaimed(
@@ -246,18 +243,29 @@ export function handleStakingIncentivesBatchClaimed(
 
   entity.save();
 
-  const findEpochParams = new FindEpochMapper(event.block.number);
-  const currentEpochId = findEpochId(findEpochParams);
-  if (currentEpochId) {
-    const epoch = Epoch.load(currentEpochId);
+  const contract = DispenserV2.bind(event.address);
 
-    if (epoch) {
-      for (let i = 0; i < event.params.chainIds.length; i++) {
-        for (let j = 0; j < event.params.stakingTargets[i].length; j++) {
+  for (let i = 0; i < event.params.chainIds.length; i++) {
+    for (let j = 0; j < event.params.stakingTargets[i].length; j++) {
+      const nomineeHash = getNomineeHash(
+        event.params.stakingTargets[i][j],
+        event.params.chainIds[i]
+      );
+
+      // Access the last claimed epoch from the contract state for the nominee hash.
+      // This value is updated when the event occurs. We can subtract 1 epoch
+      // to determine the epoch to which this claim belongs.
+      const claimedEpoch = contract
+        .mapLastClaimedStakingEpochs(nomineeHash)
+        .minus(BigInt.fromI32(1));
+
+      if (claimedEpoch) {
+        const epoch = Epoch.load(claimedEpoch.toString());
+
+        if (epoch) {
           let stakingIncentive = new StakingIncentive(
             `${event.transaction.hash.toHex()}_${event.params.chainIds[i]}_${j}`
           );
-
           stakingIncentive.epoch = epoch.id;
           stakingIncentive.account = event.params.account;
           stakingIncentive.chainId = event.params.chainIds[i];
@@ -273,6 +281,14 @@ export function handleStakingIncentivesBatchClaimed(
             epoch.totalStakingIncentives = epoch.totalStakingIncentives!.plus(
               event.params.stakingIncentives[i][j]
             );
+          }
+
+          // Reduce available staking incentives in the epoch by stakingIncentive
+          if (epoch.availableStakingIncentives) {
+            epoch.availableStakingIncentives =
+              epoch.availableStakingIncentives!.minus(
+                event.params.stakingIncentives[i][j]
+              );
           }
 
           epoch.save();
@@ -301,10 +317,17 @@ export function handleStakingIncentivesClaimed(
 
   entity.save();
 
-  const findEpochParams = new FindEpochMapper(event.block.number);
-  const currentEpochId = findEpochId(findEpochParams);
-  if (currentEpochId) {
-    const epoch = Epoch.load(currentEpochId);
+  // Access the last claimed epoch from the contract state for the nominee hash.
+  // This value is updated when the event occurs. We can subtract 1 epoch
+  // to determine the epoch to which this claim belongs.
+  const nomineeHash = getNomineeHash(entity.stakingTarget, entity.chainId);
+  const contract = DispenserV2.bind(event.address);
+  const claimedEpoch = contract
+    .mapLastClaimedStakingEpochs(nomineeHash)
+    .minus(BigInt.fromI32(1));
+
+  if (claimedEpoch) {
+    const epoch = Epoch.load(claimedEpoch.toString());
 
     if (epoch) {
       let stakingIncentive = new StakingIncentive(
@@ -324,6 +347,14 @@ export function handleStakingIncentivesClaimed(
         epoch.totalStakingIncentives = epoch.totalStakingIncentives!.plus(
           event.params.stakingIncentive
         );
+      }
+
+      // Reduce available staking incentives in the epoch by stakingIncentive
+      if (epoch.availableStakingIncentives) {
+        epoch.availableStakingIncentives =
+          epoch.availableStakingIncentives!.minus(
+            event.params.stakingIncentive
+          );
       }
 
       epoch.save();

@@ -1,6 +1,7 @@
 import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
 import { DevIncentive, Epoch } from "../generated/schema";
 import { Tokenomics } from "../generated/Tokenomics/Tokenomics";
+import { findEpochId } from "./utils";
 
 export class EpochMapper {
   address: Address;
@@ -76,20 +77,8 @@ export function handleEpochSave(params: EpochMapper): void {
   // Save availableDevIncentives
   epoch.availableDevIncentives = availableDevIncentives;
 
-  let availableStakingIncentives = params.availableStakingIncentives;
-
-  // Reduce available staking incentives in the epoch by totalStakingIncentives
-  if (
-    epoch.totalStakingIncentives &&
-    epoch.totalStakingIncentives!.gt(BigInt.fromI32(0))
-  ) {
-    availableStakingIncentives = availableStakingIncentives.minus(
-      epoch.totalStakingIncentives!
-    );
-  }
-
   // Save availableStakingIncentives
-  epoch.availableStakingIncentives = availableStakingIncentives;
+  epoch.availableStakingIncentives = params.availableStakingIncentives;
 
   // Manually create next epoch to collect all data from other events correctly
   let nextEpoch = new Epoch((epoch.counter + 1).toString());
@@ -108,38 +97,6 @@ export function handleEpochSave(params: EpochMapper): void {
   nextEpoch.save();
 
   epoch.save();
-}
-
-export class FindEpochMapper {
-  blockNumber: BigInt;
-
-  constructor(blockNumber: BigInt) {
-    this.blockNumber = blockNumber;
-  }
-}
-
-export function findEpochId(params: FindEpochMapper): string {
-  // Find the current epoch based on the block number
-  let epochCounter = 1;
-  while (true) {
-    let epochId = epochCounter.toString();
-    let currentEpoch = Epoch.load(epochId);
-    if (!currentEpoch) {
-      break;
-    }
-
-    if (
-      currentEpoch.startBlock.le(params.blockNumber) &&
-      (currentEpoch.endBlock === null ||
-        currentEpoch.endBlock!.ge(params.blockNumber))
-    ) {
-      return currentEpoch.id;
-    }
-
-    epochCounter++;
-  }
-
-  return "";
 }
 
 export class DevIncentiveMapper {
@@ -165,8 +122,7 @@ export class DevIncentiveMapper {
 }
 
 export function handleDevIncentiveSave(params: DevIncentiveMapper): void {
-  const findEpochParams = new FindEpochMapper(params.blockNumber);
-  const currentEpochId = findEpochId(findEpochParams);
+  const currentEpochId = findEpochId(params.blockNumber);
   if (currentEpochId) {
     const epoch = Epoch.load(currentEpochId);
 
