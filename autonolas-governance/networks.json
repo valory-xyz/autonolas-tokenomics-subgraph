@@ -1,0 +1,8 @@
+{
+  "mainnet": {
+    "GovernorOLAS": {
+      "address": "0x8e84b5055492901988b831817e4ace5275a3b401",
+      "startBlock": 17527057
+    }
+  }
+}
