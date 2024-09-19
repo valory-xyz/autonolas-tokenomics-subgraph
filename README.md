@@ -1,6 +1,6 @@
 # Tokenomics App Subgraph
 
-This repository contains a subgraph for [The Graph](https://thegraph.com) for the [Tokenomics App](https://tokenomics.olas.network/)
+This repository contains a subgraph for [The Graph](https://thegraph.com), specifically for the [tokenomics contracts](https://github.com/valory-xyz/autonolas-tokenomics)
 
 
 ## Getting Started
