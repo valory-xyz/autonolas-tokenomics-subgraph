@@ -6,8 +6,8 @@ type ProposalCanceled @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type ProposalCreated @entity(immutable: true) {
-  id: Bytes!
+type ProposalCreated @entity {
+  id: ID!
   proposalId: BigInt! # uint256
   proposer: Bytes! # address
   targets: [Bytes!]! # address[]
@@ -20,6 +20,12 @@ type ProposalCreated @entity(immutable: true) {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+  isExecuted: Boolean!
+  isCancelled: Boolean!
+  isQueued: Boolean!
+  votesFor: BigInt!
+  votesAgainst: BigInt!
+  voteCasts: [VoteCast!] @derivedFrom(field: "proposalCreated")
 }
 
 type ProposalExecuted @entity(immutable: true) {
@@ -76,6 +82,7 @@ type VoteCast @entity(immutable: true) {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+  proposalCreated: ProposalCreated
 }
 
 type VoteCastWithParams @entity(immutable: true) {
