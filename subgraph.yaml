@@ -24,6 +24,8 @@ dataSources:
       abis:
         - name: StakingFactory
           file: ./abis/StakingFactory.json
+        - name: StakingToken
+          file: ./abis/StakingToken.json 
       eventHandlers:
         - event: InstanceCreated(indexed address,indexed address,indexed address)
           handler: handleInstanceCreated
