@@ -1,0 +1,42 @@
+type InstanceCreated @entity(immutable: true) {
+  id: Bytes!
+  sender: Bytes! # address
+  instance: Bytes! # address
+  implementation: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type InstanceRemoved @entity(immutable: true) {
+  id: Bytes!
+  instance: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type InstanceStatusChanged @entity(immutable: true) {
+  id: Bytes!
+  instance: Bytes! # address
+  isEnabled: Boolean! # bool
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type OwnerUpdated @entity(immutable: true) {
+  id: Bytes!
+  owner: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type VerifierUpdated @entity(immutable: true) {
+  id: Bytes!
+  verifier: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}

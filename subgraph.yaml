@@ -1,0 +1,38 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: StakingFactory
+    network: gnosis
+    source:
+      address: "0xb0228CA253A88Bc8eb4ca70BCAC8f87b381f4700"
+      abi: StakingFactory
+      startBlock: 35047282
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - InstanceCreated
+        - InstanceRemoved
+        - InstanceStatusChanged
+        - OwnerUpdated
+        - VerifierUpdated
+      abis:
+        - name: StakingFactory
+          file: ./abis/StakingFactory.json
+      eventHandlers:
+        - event: InstanceCreated(indexed address,indexed address,indexed address)
+          handler: handleInstanceCreated
+        - event: InstanceRemoved(indexed address)
+          handler: handleInstanceRemoved
+        - event: InstanceStatusChanged(indexed address,bool)
+          handler: handleInstanceStatusChanged
+        - event: OwnerUpdated(indexed address)
+          handler: handleOwnerUpdated
+        - event: VerifierUpdated(indexed address)
+          handler: handleVerifierUpdated
+      file: ./src/staking-factory.ts

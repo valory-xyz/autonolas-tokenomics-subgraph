@@ -1,0 +1,8 @@
+{
+  "gnosis": {
+    "StakingFactory": {
+      "address": "0xb0228CA253A88Bc8eb4ca70BCAC8f87b381f4700",
+      "startBlock": 35047282
+    }
+  }
+}
