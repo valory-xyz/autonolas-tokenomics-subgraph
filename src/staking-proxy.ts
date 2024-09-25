@@ -1,3 +1,4 @@
+import { Address, Bytes } from "@graphprotocol/graph-ts"
 import {
   Checkpoint as CheckpointEvent,
   Deposit as DepositEvent,
@@ -151,9 +152,9 @@ export function handleServicesEvicted(event: ServicesEvictedEvent): void {
     event.transaction.hash.concatI32(event.logIndex.toI32()),
   )
   entity.epoch = event.params.epoch
-  entity.serviceIds = event.params.serviceIds
-  entity.owners = event.params.owners
-  entity.multisigs = event.params.multisigs
+  entity.serviceIds = event.params.serviceIds 
+  // entity.owners = event.params.owners.map((owner) => owner as Bytes)
+  // entity.multisigs = event.params.multisigs as Array<Bytes>
   entity.serviceInactivity = event.params.serviceInactivity
 
   entity.blockNumber = event.block.number
