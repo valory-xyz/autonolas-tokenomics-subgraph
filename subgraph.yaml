@@ -37,7 +37,7 @@ dataSources:
           handler: handleVerifierUpdated
       file: ./src/staking-factory.ts
   - kind: ethereum
-    name: StakingProxy
+    name: StakingPearlBeta2
     network: gnosis
     source:
       address: "0x1c2f82413666d2a3fd8bc337b0268e62ddf67434"
@@ -84,7 +84,7 @@ dataSources:
           handler: handleWithdraw
       file: ./src/staking-proxy.ts
   - kind: ethereum
-    name: StakingProxy
+    name: StakingPearlBeta
     network: gnosis
     source:
       address: "0xeF44Fb0842DDeF59D37f85D61A1eF492bbA6135d"
