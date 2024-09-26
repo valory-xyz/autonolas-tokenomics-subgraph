@@ -151,7 +151,7 @@ export function handleServicesEvicted(event: ServicesEvictedEvent): void {
   let entity = new ServicesEvicted(
     event.transaction.hash.concatI32(event.logIndex.toI32()),
   )
-    // Convert Address[] to Bytes[]
+
   let owners: Bytes[] = event.params.owners.map<Bytes>(
     (owner: Address): Bytes => owner as Bytes
   );
