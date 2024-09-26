@@ -39,8 +39,9 @@ export function handleCheckpoint(event: CheckpointEvent): void {
 
   // Calculate epochStartTime
   if (event.params.epoch.equals(BigInt.fromI32(0))) {
-    entity.epochStartTime = event.block.timestamp.minus(BigInt.fromI32(86400));
+    // entity.epochStartTime = event.block.timestamp.minus(BigInt.fromI32(86400));
     // TODO: Liveness period from contract
+    entity.epochStartTime = BigInt.fromI32(0);
   } else {
     let currentEpoch = event.params.epoch
     let previousEpochId = currentEpoch.minus(BigInt.fromI32(1))
