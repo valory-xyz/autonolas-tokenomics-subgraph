@@ -151,12 +151,18 @@ export function handleServicesEvicted(event: ServicesEvictedEvent): void {
   let entity = new ServicesEvicted(
     event.transaction.hash.concatI32(event.logIndex.toI32()),
   )
+    // Convert Address[] to Bytes[]
+  let owners: Bytes[] = event.params.owners.map<Bytes>(
+    (owner: Address): Bytes => owner as Bytes
+  );
+  let multisigs: Bytes[] = event.params.multisigs.map<Bytes>(
+    (multisig: Address): Bytes => multisig as Bytes
+  );
+
   entity.epoch = event.params.epoch
   entity.serviceIds = event.params.serviceIds 
-  entity.owners = []
-  entity.multisigs = []
-  // entity.owners = event.params.owners.map((owner) => owner as Bytes)
-  // entity.multisigs = event.params.multisigs as Array<Bytes>
+  entity.owners = owners
+  entity.multisigs = multisigs
   entity.serviceInactivity = event.params.serviceInactivity
 
   entity.blockNumber = event.block.number
