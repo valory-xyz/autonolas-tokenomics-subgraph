@@ -36,6 +36,7 @@ export function handleCheckpoint(event: CheckpointEvent): void {
   entity.blockNumber = event.block.number
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
+  entity.contractAddress = event.address
 
   // // Calculate epochStartTime
   // if (event.params.epoch.equals(BigInt.fromI32(0))) {
