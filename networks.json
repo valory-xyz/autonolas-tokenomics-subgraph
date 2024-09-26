@@ -3,6 +3,9 @@
     "StakingFactory": {
       "address": "0xb0228CA253A88Bc8eb4ca70BCAC8f87b381f4700",
       "startBlock": 35047282
+    },
+    "StakingProxy": {
+      "address": "0x1c2f82413666d2a3fd8bc337b0268e62ddf67434"
     }
   }
 }
