@@ -1,4 +1,4 @@
-import { Address, Bytes } from "@graphprotocol/graph-ts"
+import { Address, Bytes, BigInt } from "@graphprotocol/graph-ts"
 import {
   Checkpoint as CheckpointEvent,
   Deposit as DepositEvent,
@@ -20,6 +20,7 @@ import {
   ServiceUnstaked,
   ServicesEvicted,
   Withdraw,
+  InstanceCreated
 } from "../generated/schema"
 
 export function handleCheckpoint(event: CheckpointEvent): void {
@@ -35,6 +36,21 @@ export function handleCheckpoint(event: CheckpointEvent): void {
   entity.blockNumber = event.block.number
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
+
+  // Calculate epochStartTime
+  if (event.params.epoch.equals(BigInt.fromI32(0))) {
+    // For epoch 0, get the blockTimestamp from InstanceCreated entity (contract creation)
+    let instanceId = Bytes.fromHexString(event.address.toHex()) // contract instance's address
+    let instance = InstanceCreated.load(instanceId)
+
+    entity.epochStartTime = instance === null ? BigInt.fromI32(0) : instance.blockTimestamp
+  } else {
+    let currentEpoch = event.params.epoch
+    let previousEpochId = currentEpoch.minus(BigInt.fromI32(1))
+    let previousEpoch = Checkpoint.load(Bytes.fromHexString(previousEpochId.toString()))
+
+    entity.epochStartTime = previousEpoch === null ? BigInt.fromI32(0) : previousEpoch.blockTimestamp
+  }
 
   entity.save()
 }
