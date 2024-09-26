@@ -37,19 +37,19 @@ export function handleCheckpoint(event: CheckpointEvent): void {
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
 
-  // Calculate epochStartTime
-  if (event.params.epoch.equals(BigInt.fromI32(0))) {
-    // entity.epochStartTime = event.block.timestamp.minus(BigInt.fromI32(86400));
-    // TODO: Liveness period from contract
-    entity.epochStartTime = BigInt.fromI32(0);
-  } else {
-    let currentEpoch = event.params.epoch
-    let previousEpochId = currentEpoch.minus(BigInt.fromI32(1))
-    let previousEpoch = Checkpoint.load(Bytes.fromHexString(previousEpochId.toString()))
+  // // Calculate epochStartTime
+  // if (event.params.epoch.equals(BigInt.fromI32(0))) {
+  //   // entity.epochStartTime = event.block.timestamp.minus(BigInt.fromI32(86400));
+  //   // TODO: Liveness period from contract
+  //   entity.epochStartTime = BigInt.fromI32(0);
+  // } else {
+  //   let currentEpoch = event.params.epoch
+  //   let previousEpochId = currentEpoch.minus(BigInt.fromI32(1))
+  //   let previousEpoch = Checkpoint.load(Bytes.fromHexString(previousEpochId.toString()))
 
-    entity.epochStartTime =
-      previousEpoch === null ? BigInt.fromI32(0) : previousEpoch.blockTimestamp;
-  }
+  //   entity.epochStartTime =
+  //     previousEpoch === null ? BigInt.fromI32(0) : previousEpoch.blockTimestamp;
+  // }
 
   entity.save()
 }

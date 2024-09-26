@@ -50,7 +50,6 @@ type Checkpoint @entity(immutable: true) {
   blockNumber: BigInt!
   transactionHash: Bytes!
   blockTimestamp: BigInt!
-  epochStartTime: BigInt!
 }
 
 type Deposit @entity(immutable: true) {
