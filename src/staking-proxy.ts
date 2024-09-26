@@ -153,6 +153,8 @@ export function handleServicesEvicted(event: ServicesEvictedEvent): void {
   )
   entity.epoch = event.params.epoch
   entity.serviceIds = event.params.serviceIds 
+  entity.owners = []
+  entity.multisigs = []
   // entity.owners = event.params.owners.map((owner) => owner as Bytes)
   // entity.multisigs = event.params.multisigs as Array<Bytes>
   entity.serviceInactivity = event.params.serviceInactivity
