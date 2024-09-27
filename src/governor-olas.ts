@@ -1,4 +1,4 @@
-import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
 import {
   ProposalCanceled as ProposalCanceledEvent,
   ProposalCreated as ProposalCreatedEvent,
@@ -25,6 +25,7 @@ import {
   VotingDelaySet,
   VotingPeriodSet,
 } from "../generated/schema";
+import { updateProposalQuorum } from "./utils";
 
 export function handleProposalCanceled(event: ProposalCanceledEvent): void {
   let entity = new ProposalCanceled(
@@ -43,6 +44,12 @@ export function handleProposalCanceled(event: ProposalCanceledEvent): void {
     proposalCreated.isCancelled = true;
     proposalCreated.save();
   }
+
+  updateProposalQuorum(
+    event.params.proposalId,
+    event.block.number,
+    event.address
+  );
 
   entity.save();
 }
@@ -95,6 +102,12 @@ export function handleProposalExecuted(event: ProposalExecutedEvent): void {
     proposalCreated.save();
   }
 
+  updateProposalQuorum(
+    event.params.proposalId,
+    event.block.number,
+    event.address
+  );
+
   entity.save();
 }
 
@@ -116,6 +129,12 @@ export function handleProposalQueued(event: ProposalQueuedEvent): void {
     proposalCreated.isQueued = true;
     proposalCreated.save();
   }
+
+  updateProposalQuorum(
+    event.params.proposalId,
+    event.block.number,
+    event.address
+  );
 
   entity.save();
 }

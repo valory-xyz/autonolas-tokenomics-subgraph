@@ -1,6 +1,10 @@
 {
   "mainnet": {
-    "GovernorOLAS": {
+    "GovernorOLASV1": {
+      "address": "0x34C895f302D0b5cf52ec0Edd3945321EB0f83dd5",
+      "startBlock": 15050305
+    },
+    "GovernorOLASV2": {
       "address": "0x8e84b5055492901988b831817e4ace5275a3b401",
       "startBlock": 17527057
     }

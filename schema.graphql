@@ -25,6 +25,7 @@ type ProposalCreated @entity {
   isQueued: Boolean!
   votesFor: BigInt!
   votesAgainst: BigInt!
+  quorum: BigInt
   voteCasts: [VoteCast!] @derivedFrom(field: "proposalCreated")
 }
 
