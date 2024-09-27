@@ -40,6 +40,7 @@ type VerifierUpdated @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+
 type Checkpoint @entity(immutable: true) {
   id: Bytes!
   epoch: BigInt! # uint256
@@ -48,8 +49,9 @@ type Checkpoint @entity(immutable: true) {
   rewards: [BigInt!]! # uint256[]
   epochLength: BigInt! # uint256
   blockNumber: BigInt!
-  blockTimestamp: BigInt!
   transactionHash: Bytes!
+  blockTimestamp: BigInt!
+  contractAddress: Bytes! # address
 }
 
 type Deposit @entity(immutable: true) {

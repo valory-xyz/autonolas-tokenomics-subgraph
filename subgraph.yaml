@@ -37,12 +37,59 @@ dataSources:
           handler: handleVerifierUpdated
       file: ./src/staking-factory.ts
   - kind: ethereum
-    name: StakingProxy
+    name: StakingPearlBeta2
     network: gnosis
     source:
       address: "0x1c2f82413666d2a3fd8bc337b0268e62ddf67434"
       abi: StakingProxy
       startBlock: 35709363
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Checkpoint
+        - Deposit
+        - RewardClaimed
+        - ServiceForceUnstaked
+        - ServiceInactivityWarning
+        - ServiceStaked
+        - ServiceUnstaked
+        - ServicesEvicted
+        - Withdraw
+      abis:
+        - name: StakingProxy
+          file: ./abis/StakingProxy.json
+      eventHandlers:
+        - event: Checkpoint(indexed uint256,uint256,uint256[],uint256[],uint256)
+          handler: handleCheckpoint
+        - event: Deposit(indexed address,uint256,uint256,uint256)
+          handler: handleDeposit
+        - event: RewardClaimed(uint256,indexed uint256,indexed address,indexed
+            address,uint256[],uint256)
+          handler: handleRewardClaimed
+        - event: ServiceForceUnstaked(uint256,indexed uint256,indexed address,indexed
+            address,uint256[],uint256,uint256)
+          handler: handleServiceForceUnstaked
+        - event: ServiceInactivityWarning(uint256,indexed uint256,uint256)
+          handler: handleServiceInactivityWarning
+        - event: ServiceStaked(uint256,indexed uint256,indexed address,indexed address,uint256[])
+          handler: handleServiceStaked
+        - event: ServiceUnstaked(uint256,indexed uint256,indexed address,indexed
+            address,uint256[],uint256,uint256)
+          handler: handleServiceUnstaked
+        - event: ServicesEvicted(indexed uint256,uint256[],address[],address[],uint256[])
+          handler: handleServicesEvicted
+        - event: Withdraw(indexed address,uint256)
+          handler: handleWithdraw
+      file: ./src/staking-proxy.ts
+  - kind: ethereum
+    name: StakingPearlBeta
+    network: gnosis
+    source:
+      address: "0xeF44Fb0842DDeF59D37f85D61A1eF492bbA6135d"
+      abi: StakingProxy
+      startBlock: 35206806
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

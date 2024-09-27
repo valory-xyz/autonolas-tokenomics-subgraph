@@ -1,4 +1,4 @@
-import { Address, Bytes } from "@graphprotocol/graph-ts"
+import { Address, Bytes, BigInt } from "@graphprotocol/graph-ts"
 import {
   Checkpoint as CheckpointEvent,
   Deposit as DepositEvent,
@@ -20,6 +20,7 @@ import {
   ServiceUnstaked,
   ServicesEvicted,
   Withdraw,
+  InstanceCreated
 } from "../generated/schema"
 
 export function handleCheckpoint(event: CheckpointEvent): void {
@@ -31,10 +32,10 @@ export function handleCheckpoint(event: CheckpointEvent): void {
   entity.serviceIds = event.params.serviceIds
   entity.rewards = event.params.rewards
   entity.epochLength = event.params.epochLength
-
   entity.blockNumber = event.block.number
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
+  entity.contractAddress = event.address
 
   entity.save()
 }
@@ -151,7 +152,7 @@ export function handleServicesEvicted(event: ServicesEvictedEvent): void {
   let entity = new ServicesEvicted(
     event.transaction.hash.concatI32(event.logIndex.toI32()),
   )
-    // Convert Address[] to Bytes[]
+
   let owners: Bytes[] = event.params.owners.map<Bytes>(
     (owner: Address): Bytes => owner as Bytes
   );
