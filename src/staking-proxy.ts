@@ -1,4 +1,4 @@
-import { Address, Bytes, BigInt } from "@graphprotocol/graph-ts"
+import { Address, Bytes } from "@graphprotocol/graph-ts"
 import {
   Checkpoint as CheckpointEvent,
   Deposit as DepositEvent,
@@ -9,7 +9,7 @@ import {
   ServiceUnstaked as ServiceUnstakedEvent,
   ServicesEvicted as ServicesEvictedEvent,
   Withdraw as WithdrawEvent,
-} from "../generated/StakingProxy/StakingProxy"
+} from "../generated/templates/StakingProxy/StakingProxy"
 import {
   Checkpoint,
   Deposit,
@@ -19,8 +19,7 @@ import {
   ServiceStaked,
   ServiceUnstaked,
   ServicesEvicted,
-  Withdraw,
-  InstanceCreated
+  Withdraw
 } from "../generated/schema"
 
 export function handleCheckpoint(event: CheckpointEvent): void {

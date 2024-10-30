@@ -12,8 +12,12 @@ import {
   OwnerUpdated,
   VerifierUpdated
 } from "../generated/schema"
+import { StakingProxy } from "../generated/templates";
 
 export function handleInstanceCreated(event: InstanceCreatedEvent): void {
+
+  StakingProxy.create(event.params.instance);
+
   let entity = new InstanceCreated(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   )
@@ -26,6 +30,7 @@ export function handleInstanceCreated(event: InstanceCreatedEvent): void {
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+
 }
 
 export function handleInstanceRemoved(event: InstanceRemovedEvent): void {
@@ -39,6 +44,7 @@ export function handleInstanceRemoved(event: InstanceRemovedEvent): void {
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+  
 }
 
 export function handleInstanceStatusChanged(
