@@ -12,5 +12,12 @@ This repository contains a subgraph for [The Graph](https://thegraph.com), speci
 - Authenticate using the subgraph's deploy key: `graph auth --studio [DEPLOY KEY]`
 - Run `yarn codegen`
 - Run `yarn build`
-- Run `graph deploy --studio pearl-staking-rewards-history`, choose newer version
+- Run `graph deploy-gnosis`, choose newer version
 - Use updated API URL wherever needed
+
+## Add new network
+
+- Update network.json with new network, specify Factory address and start block
+- Run `yarn generate-manifests` to generate needed configs from subgraph.template.yaml
+- Update package.json with the command that deploys your subgraph on new network
+- Deploy your subgraph

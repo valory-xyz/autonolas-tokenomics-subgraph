@@ -2,12 +2,11 @@
   "name": "pearl-staking-rewards-history",
   "license": "UNLICENSED",
   "scripts": {
-    "codegen": "graph codegen",
+    "generate-manifests": "node scripts/generate-manifests.js",
+    "codegen": "graph codegen subgraph.gnosis.yaml",
     "build": "graph build",
-    "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ pearl-staking-rewards-history",
-    "create-local": "graph create --node http://localhost:8020/ pearl-staking-rewards-history",
-    "remove-local": "graph remove --node http://localhost:8020/ pearl-staking-rewards-history",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 pearl-staking-rewards-history",
+    "deploy-gnosis": "graph deploy --network gnosis --studio pearl-staking-rewards-history subgraph.gnosis.yaml",
+    "deploy-base": "graph deploy --network base --studio olas-base-staking-rewards-history subgraph.base.yaml",
     "test": "graph test"
   },
   "dependencies": {

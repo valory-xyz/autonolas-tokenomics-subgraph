@@ -2,17 +2,13 @@
   "gnosis": {
     "StakingFactory": {
       "address": "0xb0228CA253A88Bc8eb4ca70BCAC8f87b381f4700",
-      "startBlock": 35047282
-    },
-    "StakingProxy": [
-      {
-        "address": "0x1c2f82413666d2a3fd8bc337b0268e62ddf67434",
-        "startBlock": 35709363
-      },
-      {
-        "address": "0xeF44Fb0842DDeF59D37f85D61A1eF492bbA6135d",
-        "startBlock": 35206806
-      }
-    ]
+      "startBlock": 35206806
+    }
+  },
+  "base": {
+    "StakingFactory": {
+      "address": "0x1cEe30D08943EB58EFF84DD1AB44a6ee6FEff63a",
+      "startBlock": 17310019
+    }
   }
 }
