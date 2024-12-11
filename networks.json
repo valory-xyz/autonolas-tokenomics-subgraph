@@ -10,5 +10,11 @@
       "address": "0x1cEe30D08943EB58EFF84DD1AB44a6ee6FEff63a",
       "startBlock": 17310019
     }
+  },
+  "mode-mainnet": {
+    "StakingFactory": {
+      "address": "0x75D529FAe220bC8db714F0202193726b46881B76",
+      "startBlock": 14444647
+    }
   }
 }

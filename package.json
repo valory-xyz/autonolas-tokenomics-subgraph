@@ -7,6 +7,7 @@
     "build": "graph build",
     "deploy-gnosis": "graph deploy --network gnosis --studio pearl-staking-rewards-history subgraph.gnosis.yaml",
     "deploy-base": "graph deploy --network base --studio olas-base-staking-rewards-history subgraph.base.yaml",
+    "deploy-mode": "graph deploy --network mode-mainnet --studio olas-mode-staking-rewards-history subgraph.mode-mainnet.yaml",
     "test": "graph test"
   },
   "dependencies": {
