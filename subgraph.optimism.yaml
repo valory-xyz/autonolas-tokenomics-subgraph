@@ -6,11 +6,11 @@ schema:
 dataSources:
   - kind: ethereum
     name: StakingFactory
-    network: gnosis
+    network: optimism
     source:
-      address: "0xb0228CA253A88Bc8eb4ca70BCAC8f87b381f4700"
+      address: "0xa45E64d13A30a51b91ae0eb182e88a40e9b18eD8"
       abi: StakingFactory
-      startBlock: 35206806
+      startBlock: 124618633
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -41,7 +41,7 @@ dataSources:
 templates:
   - name: StakingProxy
     kind: ethereum/contract
-    network: gnosis
+    network: optimism
     source:
       abi: StakingProxy
     mapping:

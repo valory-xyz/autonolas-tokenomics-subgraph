@@ -148,3 +148,25 @@ type Withdraw @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+
+type StakingContract @entity(immutable: true) {
+  id: Bytes!
+  sender: Bytes! # address
+  instance: Bytes! # address
+  implementation: Bytes! # address
+  metadataHash: Bytes!
+  maxNumServices: BigInt!
+  rewardsPerSecond: BigInt!
+  minStakingDeposit: BigInt!
+  minStakingDuration: BigInt!
+  maxNumInactivityPeriods: BigInt!
+  livenessPeriod: BigInt!
+  timeForEmissions: BigInt!
+  numAgentInstances: BigInt!
+  agentIds: [BigInt!]!
+  threshold: BigInt!
+  configHash: Bytes!
+  proxyHash: Bytes!
+  serviceRegistry: Bytes!
+  activityChecker: Bytes!
+}

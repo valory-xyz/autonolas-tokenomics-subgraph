@@ -1,5 +1,9 @@
 [
-  { "inputs": [], "name": "AlreadyInitialized", "type": "error" },
+  {
+    "inputs": [],
+    "name": "AlreadyInitialized",
+    "type": "error"
+  },
   {
     "inputs": [
       {
@@ -13,102 +17,206 @@
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "provided", "type": "uint256" },
-      { "internalType": "uint256", "name": "expected", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "provided",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "expected",
+        "type": "uint256"
+      }
     ],
     "name": "LowerThan",
     "type": "error"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "maxNumServices", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "maxNumServices",
+        "type": "uint256"
+      }
     ],
     "name": "MaxNumServicesReached",
     "type": "error"
   },
-  { "inputs": [], "name": "NoRewardsAvailable", "type": "error" },
+  {
+    "inputs": [],
+    "name": "NoRewardsAvailable",
+    "type": "error"
+  },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "serviceId", "type": "uint256" },
-      { "internalType": "uint256", "name": "tsProvided", "type": "uint256" },
-      { "internalType": "uint256", "name": "tsExpected", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "serviceId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tsProvided",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tsExpected",
+        "type": "uint256"
+      }
     ],
     "name": "NotEnoughTimeStaked",
     "type": "error"
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "sender", "type": "address" },
-      { "internalType": "address", "name": "owner", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
     ],
     "name": "OwnerOnly",
     "type": "error"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "serviceId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "serviceId",
+        "type": "uint256"
+      }
     ],
     "name": "ServiceNotUnstaked",
     "type": "error"
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "token", "type": "address" },
-      { "internalType": "address", "name": "from", "type": "address" },
-      { "internalType": "address", "name": "to", "type": "address" },
-      { "internalType": "uint256", "name": "value", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
     ],
     "name": "TokenTransferFailed",
     "type": "error"
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "multisig", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "multisig",
+        "type": "address"
+      }
     ],
     "name": "UnauthorizedMultisig",
     "type": "error"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "provided", "type": "uint256" },
-      { "internalType": "uint256", "name": "expected", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "provided",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "expected",
+        "type": "uint256"
+      }
     ],
     "name": "ValueLowerThan",
     "type": "error"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "agentId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "agentId",
+        "type": "uint256"
+      }
     ],
     "name": "WrongAgentId",
     "type": "error"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "serviceId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "serviceId",
+        "type": "uint256"
+      }
     ],
     "name": "WrongServiceConfiguration",
     "type": "error"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "state", "type": "uint256" },
-      { "internalType": "uint256", "name": "serviceId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "state",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "serviceId",
+        "type": "uint256"
+      }
     ],
     "name": "WrongServiceState",
     "type": "error"
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "expected", "type": "address" },
-      { "internalType": "address", "name": "provided", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "expected",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "provided",
+        "type": "address"
+      }
     ],
     "name": "WrongStakingToken",
     "type": "error"
   },
-  { "inputs": [], "name": "ZeroAddress", "type": "error" },
-  { "inputs": [], "name": "ZeroTokenAddress", "type": "error" },
-  { "inputs": [], "name": "ZeroValue", "type": "error" },
+  {
+    "inputs": [],
+    "name": "ZeroAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroTokenAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroValue",
+    "type": "error"
+  },
   {
     "anonymous": false,
     "inputs": [
@@ -439,56 +547,108 @@
   {
     "inputs": [],
     "name": "VERSION",
-    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "activityChecker",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "name": "agentIds",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "availableRewards",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "balance",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "serviceId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "serviceId",
+        "type": "uint256"
+      }
     ],
     "name": "calculateStakingLastReward",
     "outputs": [
-      { "internalType": "uint256", "name": "reward", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "reward",
+        "type": "uint256"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "serviceId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "serviceId",
+        "type": "uint256"
+      }
     ],
     "name": "calculateStakingReward",
     "outputs": [
-      { "internalType": "uint256", "name": "reward", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "reward",
+        "type": "uint256"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -497,9 +657,21 @@
     "inputs": [],
     "name": "checkpoint",
     "outputs": [
-      { "internalType": "uint256[]", "name": "", "type": "uint256[]" },
-      { "internalType": "uint256[]", "name": "", "type": "uint256[]" },
-      { "internalType": "uint256[]", "name": "", "type": "uint256[]" },
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      },
       {
         "internalType": "uint256[]",
         "name": "evictServiceIds",
@@ -511,32 +683,62 @@
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "serviceId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "serviceId",
+        "type": "uint256"
+      }
     ],
     "name": "checkpointAndClaim",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "serviceId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "serviceId",
+        "type": "uint256"
+      }
     ],
     "name": "claim",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "configHash",
-    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
     ],
     "name": "deposit",
     "outputs": [],
@@ -546,20 +748,36 @@
   {
     "inputs": [],
     "name": "emissionsAmount",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "epochCounter",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "serviceId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "serviceId",
+        "type": "uint256"
+      }
     ],
     "name": "forcedUnstake",
     "outputs": [],
@@ -570,7 +788,11 @@
     "inputs": [],
     "name": "getAgentIds",
     "outputs": [
-      { "internalType": "uint256[]", "name": "", "type": "uint256[]" }
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -579,7 +801,11 @@
     "inputs": [],
     "name": "getNextRewardCheckpointTimestamp",
     "outputs": [
-      { "internalType": "uint256", "name": "tsNext", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "tsNext",
+        "type": "uint256"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -588,29 +814,57 @@
     "inputs": [],
     "name": "getServiceIds",
     "outputs": [
-      { "internalType": "uint256[]", "name": "", "type": "uint256[]" }
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "serviceId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "serviceId",
+        "type": "uint256"
+      }
     ],
     "name": "getServiceInfo",
     "outputs": [
       {
         "components": [
-          { "internalType": "address", "name": "multisig", "type": "address" },
-          { "internalType": "address", "name": "owner", "type": "address" },
+          {
+            "internalType": "address",
+            "name": "multisig",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
           {
             "internalType": "uint256[]",
             "name": "nonces",
             "type": "uint256[]"
           },
-          { "internalType": "uint256", "name": "tsStart", "type": "uint256" },
-          { "internalType": "uint256", "name": "reward", "type": "uint256" },
-          { "internalType": "uint256", "name": "inactivity", "type": "uint256" }
+          {
+            "internalType": "uint256",
+            "name": "tsStart",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "reward",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "inactivity",
+            "type": "uint256"
+          }
         ],
         "internalType": "struct ServiceInfo",
         "name": "sInfo",
@@ -622,7 +876,11 @@
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "serviceId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "serviceId",
+        "type": "uint256"
+      }
     ],
     "name": "getStakingState",
     "outputs": [
@@ -689,13 +947,21 @@
             "name": "agentIds",
             "type": "uint256[]"
           },
-          { "internalType": "uint256", "name": "threshold", "type": "uint256" },
+          {
+            "internalType": "uint256",
+            "name": "threshold",
+            "type": "uint256"
+          },
           {
             "internalType": "bytes32",
             "name": "configHash",
             "type": "bytes32"
           },
-          { "internalType": "bytes32", "name": "proxyHash", "type": "bytes32" },
+          {
+            "internalType": "bytes32",
+            "name": "proxyHash",
+            "type": "bytes32"
+          },
           {
             "internalType": "address",
             "name": "serviceRegistry",
@@ -716,7 +982,11 @@
         "name": "_serviceRegistryTokenUtility",
         "type": "address"
       },
-      { "internalType": "address", "name": "_stakingToken", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "_stakingToken",
+        "type": "address"
+      }
     ],
     "name": "initialize",
     "outputs": [],
@@ -726,19 +996,51 @@
   {
     "inputs": [],
     "name": "livenessPeriod",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "name": "mapServiceInfo",
     "outputs": [
-      { "internalType": "address", "name": "multisig", "type": "address" },
-      { "internalType": "address", "name": "owner", "type": "address" },
-      { "internalType": "uint256", "name": "tsStart", "type": "uint256" },
-      { "internalType": "uint256", "name": "reward", "type": "uint256" },
-      { "internalType": "uint256", "name": "inactivity", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "multisig",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tsStart",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "reward",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "inactivity",
+        "type": "uint256"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -746,102 +1048,206 @@
   {
     "inputs": [],
     "name": "maxInactivityDuration",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "maxNumInactivityPeriods",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "maxNumServices",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "metadataHash",
-    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "minStakingDeposit",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "minStakingDuration",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "numAgentInstances",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "", "type": "address" },
-      { "internalType": "address", "name": "", "type": "address" },
-      { "internalType": "uint256", "name": "", "type": "uint256" },
-      { "internalType": "bytes", "name": "", "type": "bytes" }
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
     ],
     "name": "onERC721Received",
-    "outputs": [{ "internalType": "bytes4", "name": "", "type": "bytes4" }],
+    "outputs": [
+      {
+        "internalType": "bytes4",
+        "name": "",
+        "type": "bytes4"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "proxyHash",
-    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "rewardsPerSecond",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "serviceRegistry",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "serviceRegistryTokenUtility",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "name": "setServiceIds",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "serviceId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "setServiceIds",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "serviceId",
+        "type": "uint256"
+      }
     ],
     "name": "stake",
     "outputs": [],
@@ -851,37 +1257,71 @@
   {
     "inputs": [],
     "name": "stakingToken",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "threshold",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "timeForEmissions",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "tsCheckpoint",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "serviceId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "serviceId",
+        "type": "uint256"
+      }
     ],
     "name": "unstake",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   }
