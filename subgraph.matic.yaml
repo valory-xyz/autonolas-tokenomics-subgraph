@@ -6,11 +6,11 @@ schema:
 dataSources:
   - kind: ethereum
     name: StakingFactory
-    network: gnosis
+    network: matic
     source:
-      address: "0xb0228CA253A88Bc8eb4ca70BCAC8f87b381f4700"
+      address: "0x46C0D07F55d4F9B5Eed2Fc9680B5953e5fd7b461"
       abi: StakingFactory
-      startBlock: 35206806
+      startBlock: 62213142
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -41,7 +41,7 @@ dataSources:
 templates:
   - name: StakingProxy
     kind: ethereum/contract
-    network: gnosis
+    network: matic
     source:
       abi: StakingProxy
     mapping:
