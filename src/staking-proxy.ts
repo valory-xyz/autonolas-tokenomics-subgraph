@@ -1,4 +1,4 @@
-import { Address, Bytes } from "@graphprotocol/graph-ts"
+import { Address, Bytes, BigInt } from "@graphprotocol/graph-ts"
 import {
   Checkpoint as CheckpointEvent,
   Deposit as DepositEvent,
@@ -21,6 +21,7 @@ import {
   ServicesEvicted,
   Withdraw
 } from "../generated/schema"
+import { getGlobal } from "./utils"
 
 export function handleCheckpoint(event: CheckpointEvent): void {
   let entity = new Checkpoint(
@@ -37,6 +38,15 @@ export function handleCheckpoint(event: CheckpointEvent): void {
   entity.contractAddress = event.address
 
   entity.save()
+
+  // Update claimable staking rewards
+  let global = getGlobal();
+  let totalRewards = BigInt.fromI32(0);
+  for (let i = 0; i < event.params.rewards.length; i++) {
+    totalRewards = totalRewards.plus(event.params.rewards[i]);
+  }
+  global.totalStakingRewardsClaimable = global.totalStakingRewardsClaimable.plus(totalRewards);
+  global.save()
 }
 
 export function handleDeposit(event: DepositEvent): void {
@@ -71,6 +81,13 @@ export function handleRewardClaimed(event: RewardClaimedEvent): void {
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+
+  // Update claimed staking rewards
+  let global = getGlobal();
+  global.totalStakingRewardsClaimed = global.totalStakingRewardsClaimed.plus(
+    event.params.reward
+  );
+  global.save()
 }
 
 export function handleServiceForceUnstaked(
@@ -145,6 +162,13 @@ export function handleServiceUnstaked(event: ServiceUnstakedEvent): void {
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+
+  // Update claimed staking rewards
+  let global = getGlobal();
+  global.totalStakingRewardsClaimed = global.totalStakingRewardsClaimed.plus(
+    event.params.reward
+  );
+  global.save()
 }
 
 export function handleServicesEvicted(event: ServicesEvictedEvent): void {
