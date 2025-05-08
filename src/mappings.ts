@@ -128,6 +128,168 @@ export function handleEpochSave(params: EpochMapper): void {
   epoch.save();
 }
 
+////// 0.0.5
+// export function handleEpochSave(params: EpochMapper): void {
+//   // Epoch entity
+//   let epoch = Epoch.load(params.epochCounter.toString());
+//   if (!epoch) {
+//     epoch = new Epoch(params.epochCounter.toString());
+//   }
+//   epoch.counter = params.epochCounter.toI32();
+//   epoch.endBlock = params.blockNumber;
+
+//   let adjustedAccountTopUps = params.accountTopUps;
+//   // Manually set the first epoch startBlock and effectiveBond with accountTopUps
+//   if (epoch.counter == 1) {
+//     epoch.startBlock = BigInt.fromString("16699195");
+//     epoch.effectiveBond = BigInt.fromString("376744602072265367760000");
+//     adjustedAccountTopUps = BigInt.fromI32(0);
+//   }
+//   // There was an error in the 2d epoch topUp calculation, manually reduce the value
+//   if (params.epochCounter.toI32() == 2) {
+//     adjustedAccountTopUps = adjustedAccountTopUps.minus(
+//       BigInt.fromString("877000006048735000000000")
+//     );
+//   }
+//   epoch.accountTopUps = adjustedAccountTopUps;
+
+//   // Set availableDevIncentives for the current epoch
+//   epoch.availableDevIncentives = adjustedAccountTopUps;
+
+//   // We no longer accumulate availableDevIncentives here
+
+//   // Save availableStakingIncentives
+//   epoch.availableStakingIncentives = params.availableStakingIncentives;
+
+//   // Calculate totalBondsClaimable
+//   let totaltotalBondsClaimable = BigInt.fromI32(0);
+
+//   const maturedBonds = new Array<Bytes>()
+
+//   // Iterate through epochs from 1 up to the current epoch
+//   for (let i = 1; i <= epoch.counter; i++) {
+//     const epochId = i.toString();
+//     const historicalEpoch = Epoch.load(epochId);
+
+//     if (historicalEpoch && historicalEpoch.createBonds) {
+//       const bondIds = historicalEpoch.createBonds;
+//       const bonds = bondIds.load();
+
+//       for (let j = 0; j < bonds.length; j++) {
+//         const bond = bonds[j];
+
+//         // Calculate total bonds claimable
+//         const currentEpochEndTimestamp = params.blockTimestamp
+
+//         if (
+//           bond !== null &&
+//           bond.maturity !== null &&
+//           bond.maturity! <= currentEpochEndTimestamp
+//         ) {
+//           totaltotalBondsClaimable = totaltotalBondsClaimable.plus(
+//             bond.amountOLAS
+//           );
+//           maturedBonds.push(bond.id)
+//         }
+//       }
+//     }
+//   }
+
+//   epoch.maturedBonds = maturedBonds;
+//   epoch.totalBondsClaimable = totaltotalBondsClaimable;
+
+//   // Manually create next epoch to collect all data from other events correctly
+//   let nextEpoch = new Epoch((epoch.counter + 1).toString());
+//   nextEpoch.counter = epoch.counter + 1;
+//   nextEpoch.startBlock = params.blockNumber.plus(BigInt.fromI32(1));
+//   nextEpoch.endBlock = null;
+//   nextEpoch.accountTopUps = BigInt.fromI32(0);
+//   nextEpoch.availableDevIncentives = BigInt.fromI32(0);
+//   nextEpoch.availableStakingIncentives = BigInt.fromI32(0);
+//   // Access effectiveBond from the contract state when the epoch ends
+//   const contract = Tokenomics.bind(params.address);
+//   const effectiveBond = contract.effectiveBond();
+//   // The effectiveBond is calculated for the next epoch
+//   nextEpoch.effectiveBond = effectiveBond;
+//   nextEpoch.save();
+//   epoch.save();
+// }
+
+//// OLD
+// export function handleEpochSave(params: EpochMapper): void {
+//   // Epoch entity
+//   let epoch = Epoch.load(params.epochCounter.toString());
+
+//   if (!epoch) {
+//     epoch = new Epoch(params.epochCounter.toString());
+//   }
+
+//   epoch.counter = params.epochCounter.toI32();
+//   epoch.endBlock = params.blockNumber;
+
+//   let adjustedAccountTopUps = params.accountTopUps;
+
+//   // Manually set the first epoch startBlock and effectiveBond
+//   if (epoch.counter == 1) {
+//     epoch.startBlock = BigInt.fromString("16699195");
+//     epoch.effectiveBond = BigInt.fromString("376744602072265367760000");
+//   }
+
+//   // There was an error in the 2d epoch topUp calculation, manually reduce the value
+//   if (params.epochCounter.toI32() == 2) {
+//     adjustedAccountTopUps = adjustedAccountTopUps.minus(
+//       BigInt.fromString("877000006048735000000000")
+//     );
+//   }
+
+//   epoch.accountTopUps = adjustedAccountTopUps;
+
+//   // Calculate availableDevIncentives
+//   let availableDevIncentives = adjustedAccountTopUps;
+
+//   if (epoch.counter > 1) {
+//     const previousEpochId = (epoch.counter - 1).toString();
+//     let previousEpoch = Epoch.load(previousEpochId);
+
+//     if (previousEpoch) {
+//       availableDevIncentives = previousEpoch.availableDevIncentives.plus(
+//         adjustedAccountTopUps
+//       );
+//     }
+//   }
+
+//   // Reduce available dev incentives in the epoch by devIncentivesTotalTopUp
+//   if (epoch.devIncentivesTotalTopUp) {
+//     availableDevIncentives = availableDevIncentives.minus(
+//       epoch.devIncentivesTotalTopUp!
+//     );
+//   }
+
+//   // Save availableDevIncentives
+//   epoch.availableDevIncentives = availableDevIncentives;
+
+//   // Save availableStakingIncentives
+//   epoch.availableStakingIncentives = params.availableStakingIncentives;
+
+//   // Manually create next epoch to collect all data from other events correctly
+//   let nextEpoch = new Epoch((epoch.counter + 1).toString());
+//   nextEpoch.counter = epoch.counter + 1;
+//   nextEpoch.startBlock = params.blockNumber.plus(BigInt.fromI32(1));
+//   nextEpoch.endBlock = null;
+//   nextEpoch.accountTopUps = BigInt.fromI32(0);
+//   nextEpoch.availableDevIncentives = BigInt.fromI32(0);
+//   nextEpoch.availableStakingIncentives = BigInt.fromI32(0);
+
+//   // Access effectiveBond from the contract state when the epoch ends
+//   const contract = Tokenomics.bind(params.address);
+//   const effectiveBond = contract.effectiveBond();
+//   // The effectiveBond is calculated for the next epoch
+//   nextEpoch.effectiveBond = effectiveBond;
+//   nextEpoch.save();
+
+//   epoch.save();
+// }
+
 export class DevIncentiveMapper {
   blockNumber: BigInt;
   transactionHash: Bytes;
