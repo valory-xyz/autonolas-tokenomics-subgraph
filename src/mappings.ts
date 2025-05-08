@@ -1,11 +1,12 @@
 import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
-import { DevIncentive, Epoch } from "../generated/schema";
+import { CreateBond, DevIncentive, Epoch } from "../generated/schema";
 import { Tokenomics } from "../generated/Tokenomics/Tokenomics";
 import { findEpochId } from "./utils";
 
 export class EpochMapper {
   address: Address;
   blockNumber: BigInt;
+  blockTimestamp: BigInt;
   epochCounter: BigInt;
   accountTopUps: BigInt;
   availableStakingIncentives: BigInt;
@@ -13,89 +14,117 @@ export class EpochMapper {
   constructor(
     address: Address,
     blockNumber: BigInt,
+    blockTimestamp: BigInt,
     epochCounter: BigInt,
     accountTopUps: BigInt,
     availableStakingIncentives: BigInt
   ) {
     this.address = address;
     this.blockNumber = blockNumber;
+    this.blockTimestamp = blockTimestamp;
     this.epochCounter = epochCounter;
     this.accountTopUps = accountTopUps;
     this.availableStakingIncentives = availableStakingIncentives;
   }
 }
 
+
 export function handleEpochSave(params: EpochMapper): void {
   // Epoch entity
   let epoch = Epoch.load(params.epochCounter.toString());
-
   if (!epoch) {
     epoch = new Epoch(params.epochCounter.toString());
   }
-
   epoch.counter = params.epochCounter.toI32();
   epoch.endBlock = params.blockNumber;
+  epoch.blockTimestamp = params.blockTimestamp;
 
+  // Save availableStakingIncentives
+  epoch.availableStakingIncentives = params.availableStakingIncentives;
+
+  /**
+   * Calculate availableDevIncentives
+   */
   let adjustedAccountTopUps = params.accountTopUps;
-
-  // Manually set the first epoch startBlock and effectiveBond
+  // Manually set the first epoch startBlock and effectiveBond with accountTopUps
   if (epoch.counter == 1) {
     epoch.startBlock = BigInt.fromString("16699195");
     epoch.effectiveBond = BigInt.fromString("376744602072265367760000");
+    adjustedAccountTopUps = BigInt.fromI32(0);
   }
-
   // There was an error in the 2d epoch topUp calculation, manually reduce the value
   if (params.epochCounter.toI32() == 2) {
     adjustedAccountTopUps = adjustedAccountTopUps.minus(
       BigInt.fromString("877000006048735000000000")
     );
   }
-
   epoch.accountTopUps = adjustedAccountTopUps;
+  epoch.availableDevIncentives = adjustedAccountTopUps;
 
-  // Calculate availableDevIncentives
-  let availableDevIncentives = adjustedAccountTopUps;
 
-  if (epoch.counter > 1) {
-    const previousEpochId = (epoch.counter - 1).toString();
-    let previousEpoch = Epoch.load(previousEpochId);
+  /**
+   * Calculate totalBondsClaimable and maturedBonds
+   **/ 
+  let totalBondsClaimable = BigInt.fromI32(0);
+  const maturedBonds = new Array<Bytes>()
 
-    if (previousEpoch) {
-      availableDevIncentives = previousEpoch.availableDevIncentives.plus(
-        adjustedAccountTopUps
-      );
+  const prevEpoch = Epoch.load((epoch.counter - 1).toString());
+
+  if (prevEpoch) {
+    // Iterate through epochs from 1 up to the current epoch
+    // to find matured bonds
+    for (let i = 1; i <= epoch.counter; i++) {
+      const epochId = i.toString();
+      const historicalEpoch = Epoch.load(epochId);
+
+      if (historicalEpoch && historicalEpoch.createBonds) {
+        const bondIds = historicalEpoch.createBonds;
+        const bonds = bondIds.load();
+
+        for (let j = 0; j < bonds.length; j++) {
+          const bond = bonds[j];
+
+          // Calculate total bonds claimable
+          const historicalEpochEndTimestamp = params.blockTimestamp
+          const prevEpochEndTimestamp = prevEpoch.blockTimestamp
+
+          if (
+            bond !== null &&
+            bond.maturity !== null &&
+            prevEpochEndTimestamp !== null &&
+            bond.maturity! >= prevEpochEndTimestamp &&
+            bond.maturity! <= historicalEpochEndTimestamp
+          ) {
+            totalBondsClaimable = totalBondsClaimable.plus(
+              bond.amountOLAS
+            );
+            maturedBonds.push(bond.id)
+          }
+        }
+      }
     }
   }
 
-  // Reduce available dev incentives in the epoch by devIncentivesTotalTopUp
-  if (epoch.devIncentivesTotalTopUp) {
-    availableDevIncentives = availableDevIncentives.minus(
-      epoch.devIncentivesTotalTopUp!
-    );
-  }
+  epoch.maturedBonds = maturedBonds;
+  epoch.totalBondsClaimable = totalBondsClaimable;
 
-  // Save availableDevIncentives
-  epoch.availableDevIncentives = availableDevIncentives;
-
-  // Save availableStakingIncentives
-  epoch.availableStakingIncentives = params.availableStakingIncentives;
-
-  // Manually create next epoch to collect all data from other events correctly
+  /**
+   * Manually create next epoch to collect all data from the following events correctly
+   **/ 
   let nextEpoch = new Epoch((epoch.counter + 1).toString());
   nextEpoch.counter = epoch.counter + 1;
   nextEpoch.startBlock = params.blockNumber.plus(BigInt.fromI32(1));
   nextEpoch.endBlock = null;
+  nextEpoch.blockTimestamp = null;
   nextEpoch.accountTopUps = BigInt.fromI32(0);
   nextEpoch.availableDevIncentives = BigInt.fromI32(0);
   nextEpoch.availableStakingIncentives = BigInt.fromI32(0);
-
   // Access effectiveBond from the contract state when the epoch ends
   const contract = Tokenomics.bind(params.address);
   const effectiveBond = contract.effectiveBond();
   // The effectiveBond is calculated for the next epoch
   nextEpoch.effectiveBond = effectiveBond;
   nextEpoch.save();
-
   epoch.save();
 }
 

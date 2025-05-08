@@ -82,6 +82,9 @@ export function handleCreateBondV2(event: CreateBondV2Event): void {
   entity.tokenAmount = event.params.tokenAmount;
   entity.maturity = event.params.maturity;
 
+  entity.expiry = null;
+  entity.vesting = null;
+
   entity.blockNumber = event.block.number;
   entity.blockTimestamp = event.block.timestamp;
   entity.transactionHash = event.transaction.hash;
@@ -89,19 +92,6 @@ export function handleCreateBondV2(event: CreateBondV2Event): void {
   const currentEpochId = findEpochId(event.block.number);
   if (currentEpochId) {
     entity.epoch = currentEpochId;
-
-    const epoch = Epoch.load(currentEpochId);
-    if (epoch) {
-      // Update the total dev incentives topUp in the epoch
-      if (!epoch.totalCreateBondsAmountOLAS) {
-        epoch.totalCreateBondsAmountOLAS = event.params.amountOLAS;
-      } else {
-        epoch.totalCreateBondsAmountOLAS =
-          epoch.totalCreateBondsAmountOLAS!.plus(event.params.amountOLAS);
-      }
-
-      epoch.save();
-    }
   }
 
   entity.save();
@@ -117,7 +107,9 @@ export function handleCreateBond(event: CreateBondEvent): void {
   entity.bondId = event.params.bondId;
   entity.amountOLAS = event.params.amountOLAS;
   entity.tokenAmount = event.params.tokenAmount;
+  entity.maturity = event.params.expiry; // Use expiry as maturity for V1
   entity.expiry = event.params.expiry;
+  entity.vesting = null;
 
   entity.blockNumber = event.block.number;
   entity.blockTimestamp = event.block.timestamp;
@@ -126,19 +118,6 @@ export function handleCreateBond(event: CreateBondEvent): void {
   const currentEpochId = findEpochId(event.block.number);
   if (currentEpochId) {
     entity.epoch = currentEpochId;
-
-    const epoch = Epoch.load(currentEpochId);
-    if (epoch) {
-      // Update the total dev incentives topUp in the epoch
-      if (!epoch.totalCreateBondsAmountOLAS) {
-        epoch.totalCreateBondsAmountOLAS = event.params.amountOLAS;
-      } else {
-        epoch.totalCreateBondsAmountOLAS =
-          epoch.totalCreateBondsAmountOLAS!.plus(event.params.amountOLAS);
-      }
-
-      epoch.save();
-    }
   }
 
   entity.save();

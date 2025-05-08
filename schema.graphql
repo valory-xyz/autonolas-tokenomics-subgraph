@@ -24,8 +24,9 @@ type CreateBond @entity(immutable: true) {
   bondId: BigInt! # uint256
   amountOLAS: BigInt! # uint256
   tokenAmount: BigInt! # uint256
-  maturity: BigInt # uint256
-  expiry: BigInt # uint256
+  maturity: BigInt # Changed from expiry/vesting to a consistent maturity
+  expiry: BigInt # Keep for V1 events
+  vesting: BigInt # Keep for V2 events
   epoch: Epoch
   blockNumber: BigInt!
   blockTimestamp: BigInt!
@@ -301,18 +302,22 @@ type Epoch @entity {
   counter: Int!
   startBlock: BigInt!
   endBlock: BigInt
+  blockTimestamp: BigInt
   accountTopUps: BigInt!
   availableDevIncentives: BigInt!
   devIncentivesTotalTopUp: BigInt
   devIncentives: [DevIncentive!] @derivedFrom(field: "epoch")
-  effectiveBond: BigInt
-  createProducts: [CreateProduct!] @derivedFrom(field: "epoch")
-  totalCreateProductsSupply: BigInt
-  createBonds: [CreateBond!] @derivedFrom(field: "epoch")
-  totalCreateBondsAmountOLAS: BigInt
   availableStakingIncentives: BigInt
   stakingIncentives: [StakingIncentive!] @derivedFrom(field: "epoch")
   totalStakingIncentives: BigInt
+  createProducts: [CreateProduct!] @derivedFrom(field: "epoch")
+  totalCreateProductsSupply: BigInt
+  effectiveBond: BigInt
+  createBonds: [CreateBond!] @derivedFrom(field: "epoch")
+  maturedBonds: [CreateBond!]
+  bondClaims: [BondClaim!] @derivedFrom(field: "epoch")
+  totalBondsClaimable: BigInt
+  totalBondsClaimed: BigInt
 }
 
 type DevIncentive @entity {
@@ -433,4 +438,14 @@ type WithheldAmountSynced @entity(immutable: true) {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+}
+
+type BondClaim @entity {
+  id: Bytes!
+  epoch: Epoch!
+  claimer: Bytes! # The address claiming the bond
+  amountOLAS: BigInt! # The amount of OLAS claimed
+  transactionHash: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
 }

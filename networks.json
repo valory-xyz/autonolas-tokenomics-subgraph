@@ -19,6 +19,10 @@
     "DispenserV2": {
       "address": "0x5650300fCBab43A0D7D02F8Cb5d0f039402593f0",
       "startBlock": 20340783
+    },
+    "OLAS": {
+      "address": "0x0001a500a6b18995b03f44bb040a5ffc28e45cb0",
+      "startBlock": 15050732
     }
   }
 }
