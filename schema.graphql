@@ -170,3 +170,9 @@ type StakingContract @entity(immutable: true) {
   serviceRegistry: Bytes!
   activityChecker: Bytes!
 }
+
+type Global @entity(immutable: false) {
+  id: ID!
+  totalStakingRewardsClaimable: BigInt!
+  totalStakingRewardsClaimed: BigInt!
+}
