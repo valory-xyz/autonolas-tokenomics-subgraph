@@ -209,6 +209,7 @@ export function handleEpochSettledV2(event: EpochSettledV2Event): void {
   const epochParams = new EpochMapper(
     event.address,
     event.block.number,
+    event.block.timestamp,
     event.params.epochCounter,
     event.params.accountTopUps,
     event.params.totalStakingIncentive
@@ -235,6 +236,7 @@ export function handleEpochSettled(event: EpochSettledEvent): void {
   const epochParams = new EpochMapper(
     event.address,
     event.block.number,
+    event.block.timestamp,
     event.params.epochCounter,
     event.params.accountTopUps,
     // old epochs don't have staking incentives data,
