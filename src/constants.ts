@@ -1,0 +1,1 @@
+export const CREATOR_ADDRESSES = ['0x89c5cc945dd550bcffb72fe42bff002429f46fec', '0xffc8029154ecd55abed15bd428ba596e7d23f557']
