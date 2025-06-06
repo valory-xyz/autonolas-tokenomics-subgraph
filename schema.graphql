@@ -1,0 +1,483 @@
+type ActivateRegistration @entity(immutable: true) {
+  id: Bytes!
+  serviceId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Approval @entity(immutable: true) {
+  id: Bytes!
+  owner: Bytes! # address
+  spender: Bytes! # address
+  ServiceRegistryL2_id: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ApprovalForAll @entity(immutable: true) {
+  id: Bytes!
+  owner: Bytes! # address
+  operator: Bytes! # address
+  approved: Boolean! # bool
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BaseURIChanged @entity(immutable: true) {
+  id: Bytes!
+  baseURI: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type CreateMultisigWithAgents @entity(immutable: true) {
+  id: Bytes!
+  serviceId: BigInt! # uint256
+  multisig: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type CreateService @entity(immutable: true) {
+  id: Bytes!
+  serviceId: BigInt! # uint256
+  configHash: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type DeployService @entity(immutable: true) {
+  id: Bytes!
+  serviceId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Deposit @entity(immutable: true) {
+  id: Bytes!
+  sender: Bytes! # address
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Drain @entity(immutable: true) {
+  id: Bytes!
+  drainer: Bytes! # address
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type DrainerUpdated @entity(immutable: true) {
+  id: Bytes!
+  drainer: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ManagerUpdated @entity(immutable: true) {
+  id: Bytes!
+  manager: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type OperatorSlashed @entity(immutable: true) {
+  id: Bytes!
+  amount: BigInt! # uint256
+  operator: Bytes! # address
+  serviceId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type OperatorUnbond @entity(immutable: true) {
+  id: Bytes!
+  operator: Bytes! # address
+  serviceId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type OwnerUpdated @entity(immutable: true) {
+  id: Bytes!
+  owner: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Refund @entity(immutable: true) {
+  id: Bytes!
+  receiver: Bytes! # address
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type RegisterInstance @entity(immutable: true) {
+  id: Bytes!
+  operator: Bytes! # address
+  serviceId: BigInt! # uint256
+  agentInstance: Bytes! # address
+  agentId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TerminateService @entity(immutable: true) {
+  id: Bytes!
+  serviceId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Transfer @entity(immutable: true) {
+  id: Bytes!
+  from: Bytes! # address
+  to: Bytes! # address
+  ServiceRegistryL2_id: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type UpdateService @entity(immutable: true) {
+  id: Bytes!
+  serviceId: BigInt! # uint256
+  configHash: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ConditionPreparation @entity(immutable: true) {
+  id: Bytes!
+  conditionId: Bytes! # bytes32
+  oracle: Bytes! # address
+  questionId: Bytes! # bytes32
+  outcomeSlotCount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ConditionResolution @entity(immutable: true) {
+  id: Bytes!
+  conditionId: Bytes! # bytes32
+  oracle: Bytes! # address
+  questionId: Bytes! # bytes32
+  outcomeSlotCount: BigInt! # uint256
+  payoutNumerators: [BigInt!]! # uint256[]
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PositionSplit @entity(immutable: true) {
+  id: Bytes!
+  stakeholder: Bytes! # address
+  collateralToken: Bytes! # address
+  parentCollectionId: Bytes! # bytes32
+  conditionId: Bytes! # bytes32
+  partition: [BigInt!]! # uint256[]
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PositionsMerge @entity(immutable: true) {
+  id: Bytes!
+  stakeholder: Bytes! # address
+  collateralToken: Bytes! # address
+  parentCollectionId: Bytes! # bytes32
+  conditionId: Bytes! # bytes32
+  partition: [BigInt!]! # uint256[]
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PayoutRedemption @entity(immutable: true) {
+  id: Bytes!
+  redeemer: Bytes! # address
+  collateralToken: Bytes! # address
+  parentCollectionId: Bytes! # bytes32
+  conditionId: Bytes! # bytes32
+  indexSets: [BigInt!]! # uint256[]
+  payout: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TransferSingle @entity(immutable: true) {
+  id: Bytes!
+  operator: Bytes! # address
+  from: Bytes! # address
+  to: Bytes! # address
+  ConditionalTokens_id: BigInt! # uint256
+  value: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TransferBatch @entity(immutable: true) {
+  id: Bytes!
+  operator: Bytes! # address
+  from: Bytes! # address
+  to: Bytes! # address
+  ids: [BigInt!]! # uint256[]
+  values: [BigInt!]! # uint256[]
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ConditionalTokensApprovalForAll @entity(immutable: true) {
+  id: Bytes!
+  owner: Bytes! # address
+  operator: Bytes! # address
+  approved: Boolean! # bool
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type URI @entity(immutable: true) {
+  id: Bytes!
+  value: String! # string
+  ConditionalTokens_id: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TraderAgent @entity {
+  id: ID!
+  serviceId: BigInt!
+  firstParticipation: BigInt
+  lastActive: BigInt
+  totalBets: Int!
+  totalTraded: BigInt!
+  totalPayout: BigInt!
+  buyAmount: BigInt!
+  buyAmountFee: BigInt!
+  sellAmount: BigInt!
+  sellAmountFee: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Bet @entity {
+  id: ID!
+  bettor: Bytes!
+  conditionId: BigInt!
+  outcomeIndex: Int!
+  amount: BigInt!
+  correct: Boolean
+  timestamp: BigInt!
+}
+
+type CreatorAgent @entity {
+  id: ID!
+  totalQuestions: Int!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type FixedProductMarketMakerCreation @entity {
+  id: ID!
+  creator: Bytes! # address
+  fixedProductMarketMaker: Bytes! # address
+  conditionalTokens: Bytes! # address
+  collateralToken: Bytes! # address
+  conditionIds: [Bytes!]! # bytes32[]
+  fee: BigInt! # uint256
+  currentAnswer: Bytes
+  currentAnswerTimestamp: BigInt
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+
+type FPMMBuy @entity(immutable: true) {
+  id: Bytes!
+  buyer: Bytes! # address
+  investmentAmount: BigInt! # uint256
+  feeAmount: BigInt! # uint256
+  outcomeIndex: BigInt! # uint256
+  outcomeTokensBought: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type FPMMSell @entity(immutable: true) {
+  id: Bytes!
+  seller: Bytes! # address
+  returnAmount: BigInt! # uint256
+  feeAmount: BigInt! # uint256
+  outcomeIndex: BigInt! # uint256
+  outcomeTokensSold: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Global @entity {
+  id: ID!
+  totalTraderAgents: Int!
+  totalActiveTraderAgents: Int!
+}
+
+type LogSetQuestionFee @entity(immutable: true) {
+  id: Bytes!
+  arbitrator: Bytes! # address
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type LogNewTemplate @entity(immutable: true) {
+  id: Bytes!
+  template_id: BigInt! # uint256
+  user: Bytes! # address
+  question_text: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+
+type Question @entity {
+  id: Bytes!
+  currentAnswer: Bytes
+  currentAnswerBond: BigInt
+  currentAnswerTimestamp: BigInt
+  fixedProductMarketMaker: FixedProductMarketMakerCreation!
+}
+
+type LogNewQuestion @entity(immutable: true) {
+  id: Bytes!
+  question_id: Bytes! # bytes32
+  user: Bytes! # address
+  template_id: BigInt! # uint256
+  question: String! # string
+  content_hash: Bytes! # bytes32
+  arbitrator: Bytes! # address
+  timeout: BigInt! # uint32
+  opening_ts: BigInt! # uint32
+  nonce: BigInt! # uint256
+  created: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type LogFundAnswerBounty @entity(immutable: true) {
+  id: Bytes!
+  question_id: Bytes! # bytes32
+  bounty_added: BigInt! # uint256
+  bounty: BigInt! # uint256
+  user: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type LogNewAnswer @entity(immutable: true) {
+  id: Bytes!
+  answer: Bytes! # bytes32
+  question_id: Bytes! # bytes32
+  history_hash: Bytes! # bytes32
+  user: Bytes! # address
+  bond: BigInt! # uint256
+  ts: BigInt! # uint256
+  is_commitment: Boolean! # bool
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type LogAnswerReveal @entity(immutable: true) {
+  id: Bytes!
+  question_id: Bytes! # bytes32
+  user: Bytes! # address
+  answer_hash: Bytes! # bytes32
+  answer: Bytes! # bytes32
+  nonce: BigInt! # uint256
+  bond: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type LogNotifyOfArbitrationRequest @entity(immutable: true) {
+  id: Bytes!
+  question_id: Bytes! # bytes32
+  user: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type LogCancelArbitration @entity(immutable: true) {
+  id: Bytes!
+  question_id: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type LogFinalize @entity(immutable: true) {
+  id: Bytes!
+  question_id: Bytes! # bytes32
+  answer: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type LogClaim @entity(immutable: true) {
+  id: Bytes!
+  question_id: Bytes! # bytes32
+  user: Bytes! # address
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type LogWithdraw @entity(immutable: true) {
+  id: Bytes!
+  user: Bytes! # address
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
