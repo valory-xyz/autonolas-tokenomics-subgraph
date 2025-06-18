@@ -38,29 +38,15 @@ export function handleEpochSave(params: EpochMapper): void {
   epoch.counter = params.epochCounter.toI32();
   epoch.endBlock = params.blockNumber;
   epoch.blockTimestamp = params.blockTimestamp;
-
-  // Save availableStakingIncentives
+  epoch.accountTopUps = params.accountTopUps;
   epoch.availableStakingIncentives = params.availableStakingIncentives;
 
-  /**
-   * Calculate availableDevIncentives
-   */
-  let adjustedAccountTopUps = params.accountTopUps;
   // Manually set the first epoch startBlock and effectiveBond with accountTopUps
   if (epoch.counter == 1) {
     epoch.startBlock = BigInt.fromString("16699195");
     epoch.effectiveBond = BigInt.fromString("376744602072265367760000");
-    adjustedAccountTopUps = BigInt.fromI32(0);
+    epoch.availableDevIncentives = BigInt.fromI32(0)
   }
-  // There was an error in the 2d epoch topUp calculation, manually reduce the value
-  if (params.epochCounter.toI32() == 2) {
-    adjustedAccountTopUps = adjustedAccountTopUps.minus(
-      BigInt.fromString("877000006048735000000000")
-    );
-  }
-  epoch.accountTopUps = adjustedAccountTopUps;
-  epoch.availableDevIncentives = adjustedAccountTopUps;
-
 
   /**
    * Calculate totalBondsClaimable and maturedBonds
@@ -117,13 +103,28 @@ export function handleEpochSave(params: EpochMapper): void {
   nextEpoch.endBlock = null;
   nextEpoch.blockTimestamp = null;
   nextEpoch.accountTopUps = BigInt.fromI32(0);
-  nextEpoch.availableDevIncentives = BigInt.fromI32(0);
   nextEpoch.availableStakingIncentives = BigInt.fromI32(0);
   // Access effectiveBond from the contract state when the epoch ends
   const contract = Tokenomics.bind(params.address);
   const effectiveBond = contract.effectiveBond();
+
   // The effectiveBond is calculated for the next epoch
   nextEpoch.effectiveBond = effectiveBond;
+
+  // The availableDevIncentives are calculated for the next epoch
+  let adjustedAccountTopUps = params.accountTopUps;
+  if (epoch.counter == 1) { 
+    adjustedAccountTopUps = BigInt.fromI32(0);
+  }
+  // There was an error in the 2d epoch for topUp calculation, manually reduce the value
+  if (epoch.counter == 2) {
+    adjustedAccountTopUps = adjustedAccountTopUps.minus(
+      BigInt.fromString("877000006048735000000000")
+    );
+  }
+
+  nextEpoch.availableDevIncentives = adjustedAccountTopUps
+
   nextEpoch.save();
   epoch.save();
 }

@@ -297,7 +297,7 @@ type DispenserTreasuryUpdated @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type Epoch @entity {
+type Epoch @entity(immutable: false) {
   id: ID!
   counter: Int!
   startBlock: BigInt!
@@ -320,7 +320,7 @@ type Epoch @entity {
   totalBondsClaimed: BigInt
 }
 
-type DevIncentive @entity {
+type DevIncentive @entity(immutable: false) {
   id: ID!
   epoch: Epoch!
   owner: Bytes!
@@ -328,7 +328,7 @@ type DevIncentive @entity {
   topUp: BigInt!
 }
 
-type StakingIncentive @entity {
+type StakingIncentive @entity(immutable: false) {
   id: ID!
   epoch: Epoch!
   account: Bytes!
@@ -391,7 +391,7 @@ type StakingIncentivesBatchClaimed @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type StakingIncentivesBatch @entity {
+type StakingIncentivesBatch @entity(immutable: false) {
   id: ID!
   batchClaim: StakingIncentivesBatchClaimed!
   chainId: BigInt!
@@ -440,7 +440,7 @@ type WithheldAmountSynced @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type BondClaim @entity {
+type BondClaim @entity(immutable: false) {
   id: Bytes!
   epoch: Epoch!
   claimer: Bytes! # The address claiming the bond
