@@ -449,3 +449,8 @@ type BondClaim @entity(immutable: false) {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
 }
+
+type TokenHolder @entity {
+  id: ID!
+  balance: BigInt!
+}
