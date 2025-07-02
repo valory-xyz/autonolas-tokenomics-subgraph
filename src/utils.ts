@@ -1,7 +1,11 @@
 import { BigInt, Bytes, crypto } from "@graphprotocol/graph-ts";
 import { Epoch } from "../generated/schema";
 
-export function findEpochId(blockNumber: BigInt): string {
+export const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
+export let BIGINT_ZERO = BigInt.fromI32(0);
+export let BIGINT_ONE = BigInt.fromI32(1);
+
+export function findEpochId(blockNumber: BigInt): string | null {
   // Find the current epoch based on the block number
   let epochCounter = 1;
   while (true) {
