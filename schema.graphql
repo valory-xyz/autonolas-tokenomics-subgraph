@@ -454,15 +454,3 @@ type TokenHolder @entity {
   id: ID!
   balance: BigInt!
 }
-
-type VeOLASLock @entity {
-  id: ID!
-  account: Bytes!
-  amount: BigInt!
-  unlockTime: BigInt!
-  depositType: Int!
-  timestamp: BigInt!
-  isActive: Boolean!
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-}

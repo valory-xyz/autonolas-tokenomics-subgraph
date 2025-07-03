@@ -295,13 +295,10 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - TokenHolder
-        - VeOLASLock
       abis:
         - name: veOLAS
           file: ./abis/veOLAS.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-        - event: Deposit(indexed address,uint256,uint256,uint8,uint256)
-          handler: handleDeposit
       file: ./src/veolas.ts
