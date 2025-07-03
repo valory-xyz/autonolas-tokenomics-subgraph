@@ -274,7 +274,6 @@ dataSources:
       entities:
         - BondClaim
         - Epoch
-        - TokenHolder
       abis:
         - name: OLAS
           file: ./abis/OLAS.json # You'll need the OLAS token ABI
