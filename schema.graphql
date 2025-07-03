@@ -171,8 +171,11 @@ type StakingContract @entity(immutable: true) {
   activityChecker: Bytes!
 }
 
-type Global @entity(immutable: false) {
+type RewardUpdate @entity(immutable: true) {
   id: ID!
-  totalStakingRewardsClaimable: BigInt!
-  totalStakingRewardsClaimed: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  type: String! # "Claimable" or "Claimed"
+  amount: BigInt!
 }
