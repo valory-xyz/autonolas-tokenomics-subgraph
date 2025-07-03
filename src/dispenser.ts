@@ -1,5 +1,5 @@
 import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
-import { IncentivesClaimed as IncentivesClaimedEvent } from "../generated/DispenserV1/DispenserV1";
+import { IncentivesClaimed as IncentivesClaimedEvent } from "../generated/Dispenser/Dispenser";
 import {
   DispenserV2,
   AddNomineeHash as AddNomineeHashEvent,
