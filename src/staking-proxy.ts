@@ -21,7 +21,7 @@ import {
   ServicesEvicted,
   Withdraw
 } from "../generated/schema"
-import { getGlobal } from "./utils"
+import { createRewardUpdate } from "./utils"
 
 export function handleCheckpoint(event: CheckpointEvent): void {
   let entity = new Checkpoint(
@@ -39,14 +39,21 @@ export function handleCheckpoint(event: CheckpointEvent): void {
 
   entity.save()
 
-  // Update claimable staking rewards
-  let global = getGlobal();
+  // Calculate total rewards for this checkpoint
   let totalRewards = BigInt.fromI32(0);
   for (let i = 0; i < event.params.rewards.length; i++) {
     totalRewards = totalRewards.plus(event.params.rewards[i]);
   }
-  global.totalStakingRewardsClaimable = global.totalStakingRewardsClaimable.plus(totalRewards);
-  global.save()
+
+  // Update claimable staking rewards
+  createRewardUpdate(
+    event.transaction.hash.toHex() + "-" + event.logIndex.toString(),
+    event.block.number,
+    event.block.timestamp,
+    event.transaction.hash,
+    "Claimable",
+    totalRewards
+  );
 }
 
 export function handleDeposit(event: DepositEvent): void {
@@ -83,11 +90,14 @@ export function handleRewardClaimed(event: RewardClaimedEvent): void {
   entity.save()
 
   // Update claimed staking rewards
-  let global = getGlobal();
-  global.totalStakingRewardsClaimed = global.totalStakingRewardsClaimed.plus(
+  createRewardUpdate(
+    event.transaction.hash.toHex() + "-" + event.logIndex.toString(),
+    event.block.number,
+    event.block.timestamp,
+    event.transaction.hash,
+    "Claimed",
     event.params.reward
   );
-  global.save()
 }
 
 export function handleServiceForceUnstaked(
@@ -164,11 +174,14 @@ export function handleServiceUnstaked(event: ServiceUnstakedEvent): void {
   entity.save()
 
   // Update claimed staking rewards
-  let global = getGlobal();
-  global.totalStakingRewardsClaimed = global.totalStakingRewardsClaimed.plus(
+  createRewardUpdate(
+    event.transaction.hash.toHex() + "-" + event.logIndex.toString(),
+    event.block.number,
+    event.block.timestamp,
+    event.transaction.hash,
+    "Claimed",
     event.params.reward
   );
-  global.save()
 }
 
 export function handleServicesEvicted(event: ServicesEvictedEvent): void {
