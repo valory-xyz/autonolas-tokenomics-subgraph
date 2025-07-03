@@ -15,16 +15,16 @@ export function handleTransfer(event: TransferEvent): void {
   if (BOND_CLAIMER_ADDRESSES.includes(event.params.from)) {
     const currentEpochId = findEpochId(event.block.number);
     if (currentEpochId) {
-      let bondClaim = new BondClaim(
-        event.transaction.hash.concatI32(event.logIndex.toI32())
-      );
-      bondClaim.epoch = currentEpochId;
-      bondClaim.claimer = event.params.to;
-      bondClaim.amountOLAS = event.params.amount;
-      bondClaim.transactionHash = event.transaction.hash;
-      bondClaim.blockNumber = event.block.number;
-      bondClaim.blockTimestamp = event.block.timestamp;
-      bondClaim.save();
+    let bondClaim = new BondClaim(
+      event.transaction.hash.concatI32(event.logIndex.toI32())
+    );
+    bondClaim.epoch = currentEpochId;
+    bondClaim.claimer = event.params.to;
+    bondClaim.amountOLAS = event.params.amount;
+    bondClaim.transactionHash = event.transaction.hash;
+    bondClaim.blockNumber = event.block.number;
+    bondClaim.blockTimestamp = event.block.timestamp;
+    bondClaim.save();
 
       let epoch = Epoch.load(currentEpochId);
       if (epoch) {
