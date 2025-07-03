@@ -450,7 +450,7 @@ type BondClaim @entity(immutable: false) {
   blockTimestamp: BigInt!
 }
 
-type TokenHolder @entity {
-  id: ID!
+type Token @entity {
+  id: Bytes!
   balance: BigInt!
 }
