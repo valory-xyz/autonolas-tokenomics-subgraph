@@ -14,6 +14,7 @@ import {
   Checkpoint,
   Deposit,
   RewardClaimed,
+  Service,
   ServiceForceUnstaked,
   ServiceInactivityWarning,
   ServiceStaked,
@@ -21,7 +22,7 @@ import {
   ServicesEvicted,
   Withdraw
 } from "../generated/schema"
-import { createRewardUpdate } from "./utils"
+import { createRewardUpdate, getGlobal, getOlasForStaking } from "./utils"
 
 export function handleCheckpoint(event: CheckpointEvent): void {
   let entity = new Checkpoint(
@@ -39,10 +40,19 @@ export function handleCheckpoint(event: CheckpointEvent): void {
 
   entity.save()
 
-  // Calculate total rewards for this checkpoint
   let totalRewards = BigInt.fromI32(0);
   for (let i = 0; i < event.params.rewards.length; i++) {
+    // Calculate total rewards for this checkpoint
     totalRewards = totalRewards.plus(event.params.rewards[i]);
+
+    // and update each service cumulative rewards
+    let service = Service.load(event.params.serviceIds[i].toString());
+    if (service !== null) {
+      service.olasRewardsEarned = service.olasRewardsEarned.plus(
+        event.params.rewards[i]
+      );
+      service.save();
+    }
   }
 
   // Update claimable staking rewards
@@ -119,6 +129,20 @@ export function handleServiceForceUnstaked(
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+
+  const olasForStaking = getOlasForStaking(event.params._event.address)
+  // Update service
+  let service = Service.load(event.params.serviceId.toString());
+  if (service !== null) {
+    service.currentOlasStaked = service.currentOlasStaked.minus(olasForStaking);
+    service.save()
+  }
+
+  // Update global
+  let global = getGlobal();
+  global.cumulativeOlasUnstaked = global.cumulativeOlasUnstaked.plus(olasForStaking);
+  global.currentOlasStaked = global.currentOlasStaked.minus(olasForStaking);
+  global.save();
 }
 
 export function handleServiceInactivityWarning(
@@ -153,6 +177,26 @@ export function handleServiceStaked(event: ServiceStakedEvent): void {
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+
+  // Update service
+  let service = Service.load(event.params.serviceId.toString());
+  if (service === null) {
+    service = new Service(event.params.serviceId.toString())
+    service.blockNumber = event.block.number;
+    service.blockTimestamp = event.block.timestamp;
+    service.currentOlasStaked = BigInt.fromI32(0);
+    service.olasRewardsEarned = BigInt.fromI32(0);
+  }
+
+  const olasForStaking = getOlasForStaking(event.params._event.address)
+  service.currentOlasStaked = service.currentOlasStaked.plus(olasForStaking);
+  service.save()
+
+  // Update global
+  let global = getGlobal();
+  global.cumulativeOlasStaked = global.cumulativeOlasStaked.plus(olasForStaking)
+  global.currentOlasStaked = global.currentOlasStaked.plus(olasForStaking)
+  global.save()
 }
 
 export function handleServiceUnstaked(event: ServiceUnstakedEvent): void {
@@ -182,6 +226,21 @@ export function handleServiceUnstaked(event: ServiceUnstakedEvent): void {
     "Claimed",
     event.params.reward
   );
+
+  const olasForStaking = getOlasForStaking(event.params._event.address)
+
+  // Update service
+  let service = Service.load(event.params.serviceId.toString());
+  if (service !== null) {
+    service.currentOlasStaked = service.currentOlasStaked.minus(olasForStaking);
+    service.save()
+  }
+
+  // Update global
+  let global = getGlobal();
+  global.cumulativeOlasUnstaked = global.cumulativeOlasUnstaked.plus(olasForStaking);
+  global.currentOlasStaked = global.currentOlasStaked.minus(olasForStaking);
+  global.save();
 }
 
 export function handleServicesEvicted(event: ServicesEvictedEvent): void {
