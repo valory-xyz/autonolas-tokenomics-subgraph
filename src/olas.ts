@@ -1,7 +1,11 @@
-import { Transfer as TransferEvent } from "../generated/OLAS/OLAS";
-import { BondClaim, Epoch } from "../generated/schema";
+import { Transfer } from "../generated/OLAS/OLAS";
+import { BondClaim, Epoch, Token } from "../generated/schema";
 import { findEpochId } from "./utils";
-import { Address } from "@graphprotocol/graph-ts";
+import { Address, BigInt } from "@graphprotocol/graph-ts";
+const VEOLAS_ADDRESS = Address.fromString(
+  "0x7e01A500805f8A52Fad229b3015AD130A332B7b3"
+);
+const BIGINT_ZERO = BigInt.fromI32(0);
 
 // Bond claimer contract addresses from the Dune query
 const BOND_CLAIMER_ADDRESSES = [
@@ -9,7 +13,7 @@ const BOND_CLAIMER_ADDRESSES = [
   Address.fromString("0x52a043bcebdb2f939baef2e8b6f01652290eab3f"),
 ];
 
-export function handleTransfer(event: TransferEvent): void {
+export function handleTransfer(event: Transfer): void {
   if (BOND_CLAIMER_ADDRESSES.includes(event.params.from)) {
     const currentEpochId = findEpochId(event.block.number);
     let bondClaim = new BondClaim(
@@ -37,5 +41,27 @@ export function handleTransfer(event: TransferEvent): void {
         epoch.save();
       }
     }
+  }
+  if (
+    event.params.to.equals(VEOLAS_ADDRESS) ||
+    event.params.from.equals(VEOLAS_ADDRESS)
+  ) {
+    let token = Token.load(VEOLAS_ADDRESS);
+    if (token == null) {
+      token = new Token(VEOLAS_ADDRESS);
+      token.balance = BIGINT_ZERO;
+    }
+
+    // if 'to' is veOLAS contract, increase balance
+    if (event.params.to.equals(VEOLAS_ADDRESS)) {
+      token.balance = token.balance.plus(event.params.amount);
+    }
+
+    // if 'from' is veOLAS contract, decrease balance
+    if (event.params.from.equals(VEOLAS_ADDRESS)) {
+      token.balance = token.balance.minus(event.params.amount);
+    }
+
+    token.save();
   }
 }
