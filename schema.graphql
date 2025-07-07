@@ -454,3 +454,8 @@ type Token @entity {
   id: Bytes!
   balance: BigInt!
 }
+
+type VeolasDepositor @entity {
+  id: Bytes!
+  unlockTimestamp: BigInt!
+}
