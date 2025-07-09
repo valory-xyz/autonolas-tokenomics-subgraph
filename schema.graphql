@@ -457,9 +457,8 @@ type Token @entity(immutable: false) {
 }
 
 type TokenHolder @entity(immutable: false) {
-  id: ID!
+  id: Bytes!
   token: Bytes!
-  address: Bytes!
   balance: BigInt!
 }
 
