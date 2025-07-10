@@ -2,9 +2,10 @@
   "name": "autonolas-tokenomics-subgraph",
   "license": "UNLICENSED",
   "scripts": {
-    "build-l1": "yarn codegen-ethereum && yarn build-ethereum",
+    "build-l1": "yarn codegen-ethereum && yarn copy-generated-l1 && yarn build-ethereum",
     "build-l2": "yarn codegen-base && yarn build-base && yarn codegen-gnosis && yarn build-gnosis",
     "codegen-ethereum": "graph codegen subgraphs/tokenomics/subgraph.yaml",
+    "copy-generated-l1": "cp -r generated subgraphs/tokenomics/",
     "build-ethereum": "graph build subgraphs/tokenomics/subgraph.yaml",
     "codegen-base": "graph codegen subgraphs/tokenomics-base/subgraph.base.yaml",
     "build-base": "graph build subgraphs/tokenomics-base/subgraph.base.yaml",
