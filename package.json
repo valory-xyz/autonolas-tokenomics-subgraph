@@ -1,15 +1,25 @@
 {
-  "name": "autonolas-tokenomics",
+  "name": "autonolas-tokenomics-subgraph",
   "license": "UNLICENSED",
   "scripts": {
-    "codegen": "graph codegen",
-    "build": "graph build",
-    "deploy": "graph deploy --studio autonolas-tokenomics",
+    "generate-manifests": "node scripts/generate-manifests.js",
+    "codegen": "graph codegen subgraphs/tokenomics/subgraph.yaml",
+    "build": "graph build subgraphs/tokenomics/subgraph.yaml",
+    "codegen-gnosis": "graph codegen subgraphs/tokenomics-gnosis/subgraph.gnosis.yaml",
+    "build-gnosis": "graph build subgraphs/tokenomics-gnosis/subgraph.gnosis.yaml",
+    "codegen-base": "graph codegen subgraphs/tokenomics-base/subgraph.base.yaml",
+    "build-base": "graph build subgraphs/tokenomics-base/subgraph.base.yaml",
+    "deploy-mainnet": "graph deploy --network mainnet olas-tokenomics subgraphs/tokenomics/subgraph.yaml",
+    "deploy-gnosis": "graph deploy --network gnosis olas-gnosis-tokenomics subgraphs/tokenomics-gnosis/subgraph.gnosis.yaml",
+    "deploy-base": "graph deploy --network base olas-base-tokenomics subgraphs/tokenomics-base/subgraph.base.yaml",
+    "deploy-base-studio": "graph deploy --studio olas-base-tokenomics-test subgraphs/tokenomics-base/subgraph.base.yaml",
+    "deploy-gnosis-studio": "graph deploy --studio olas-gnosis-tokenomics-test subgraphs/tokenomics-gnosis/subgraph.gnosis.yaml",
+    "deploy-mainnet-studio": "graph deploy --studio olas-mainnet-tokenomics-test subgraphs/tokenomics/subgraph.yaml",
     "test": "graph test"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "^0.80.0",
-    "@graphprotocol/graph-ts": "^0.35.1"
+    "@graphprotocol/graph-cli": "^0.97.0",
+    "@graphprotocol/graph-ts": "^0.38.0"
   },
   "devDependencies": {
     "matchstick-as": "0.5.0"
