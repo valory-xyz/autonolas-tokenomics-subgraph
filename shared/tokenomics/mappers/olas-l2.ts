@@ -1,6 +1,6 @@
 import { Transfer } from "../generated/OLAS/OLAS";
 import { Transfer as TransferEntity } from "../generated/schema";
-import { handleTransferBalances } from "./utils";
+import { handleTransferBalances } from "../utils";
 
 export function handleTransfer(event: Transfer): void {
   // Create Transfer entity for tracking

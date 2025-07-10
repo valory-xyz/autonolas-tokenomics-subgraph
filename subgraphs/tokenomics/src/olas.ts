@@ -1,6 +1,7 @@
 import { Transfer } from "../generated/OLAS/OLAS";
 import { BondClaim, Epoch, Token } from "../generated/schema";
-import { findEpochId, handleTransferBalances } from "./utils";
+import { findEpochId } from "./utils";
+import { handleTransferBalances } from "../../../shared/tokenomics/utils";
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 const VEOLAS_ADDRESS = Address.fromString(
   "0x7e01A500805f8A52Fad229b3015AD130A332B7b3"
