@@ -100,15 +100,38 @@ async function main() {
     
     rl.close();
     
-    console.log(`\n📦 Deploying to Studio...`);
+    console.log(`\n📦 Preparing deployment...`);
     console.log(`Network Type: ${networkTypes[networkType].name}`);
     console.log(`Network: ${selectedNetwork}`);
     console.log(`Subgraph: ${subgraphName}`);
     console.log(`Version: ${version}`);
     console.log(`Config: ${networkConfig.path}\n`);
     
-    // Build the deployment command
-    const deployCommand = `echo "${version}" | graph deploy --studio ${subgraphName} ${networkConfig.path}`;
+    // Determine build command based on network type
+    const buildCommand = networkType === '1' ? 'yarn build-l1' : 'yarn build-l2';
+
+    console.log(`🔨 Building subgraph with: ${buildCommand}`);
+    execSync(buildCommand, {
+      stdio: 'inherit',
+      env: { ...process.env, FORCE_COLOR: '1' }
+    });
+
+    console.log(`\n🚀 Deploying to Studio...`);
+
+    // Check if deploy key is set
+    if (!process.env.GRAPH_DEPLOY_KEY) {
+      console.error(`❌ GRAPH_DEPLOY_KEY environment variable is not set`);
+      console.log(`\n📝 To fix this:`);
+      console.log(`1. Go to https://thegraph.com/studio/`);
+      console.log(`2. Create or select your subgraph`);
+      console.log(`3. Copy your deploy key`);
+      console.log(`4. Set it as an environment variable:`);
+      console.log(`   export GRAPH_DEPLOY_KEY=your_deploy_key_here\n`);
+      process.exit(1);
+    }
+
+    // Build the deployment command for Graph Studio
+    const deployCommand = `graph deploy --deploy-key ${process.env.GRAPH_DEPLOY_KEY} --version-label ${version} ${subgraphName} ${networkConfig.path}`;
     
     // Execute deployment
     execSync(deployCommand, { 
@@ -116,6 +139,16 @@ async function main() {
       env: { ...process.env, FORCE_COLOR: '1' }
     });
     
+    // Cleanup temporary files for L2 builds
+    if (networkType === '2') {
+      console.log(`\n🧹 Cleaning up temporary files...`);
+      try {
+        execSync('rm -rf generated-l2', { stdio: 'pipe' });
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+      }
+    }
+
     console.log(`\n✅ Successfully deployed to Studio!`);
     console.log(`📊 Dashboard: https://thegraph.com/studio/subgraph/${subgraphName}`);
     
