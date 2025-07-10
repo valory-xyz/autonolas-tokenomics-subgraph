@@ -15,6 +15,7 @@
     "deploy-base-studio": "graph deploy --studio olas-base-tokenomics-test subgraphs/tokenomics-base/subgraph.base.yaml",
     "deploy-gnosis-studio": "graph deploy --studio olas-gnosis-tokenomics-test subgraphs/tokenomics-gnosis/subgraph.gnosis.yaml",
     "deploy-mainnet-studio": "graph deploy --studio olas-mainnet-tokenomics-test subgraphs/tokenomics/subgraph.yaml",
+    "deploy-studio": "node scripts/deploy-studio.js",
     "test": "graph test"
   },
   "dependencies": {

@@ -1,5 +1,5 @@
-import { Transfer } from "../../../generated/OLAS/OLAS";
-import { Transfer as TransferEntity } from "../../../generated/schema";
+import { Transfer } from "../generated/OLAS/OLAS";
+import { Transfer as TransferEntity } from "../generated/schema";
 import { handleTransferBalances } from "./utils";
 
 export function handleTransfer(event: Transfer): void {

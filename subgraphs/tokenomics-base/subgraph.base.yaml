@@ -8,7 +8,7 @@ dataSources:
     source:
       address: "0x54330d28ca3357F294334BDC454a032e7f353416" # OLAS token on Base
       abi: OLAS
-      startBlock: 11329200
+      startBlock: 10622421
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -23,4 +23,4 @@ dataSources:
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      file: ./src/olas.ts 
+      file: ../../src-l2/olas.ts 

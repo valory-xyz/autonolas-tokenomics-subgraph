@@ -1,5 +1,5 @@
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
-import { Token, TokenHolder } from "../../../generated/schema";
+import { Token, TokenHolder } from "../generated/schema";
 import { Address, store } from "@graphprotocol/graph-ts";
 
 const BIGINT_ZERO = BigInt.fromI32(0);
