@@ -453,7 +453,7 @@ type BondClaim @entity(immutable: false) {
 type Token @entity(immutable: false) {
   id: Bytes!
   balance: BigInt!
-  holderCount: BigInt!
+  holderCount: Int!
 }
 
 type TokenHolder @entity(immutable: false) {

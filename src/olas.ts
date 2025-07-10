@@ -59,7 +59,7 @@ export function handleTransfer(event: Transfer): void {
     if (token == null) {
       token = new Token(VEOLAS_ADDRESS);
       token.balance = BIGINT_ZERO;
-      token.holderCount = BIGINT_ZERO;
+      token.holderCount = 0;
     }
 
     // if 'to' is veOLAS contract, increase balance

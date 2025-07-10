@@ -12,7 +12,7 @@ export function getOrCreateToken(tokenAddress: Address): Token {
   if (token == null) {
     token = new Token(tokenAddress);
     token.balance = BIGINT_ZERO;
-    token.holderCount = BIGINT_ZERO;
+    token.holderCount = 0;
   }
 
   return token;
@@ -55,7 +55,7 @@ export function handleTransferBalances(
       oldBalance.gt(BIGINT_ZERO) &&
       fromHolder.balance.equals(BIGINT_ZERO)
     ) {
-      token.holderCount = token.holderCount!.minus(BigInt.fromI32(1));
+      token.holderCount = token.holderCount! - 1;
       store.remove("TokenHolder", fromAddress.toHex());
     }
   }
@@ -74,7 +74,7 @@ export function handleTransferBalances(
       oldBalance.equals(BIGINT_ZERO) &&
       toHolder.balance.gt(BIGINT_ZERO)
     ) {
-      token.holderCount = token.holderCount!.plus(BigInt.fromI32(1));
+      token.holderCount = token.holderCount! + 1;
     }
   }
 
