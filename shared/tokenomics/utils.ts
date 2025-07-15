@@ -33,20 +33,21 @@ export function getOrCreateTokenHolder(
   return holder;
 }
 
-export function handleTransferBalances(
+function handleSenderBalance(
+  token: Token,
   tokenAddress: Address,
   fromAddress: Address,
-  toAddress: Address,
   amount: BigInt
 ): void {
-  let token = getOrCreateToken(tokenAddress);
-
-  // Handle sender
   if (fromAddress.equals(ZERO_ADDRESS)) {
     // Mint
     token.balance = token.balance.plus(amount);
   } else {
-    if (EXCLUDED_ADDRESSES.includes(fromAddress)) return;
+    // Skip if address is in exclusion list
+    if (EXCLUDED_ADDRESSES.includes(fromAddress)) {
+      return;
+    }
+
     let fromHolder = getOrCreateTokenHolder(tokenAddress, fromAddress);
     let oldBalance = fromHolder.balance;
     fromHolder.balance = fromHolder.balance.minus(amount);
@@ -60,13 +61,23 @@ export function handleTransferBalances(
       store.remove("TokenHolder", fromAddress.toHex());
     }
   }
+}
 
-  // Handle receiver
+function handleReceiverBalance(
+  token: Token,
+  tokenAddress: Address,
+  toAddress: Address,
+  amount: BigInt
+): void {
   if (toAddress.equals(ZERO_ADDRESS)) {
     // Burn
     token.balance = token.balance.minus(amount);
   } else {
-    if (EXCLUDED_ADDRESSES.includes(toAddress)) return;
+    // Skip if address is in exclusion list
+    if (EXCLUDED_ADDRESSES.includes(toAddress)) {
+      return;
+    }
+
     let toHolder = getOrCreateTokenHolder(tokenAddress, toAddress);
     let oldBalance = toHolder.balance;
     toHolder.balance = toHolder.balance.plus(amount);
@@ -79,6 +90,18 @@ export function handleTransferBalances(
       token.holderCount = token.holderCount! + 1;
     }
   }
+}
+
+export function handleTransferBalances(
+  tokenAddress: Address,
+  fromAddress: Address,
+  toAddress: Address,
+  amount: BigInt
+): void {
+  let token = getOrCreateToken(tokenAddress);
+
+  handleSenderBalance(token, tokenAddress, fromAddress, amount);
+  handleReceiverBalance(token, tokenAddress, toAddress, amount);
 
   token.save();
 } 
