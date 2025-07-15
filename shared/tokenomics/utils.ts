@@ -1,6 +1,7 @@
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 import { Token, TokenHolder } from "./generated/schema";
 import { Address, store } from "@graphprotocol/graph-ts";
+import { EXCLUDED_ADDRESSES } from "./excludedAddresses";
 
 const BIGINT_ZERO = BigInt.fromI32(0);
 const ZERO_ADDRESS = Address.zero();
@@ -45,6 +46,7 @@ export function handleTransferBalances(
     // Mint
     token.balance = token.balance.plus(amount);
   } else {
+    if (EXCLUDED_ADDRESSES.includes(fromAddress)) return;
     let fromHolder = getOrCreateTokenHolder(tokenAddress, fromAddress);
     let oldBalance = fromHolder.balance;
     fromHolder.balance = fromHolder.balance.minus(amount);
@@ -64,6 +66,7 @@ export function handleTransferBalances(
     // Burn
     token.balance = token.balance.minus(amount);
   } else {
+    if (EXCLUDED_ADDRESSES.includes(toAddress)) return;
     let toHolder = getOrCreateTokenHolder(tokenAddress, toAddress);
     let oldBalance = toHolder.balance;
     toHolder.balance = toHolder.balance.plus(amount);
