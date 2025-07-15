@@ -4,6 +4,9 @@ import { Address, store } from "@graphprotocol/graph-ts";
 
 const BIGINT_ZERO = BigInt.fromI32(0);
 const ZERO_ADDRESS = Address.zero();
+const DEAD_ADDRESS = Address.fromHexString(
+  "0x000000000000000000000000000000000000dEaD"
+);
 
 export function getOrCreateToken(tokenAddress: Address): Token {
   let token = Token.load(tokenAddress);
@@ -60,7 +63,7 @@ export function handleTransferBalances(
   }
 
   // Handle receiver
-  if (toAddress.equals(ZERO_ADDRESS)) {
+  if (toAddress.equals(ZERO_ADDRESS) || toAddress.equals(DEAD_ADDRESS)) {
     // Burn
     token.balance = token.balance.minus(amount);
   } else {
