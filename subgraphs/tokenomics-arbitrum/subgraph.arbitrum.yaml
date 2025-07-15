@@ -4,9 +4,10 @@ schema:
 dataSources:
   - kind: ethereum
     name: OLAS
-    network: arbitrum-one
+    network: arbitrum
     source:
       address: "0x064F8B858C2A603e1b106a2039f5446D32dc81c1"
+      abi: OLAS
       startBlock: 173139043
     mapping:
       kind: ethereum/events
