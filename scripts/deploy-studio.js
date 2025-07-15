@@ -39,6 +39,10 @@ const networkTypes = {
       'optimism': {
         path: 'subgraphs/tokenomics-optimism/subgraph.optimism.yaml',
         description: 'Optimism Network'
+      },
+      'arbitrum': {
+        path: 'subgraphs/tokenomics-arbitrum/subgraph.arbitrum.yaml',
+        description: 'Arbitrum Network'
       }
     }
   }
