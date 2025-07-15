@@ -81,12 +81,13 @@ async function main() {
     } else {
       // If L2, show L2 options
       console.log('\nAvailable L2 networks:');
-      Object.keys(networkTypes[networkType].networks).forEach(network => {
+      const l2Networks = Object.keys(networkTypes[networkType].networks);
+      l2Networks.forEach(network => {
         console.log(`  ${network}: ${networkTypes[networkType].networks[network].description}`);
       });
       console.log('');
       
-      selectedNetwork = await askQuestion('Enter L2 network (base/gnosis): ');
+      selectedNetwork = await askQuestion(`Enter L2 network (${l2Networks.join('/')}): `);
       networkConfig = networkTypes[networkType].networks[selectedNetwork];
       
       if (!networkConfig) {
