@@ -3,7 +3,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build-l1": "yarn codegen-l1 && yarn copy-generated-l1 && yarn build-ethereum",
-    "build-l2": "yarn codegen-l2 && yarn copy-generated-l2 && yarn build-base && yarn build-gnosis",
+    "build-l2": "yarn codegen-l2 && yarn copy-generated-l2 && yarn build-base && yarn build-gnosis && yarn build-optimism",
     "codegen-l1": "graph codegen subgraphs/tokenomics/subgraph.yaml",
     "copy-generated-l1": "cp -r generated subgraphs/tokenomics/",
     "build-ethereum": "graph build subgraphs/tokenomics/subgraph.yaml",
@@ -11,6 +11,7 @@
     "copy-generated-l2": "cp -r generated-l2/* shared/tokenomics/generated/",
     "build-base": "graph build subgraphs/tokenomics-base/subgraph.base.yaml",
     "build-gnosis": "graph build subgraphs/tokenomics-gnosis/subgraph.gnosis.yaml",
+    "build-optimism": "graph build subgraphs/tokenomics-optimism/subgraph.optimism.yaml",
     "deploy-studio": "node scripts/deploy-studio.js",
     "test": "graph test"
   },
