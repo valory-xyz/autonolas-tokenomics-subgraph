@@ -1,32 +1,12 @@
-import {
-  BigInt,
-  log,
-  Address,
-  BigDecimal,
-  Bytes,
-} from "@graphprotocol/graph-ts";
-
 import { FixedProductMarketMakerCreation as FixedProductMarketMakerCreationEvent } from "../generated/FPMMDeterministicFactory/FPMMDeterministicFactory";
 import {
+  ConditionPreparation,
   CreatorAgent,
-  // FixedProductMarketMaker,
-  // Condition,
-  // Question,
   FixedProductMarketMakerCreation,
   Question,
 } from "../generated/schema";
 import { FixedProductMarketMaker as FixedProductMarketMakerTemplate } from "../generated/templates";
-import { CREATOR_ADDRESSES } from "./constants";
-// import { zero, secondsPerHour, hoursPerDay, zeroDec } from "./utils/constants";
-// import { joinDayAndVolume } from "./utils/day-volume";
-// import { updateScaledVolumes, setLiquidity } from "./utils/fpmm";
-// import { requireToken } from "./utils/token";
-// import { requireGlobal } from "./utils/global";
-
-const BLACKLISTED_MARKETS = [
-  "0xe7ed8a5f2f0f17f7d584ae8ddd0592d1ac67791f",
-  "0xbfa584b29891941c8950ce975c1f7fa595ce1b99",
-];
+import { CREATOR_ADDRESSES, BLACKLISTED_MARKETS } from "./constants";
 
 export function handleFixedProductMarketMakerCreation(
   event: FixedProductMarketMakerCreationEvent
@@ -38,11 +18,11 @@ export function handleFixedProductMarketMakerCreation(
   if (
     // Only save data for our market creators
     CREATOR_ADDRESSES.indexOf(creatorAddressHexString.toLowerCase()) !== -1 &&
-    BLACKLISTED_MARKETS.indexOf(addressHexString.toLowerCase()) !== -1
+    // and not in the black list
+    BLACKLISTED_MARKETS.indexOf(addressHexString.toLowerCase()) === -1
   ) {
-    let entity = new FixedProductMarketMakerCreation(addressHexString);
+    let entity = new FixedProductMarketMakerCreation(address);
     entity.creator = event.params.creator;
-    entity.fixedProductMarketMaker = event.params.fixedProductMarketMaker;
     entity.conditionalTokens = event.params.conditionalTokens;
     entity.collateralToken = event.params.collateralToken;
     entity.conditionIds = event.params.conditionIds;
@@ -51,42 +31,35 @@ export function handleFixedProductMarketMakerCreation(
     entity.blockTimestamp = event.block.timestamp;
     entity.transactionHash = event.transaction.hash;
 
+    let conditionIdStr = event.params.conditionIds[0].toHexString();
+    let condition = ConditionPreparation.load(conditionIdStr);
+    if (condition) {
+      // Log question so we can get the final answer later
+      let question = Question.load(condition.questionId.toHexString());
+      if (question != null) {
+        question.fixedProductMarketMaker = address;
+
+        let fields = question.question.split("\u241f", 4);
+
+        if (fields.length >= 1) {
+          entity.question = fields[0];
+          if (fields.length >= 2) {
+            let outcomes = new Array<string>(0);
+            let outcomesData = fields[1].split(',');
+            for (let i = 0; i < outcomesData.length; i++) {
+              let cleanedOutcome = outcomesData[i]
+                .replaceAll('"', '')
+                .replaceAll('/', '')
+                .trim();
+              outcomes.push(cleanedOutcome)
+            }
+            entity.outcomes = outcomes;
+          }
+        }
+      }
+    }
+
     entity.save();
-
-    // let condition = Condition
-
-    // // Log question so we can get the final answer later
-    // let question = Question.load(questionIdStr);
-    // if (question != null) {
-    //   fpmm.templateId = question.templateId;
-    //   fpmm.data = question.data;
-    //   fpmm.title = question.title;
-    //   fpmm.outcomes = question.outcomes;
-    //   fpmm.category = question.category;
-    //   fpmm.language = question.language;
-    //   fpmm.arbitrator = question.arbitrator;
-    //   fpmm.openingTimestamp = question.openingTimestamp;
-    //   fpmm.timeout = question.timeout;
-
-    //   if (question.indexedFixedProductMarketMakers.length < 100) {
-    //     fpmm.currentAnswer = question.currentAnswer;
-    //     fpmm.currentAnswerBond = question.currentAnswerBond;
-    //     fpmm.currentAnswerTimestamp = question.currentAnswerTimestamp;
-    //     fpmm.isPendingArbitration = question.isPendingArbitration;
-    //     fpmm.arbitrationOccurred = question.arbitrationOccurred;
-    //     fpmm.answerFinalizedTimestamp = question.answerFinalizedTimestamp;
-    //     let fpmms = question.indexedFixedProductMarketMakers;
-    //     fpmms.push(addressHexString);
-    //     question.indexedFixedProductMarketMakers = fpmms;
-    //     question.save();
-    //     fpmm.indexedOnQuestion = true;
-    //   } else {
-    //     log.warning(
-    //       "cannot continue updating live question (id {}) properties on fpmm {}",
-    //       [questionIdStr, addressHexString]
-    //     );
-    //   }
-    // }
 
     let creatorAgent = CreatorAgent.load(creatorAddressHexString);
     if (creatorAgent === null) {
