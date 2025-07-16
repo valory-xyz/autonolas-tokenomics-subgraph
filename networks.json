@@ -10,10 +10,6 @@
     "FPMMDeterministicFactory": {
       "address": "0x9083A2B699c0a4AD06F63580BDE2635d26a3eeF0"
     },
-    "FPMMDeterministicFactoryV2": {
-      "address": "0x79e32aE03fb27B07C89c0c568F80287C01ca2E57",
-      "startBlock": 27871084
-    },
     "Realitio_v2_1": {
       "address": "0x79e32aE03fb27B07C89c0c568F80287C01ca2E57"
     }

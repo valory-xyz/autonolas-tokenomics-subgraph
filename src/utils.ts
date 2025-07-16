@@ -1,36 +1,40 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Global, TraderAgent } from "../generated/schema";
 
-export function updateTraderAgent(
+export function updateTraderAgentActivity(
   address: Address,
-  blockTimestamp: BigInt,
-  tradeAmount: BigInt,
-  payout: BigInt,
-  betsCount: number,
+  blockTimestamp: BigInt
 ): void {
-  let addressHex = address.toHexString();
-  let agent = TraderAgent.load(addressHex);
+  let agent = TraderAgent.load(address);
   if (agent !== null) {
     if (agent.firstParticipation === null) {
       agent.firstParticipation = blockTimestamp;
       let global = getGlobal();
       global.totalActiveTraderAgents += 1;
-      global.save()
+      global.save();
     }
 
-    agent.totalBets += <i32>betsCount;
-    agent.totalTraded = agent.totalTraded.plus(tradeAmount)
-    agent.totalPayout = agent.totalPayout.plus(payout);
-
+    agent.totalBets += 1;
     agent.lastActive = blockTimestamp;
     agent.save();
   }
 }
 
+export function updateTraderAgentPayout(
+  address: Address,
+  payout: BigInt
+): void {
+  let agent = TraderAgent.load(address);
+  if (agent !== null) {
+    agent.totalPayout = agent.totalPayout.plus(payout);
+    agent.save();
+  }
+}
+
 export function getGlobal(): Global {
-  let global = Global.load('');
+  let global = Global.load("");
   if (global == null) {
-    global = new Global('');
+    global = new Global("");
     global.totalTraderAgents = 0;
     global.totalActiveTraderAgents = 0;
   }
