@@ -35,6 +35,8 @@ dataSources:
         # The signature is updated to match the ABI you provided.
         - event: CreateMultisigWithAgents(indexed uint256,indexed address)
           handler: handleCreateMultisig
+        - event: RegisterInstance(indexed address,indexed uint256,indexed address,uint256)
+          handler: handleRegisterInstance
       file: ../../../shared/service-registry/mappers/mapping.ts
 
 templates:
@@ -58,5 +60,7 @@ templates:
         # This event signals that the service has performed an action.
         # It's a reliable indicator of "activity".
         - event: ExecutionSuccess(bytes32,uint256)
+          handler: handleServiceActivity
+        - event: ExecutionFromModuleSuccess(indexed address)
           handler: handleServiceActivity
       file: ../../../shared/service-registry/mappers/mapping.ts 
