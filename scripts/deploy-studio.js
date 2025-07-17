@@ -11,7 +11,7 @@ const rl = readline.createInterface({
 // Network configurations
 const networkTypes = {
   '1': {
-    name: 'L1 Mainnet',
+    name: 'Tokenomics L1',
     description: 'Ethereum Mainnet - Full tokenomics + OLAS holders',
     networks: {
       'mainnet': {
@@ -21,7 +21,7 @@ const networkTypes = {
     }
   },
   '2': {
-    name: 'L2 Networks',
+    name: 'Tokenomics L2',
     description: 'Layer 2 Networks - OLAS holders only',
     networks: {
       'base': {
@@ -35,12 +35,30 @@ const networkTypes = {
     }
   },
   '3': {
-    name: 'Service Registry',
-    description: 'Service Registry - Tracks active services',
+    name: 'Service Registry L1',
+    description: 'Service Registry on L1',
     networks: {
       'mainnet': {
         path: 'subgraphs/service-registry/service-registry-eth/subgraph.yaml',
         description: 'Ethereum Mainnet'
+      }
+    }
+  },
+  '4': {
+    name: 'Service Registry L2',
+    description: 'Service Registry on L2s',
+    networks: {
+      'optimism': {
+        path: 'subgraphs/service-registry/service-registry-optimism/subgraph.optimism.yaml',
+        description: 'Optimism'
+      },
+      'base': {
+        path: 'subgraphs/service-registry/service-registry-base/subgraph.base.yaml',
+        description: 'Base Network'
+      },
+      'gnosis': {
+        path: 'subgraphs/service-registry/service-registry-gnosis/subgraph.gnosis.yaml',
+        description: 'Gnosis Chain'
       }
     }
   }
@@ -66,7 +84,7 @@ async function main() {
     console.log('');
     
     // Ask for network type
-    const networkType = await askQuestion('Enter network type (1, 2, or 3): ');
+    const networkType = await askQuestion('Enter network type (1, 2, 3 or 4): ');
     
     if (!networkTypes[networkType]) {
       console.error(`❌ Invalid network type: ${networkType}`);
@@ -77,27 +95,30 @@ async function main() {
     let networkConfig;
     
     // If L1 (mainnet), auto-select
-    if (networkType === '1') {
-      selectedNetwork = 'mainnet';
-      networkConfig = networkTypes[networkType].networks[selectedNetwork];
-    } else if (networkType === '3') {
+    if (networkType === '1' || networkType === '3') {
       selectedNetwork = 'mainnet';
       networkConfig = networkTypes[networkType].networks[selectedNetwork];
     } else {
-      // If L2, show L2 options
-      console.log('\nAvailable L2 networks:');
-      Object.keys(networkTypes[networkType].networks).forEach(network => {
-        console.log(`  ${network}: ${networkTypes[networkType].networks[network].description}`);
+      // If L2 or Service Registry L2, show numbered options
+      const networkOptions = networkTypes[networkType].networks;
+      const networkKeys = Object.keys(networkOptions);
+
+      console.log(`\nAvailable networks for ${networkTypes[networkType].name}:`);
+      networkKeys.forEach((key, index) => {
+        console.log(`  ${index + 1}. ${networkOptions[key].description} (${key})`);
       });
       console.log('');
-      
-      selectedNetwork = await askQuestion('Enter L2 network (base/gnosis): ');
-      networkConfig = networkTypes[networkType].networks[selectedNetwork];
-      
-      if (!networkConfig) {
-        console.error(`❌ Invalid L2 network: ${selectedNetwork}`);
+
+      const networkChoice = await askQuestion(`Enter network number (1-${networkKeys.length}): `);
+      const choiceIndex = parseInt(networkChoice, 10) - 1;
+
+      if (isNaN(choiceIndex) || choiceIndex < 0 || choiceIndex >= networkKeys.length) {
+        console.error(`❌ Invalid network choice: ${networkChoice}`);
         process.exit(1);
       }
+
+      selectedNetwork = networkKeys[choiceIndex];
+      networkConfig = networkOptions[selectedNetwork];
     }
     
     // Ask for subgraph name
@@ -121,13 +142,26 @@ async function main() {
     console.log(`Config: ${networkConfig.path}\n`);
     
     // Determine build command based on network type
-    const buildCommand = networkType === '1' ? 'yarn build-l1' : (networkType === '2' ? 'yarn build-l2' : 'yarn build-service-registry');
+    const buildCommand = networkType === '1' ? 'yarn build-tokenomics-l1' :
+      (networkType === '2' ? 'yarn build-tokenomics-l2' :
+        (networkType === '3' ? 'yarn build-service-registry-l1' : 'yarn build-service-registry-l2'));
+
 
     console.log(`🔨 Building subgraph with: ${buildCommand}`);
     execSync(buildCommand, {
       stdio: 'inherit',
       env: { ...process.env, FORCE_COLOR: '1' }
     });
+
+    // Cleanup temporary files for L2 builds
+    if (networkType === '2' || networkType === '4') {
+      console.log(`\n🧹 Cleaning up temporary files...`);
+      try {
+        execSync('rm -rf generated-l2', { stdio: 'pipe' });
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+      }
+    }
 
     console.log(`\n🚀 Deploying to Studio...`);
 
@@ -151,16 +185,6 @@ async function main() {
       stdio: 'inherit',
       env: { ...process.env, FORCE_COLOR: '1' }
     });
-    
-    // Cleanup temporary files for L2 builds
-    if (networkType === '2') {
-      console.log(`\n🧹 Cleaning up temporary files...`);
-      try {
-        execSync('rm -rf generated-l2', { stdio: 'pipe' });
-      } catch (cleanupError) {
-        // Ignore cleanup errors
-      }
-    }
 
     console.log(`\n✅ Successfully deployed to Studio!`);
     console.log(`📊 Dashboard: https://thegraph.com/studio/subgraph/${subgraphName}`);
