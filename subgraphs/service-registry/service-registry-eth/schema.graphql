@@ -1,0 +1,49 @@
+# schema.graphql
+# This file defines the data entities that your subgraph will store.
+# The schema is defined using the GraphQL interface definition language.
+
+"""
+A Service entity represents a single autonomous service created by the registry.
+The ID is the address of the service's multisig wallet, making it unique.
+"""
+type Service @entity(immutable: true) {
+  "The multisig address of the service."
+  id: Bytes!
+
+  "The address of the account that initiated the service creation transaction."
+  creator: Bytes!
+
+  "The block timestamp when the service was created."
+  creationTimestamp: BigInt!
+
+  "The transaction hash of the creation event."
+  txHash: Bytes!
+}
+
+"""
+This entity acts as a 'seen' list to ensure we only count a service once per day.
+The ID is a composite key: {dayTimestamp}-{serviceAddress}, which guarantees uniqueness
+for each service on any given day. Its existence implies activity.
+"""
+type DailyServiceActivity @entity(immutable: true) {
+  "Unique ID: {dayTimestamp}-{service.id}"
+  id: ID!
+
+  "A link to the Service entity that was active."
+  service: Service!
+
+  "The UNIX timestamp for the start of the day (00:00:00 UTC)."
+  dayTimestamp: BigInt!
+}
+
+"""
+This entity aggregates the total count of unique active services for a given day.
+It provides the final data point you want for your charts.
+"""
+type DailyActiveServiceCount @entity(immutable: false) {
+  "The ID is the UNIX timestamp for the start of the day."
+  id: ID!
+
+  "The total number of unique active services on this day."
+  count: Int!
+} 

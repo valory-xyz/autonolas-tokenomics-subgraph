@@ -15,7 +15,7 @@ const networkTypes = {
     description: 'Ethereum Mainnet - Full tokenomics + OLAS holders',
     networks: {
       'mainnet': {
-        path: 'subgraphs/tokenomics/subgraph.yaml',
+        path: 'subgraphs/tokenomics/tokenomics-eth/subgraph.yaml',
         description: 'Ethereum Mainnet'
       }
     }
@@ -25,12 +25,22 @@ const networkTypes = {
     description: 'Layer 2 Networks - OLAS holders only',
     networks: {
       'base': {
-        path: 'subgraphs/tokenomics-base/subgraph.base.yaml',
+        path: 'subgraphs/tokenomics/tokenomics-base/subgraph.base.yaml',
         description: 'Base Network'
       },
       'gnosis': {
-        path: 'subgraphs/tokenomics-gnosis/subgraph.gnosis.yaml',
+        path: 'subgraphs/tokenomics/tokenomics-gnosis/subgraph.gnosis.yaml',
         description: 'Gnosis Chain'
+      }
+    }
+  },
+  '3': {
+    name: 'Service Registry',
+    description: 'Service Registry - Tracks active services',
+    networks: {
+      'mainnet': {
+        path: 'subgraphs/service-registry/service-registry-eth/subgraph.yaml',
+        description: 'Ethereum Mainnet'
       }
     }
   }
@@ -56,7 +66,7 @@ async function main() {
     console.log('');
     
     // Ask for network type
-    const networkType = await askQuestion('Enter network type (1 or 2): ');
+    const networkType = await askQuestion('Enter network type (1, 2, or 3): ');
     
     if (!networkTypes[networkType]) {
       console.error(`❌ Invalid network type: ${networkType}`);
@@ -68,6 +78,9 @@ async function main() {
     
     // If L1 (mainnet), auto-select
     if (networkType === '1') {
+      selectedNetwork = 'mainnet';
+      networkConfig = networkTypes[networkType].networks[selectedNetwork];
+    } else if (networkType === '3') {
       selectedNetwork = 'mainnet';
       networkConfig = networkTypes[networkType].networks[selectedNetwork];
     } else {
@@ -108,7 +121,7 @@ async function main() {
     console.log(`Config: ${networkConfig.path}\n`);
     
     // Determine build command based on network type
-    const buildCommand = networkType === '1' ? 'yarn build-l1' : 'yarn build-l2';
+    const buildCommand = networkType === '1' ? 'yarn build-l1' : (networkType === '2' ? 'yarn build-l2' : 'yarn build-service-registry');
 
     console.log(`🔨 Building subgraph with: ${buildCommand}`);
     execSync(buildCommand, {
