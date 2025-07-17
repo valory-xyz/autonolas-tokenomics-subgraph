@@ -78,6 +78,9 @@ type DailyActiveAgentCount @entity(immutable: false) {
   "Unique ID: {dayTimestamp}-{agentId}"
   id: ID!
 
+  "The UNIX timestamp for the start of the day."
+  dayTimestamp: BigInt!
+
   "The agent ID."
   agentId: Int!
 

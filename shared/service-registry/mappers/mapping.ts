@@ -127,6 +127,7 @@ export function handleServiceActivity(event: ExecutionSuccess): void {
         let dailyActiveAgentCount = DailyActiveAgentCount.load(dailyActiveAgentCountId);
         if (dailyActiveAgentCount == null) {
           dailyActiveAgentCount = new DailyActiveAgentCount(dailyActiveAgentCountId);
+          dailyActiveAgentCount.dayTimestamp = dayID;
           dailyActiveAgentCount.agentId = agentId;
           dailyActiveAgentCount.count = 0;
         }
