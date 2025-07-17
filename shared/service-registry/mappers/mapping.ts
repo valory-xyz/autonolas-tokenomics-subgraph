@@ -22,12 +22,7 @@ import {
   GnosisSafe as GnosisSafeTemplate
 } from "../generated/templates"
 
-/**
- * @dev Handles the `CreateMultisigWithAgents` event from the `ServiceRegistryL2` contract.
- * This function is responsible for creating a new `Service` entity and
- * dynamically starting to watch the new multisig address for activity.
- * @param event The `CreateMultisigWithAgents` event object.
- */
+
 export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
   // The multisig address is the unique ID for the service.
   let serviceId = event.params.multisig;
@@ -50,12 +45,7 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
   }
 }
 
-/**
- * @dev Handles the `ExecutionSuccess` event from a service's Gnosis Safe multisig.
- * This function is triggered whenever any of the dynamically monitored services
- * successfully executes a transaction, which we define as "activity".
- * @param event The `ExecutionSuccess` event object.
- */
+
 export function handleServiceActivity(event: ExecutionSuccess): void {
   let timestamp = event.block.timestamp
   // Calculate the timestamp for the beginning of the day by using integer division.
