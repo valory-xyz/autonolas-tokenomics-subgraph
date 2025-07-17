@@ -29,17 +29,25 @@ import {
  * @param event The `CreateMultisigWithAgents` event object.
  */
 export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
-  // Create a new `Service` entity. The multisig address is used as the unique ID.
-  let service = new Service(event.params.multisig)
-  service.creator = event.transaction.from
-  service.creationTimestamp = event.block.timestamp
-  service.txHash = event.transaction.hash
-  service.save()
+  // The multisig address is the unique ID for the service.
+  let serviceId = event.params.multisig;
 
-  // This is the most important step for tracking activity.
-  // We instruct the subgraph to start indexing the new multisig contract
-  // using the `GnosisSafe` template defined in our `subgraph.yaml` file.
-  GnosisSafeTemplate.create(event.params.multisig)
+  // Check if the Service entity already exists.
+  let service = Service.load(serviceId);
+
+  // If the service does not exist, create it.
+  // This prevents overwriting an existing immutable entity if the event is fired more than once
+  // for the same multisig address.
+  if (service == null) {
+    service = new Service(serviceId);
+    service.creator = event.transaction.from;
+    service.creationTimestamp = event.block.timestamp;
+    service.txHash = event.transaction.hash;
+    service.save();
+
+    // Start indexing the new multisig contract for activity events.
+    GnosisSafeTemplate.create(event.params.multisig);
+  }
 }
 
 /**
