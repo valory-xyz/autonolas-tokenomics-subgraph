@@ -5,7 +5,8 @@
 import { BigInt, Bytes } from "@graphprotocol/graph-ts"
 import {
   // Import the specific event from the auto-generated types for the main contract
-  CreateMultisigWithAgents
+  CreateMultisigWithAgents,
+  RegisterInstance
 } from "../generated/ServiceRegistryL2/ServiceRegistryL2"
 import {
   // Import the event from the auto-generated types for the template contract
@@ -15,7 +16,10 @@ import {
   // Import the entity types we defined in our schema
   Service,
   DailyActiveServiceCount,
-  DailyServiceActivity
+  DailyServiceActivity,
+  ServiceIdLink,
+  DailyActiveAgentCount,
+  DailyAgentActivity
 } from "../generated/schema"
 import {
   // Import the template definition to create new dynamic data sources
@@ -38,10 +42,33 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
     service.creator = event.transaction.from;
     service.creationTimestamp = event.block.timestamp;
     service.txHash = event.transaction.hash;
+    service.agentIds = [];
     service.save();
+
+    // Create a link between the serviceId and the service entity
+    let serviceIdLink = new ServiceIdLink(event.params.serviceId.toString());
+    serviceIdLink.service = service.id;
+    serviceIdLink.save();
 
     // Start indexing the new multisig contract for activity events.
     GnosisSafeTemplate.create(event.params.multisig);
+  }
+}
+
+export function handleRegisterInstance(event: RegisterInstance): void {
+  let serviceIdLink = ServiceIdLink.load(event.params.serviceId.toString());
+
+  if (serviceIdLink) {
+    let service = Service.load(serviceIdLink.service);
+    if (service) {
+      let agentIds = service.agentIds;
+      let agentId = event.params.agentId.toI32();
+      if (!agentIds.includes(agentId)) {
+        agentIds.push(agentId);
+        service.agentIds = agentIds;
+        service.save();
+      }
+    }
   }
 }
 
@@ -82,6 +109,30 @@ export function handleServiceActivity(event: ExecutionSuccess): void {
     dailyCount.count = dailyCount.count + 1
     dailyCount.save()
   }
-  // If `dailyActivity` was not null, we do nothing, because the service has already
-  // been counted for today.
+
+  // Handle agent-specific activity
+  let service = Service.load(serviceAddress);
+  if (service) {
+    let agentIds = service.agentIds;
+    for (let i = 0; i < agentIds.length; i++) {
+      let agentId = agentIds[i];
+      let dailyAgentActivityId = dayID.toString() + "-" + agentId.toString() + "-" + serviceAddress.toHexString();
+      let dailyAgentActivity = DailyAgentActivity.load(dailyAgentActivityId);
+
+      if (dailyAgentActivity == null) {
+        dailyAgentActivity = new DailyAgentActivity(dailyAgentActivityId);
+        dailyAgentActivity.save();
+
+        let dailyActiveAgentCountId = dayID.toString() + "-" + agentId.toString();
+        let dailyActiveAgentCount = DailyActiveAgentCount.load(dailyActiveAgentCountId);
+        if (dailyActiveAgentCount == null) {
+          dailyActiveAgentCount = new DailyActiveAgentCount(dailyActiveAgentCountId);
+          dailyActiveAgentCount.agentId = agentId;
+          dailyActiveAgentCount.count = 0;
+        }
+        dailyActiveAgentCount.count = dailyActiveAgentCount.count + 1;
+        dailyActiveAgentCount.save();
+      }
+    }
+  }
 } 
