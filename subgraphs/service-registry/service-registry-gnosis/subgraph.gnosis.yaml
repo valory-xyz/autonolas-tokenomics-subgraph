@@ -2,7 +2,7 @@
 
 specVersion: 0.0.5
 schema:
-  file: ../service-registry-eth/schema.graphql
+  file: ../../../shared/service-registry/schema.graphql
 dataSources:
   # This is the STATIC data source. It listens to the main ServiceRegistryL2 contract
   # to discover when new services are created.
@@ -35,7 +35,7 @@ dataSources:
         # The signature is updated to match the ABI you provided.
         - event: CreateMultisigWithAgents(indexed uint256,indexed address)
           handler: handleCreateMultisig
-      file: ../service-registry-eth/src/mapping.ts
+      file: ../../../shared/service-registry/mappers/mapping.ts
 
 templates:
   - kind: ethereum/contract
@@ -59,4 +59,4 @@ templates:
         # It's a reliable indicator of "activity".
         - event: ExecutionSuccess(bytes32,uint256)
           handler: handleServiceActivity
-      file: ../service-registry-eth/src/mapping.ts 
+      file: ../../../shared/service-registry/mappers/mapping.ts 
