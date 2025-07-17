@@ -1,0 +1,62 @@
+# This is the main configuration file for the subgraph.
+
+specVersion: 0.0.5
+schema:
+  file: ../service-registry-eth/schema.graphql
+dataSources:
+  # This is the STATIC data source. It listens to the main ServiceRegistryL2 contract
+  # to discover when new services are created.
+  - kind: ethereum/contract
+    name: ServiceRegistryL2
+    network: optimism
+    source:
+      # The address of the ServiceRegistryL2 contract on Polygon.
+      # Make sure this is the correct address for the network you are deploying to.
+      address: "0x3d77596beb0f130a4415df3D2D8232B3d3D31e44"
+      abi: ServiceRegistryL2
+      # It's good practice to set a startBlock to speed up initial syncing.
+      # Find the block number when the contract was deployed.
+      startBlock: 116423039
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Service
+      abis:
+        # ABI for the main registry contract.
+        - name: ServiceRegistryL2
+          file: ../../../abis/ServiceRegistryL2.json
+        # ABI for the multisig contracts that will be created.
+        - name: GnosisSafe
+          file: ../../../abis/GnosisSafe.json
+      eventHandlers:
+        # This is the handler for the service creation event.
+        # The signature is updated to match the ABI you provided.
+        - event: CreateMultisigWithAgents(indexed uint256,indexed address)
+          handler: handleCreateMultisig
+      file: ../service-registry-eth/src/mapping.ts
+
+templates:
+  - kind: ethereum/contract
+    name: GnosisSafe
+    network: optimism
+    source:
+      # The ABI for the template is the Gnosis Safe multisig contract.
+      abi: GnosisSafe
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyServiceActivity
+        - DailyActiveServiceCount
+      abis:
+        - name: GnosisSafe
+          file: ../../../abis/GnosisSafe.json
+      eventHandlers:
+        # This event signals that the service has performed an action.
+        # It's a reliable indicator of "activity".
+        - event: ExecutionSuccess(bytes32,uint256)
+          handler: handleServiceActivity
+      file: ../service-registry-eth/src/mapping.ts 
