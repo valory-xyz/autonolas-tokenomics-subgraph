@@ -8,7 +8,7 @@ dataSources:
   # to discover when new services are created.
   - kind: ethereum/contract
     name: ServiceRegistryL2
-    network: ethereum # The Graph's network name for Polygon
+    network: mainnet # The Graph's network name for Polygon
     source:
       # The address of the ServiceRegistryL2 contract on Polygon.
       # Make sure this is the correct address for the network you are deploying to.
@@ -40,7 +40,7 @@ dataSources:
 templates:
   - kind: ethereum/contract
     name: GnosisSafe
-    network: ethereum
+    network: mainnet
     source:
       # The ABI for the template is the Gnosis Safe multisig contract.
       abi: GnosisSafe
