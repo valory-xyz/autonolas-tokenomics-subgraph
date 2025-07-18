@@ -4,11 +4,11 @@ schema:
 dataSources:
   - kind: ethereum
     name: OLAS
-    network: gnosis
+    network: arbitrum-one
     source:
-      address: "0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f" 
+      address: "0x064F8B858C2A603e1b106a2039f5446D32dc81c1"
       abi: OLAS
-      startBlock: 32672101
+      startBlock: 173139043
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

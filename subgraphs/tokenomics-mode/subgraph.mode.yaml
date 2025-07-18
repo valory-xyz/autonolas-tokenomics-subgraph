@@ -4,11 +4,11 @@ schema:
 dataSources:
   - kind: ethereum
     name: OLAS
-    network: gnosis
+    network: mode-mainnet
     source:
-      address: "0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f" 
+      address: "0xcfD1D50ce23C46D3Cf6407487B2F8934e96DC8f9" 
       abi: OLAS
-      startBlock: 32672101
+      startBlock: 14443184
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
