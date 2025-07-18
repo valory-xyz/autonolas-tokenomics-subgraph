@@ -24,6 +24,10 @@ const networkTypes = {
     name: 'Tokenomics L2',
     description: 'Layer 2 Networks - OLAS holders only',
     networks: {
+      'arbitrum': {
+        path: 'subgraphs/tokenomics-arbitrum/subgraph.arbitrum.yaml',
+        description: 'Arbitrum Network'
+      },
       'base': {
         path: 'subgraphs/tokenomics/tokenomics-base/subgraph.base.yaml',
         description: 'Base Network'
@@ -59,6 +63,50 @@ const networkTypes = {
       'gnosis': {
         path: 'subgraphs/service-registry/service-registry-gnosis/subgraph.gnosis.yaml',
         description: 'Gnosis Chain'
+      }
+    }
+  },
+  '3': {
+    name: 'Service Registry L1',
+    description: 'Service Registry on L1',
+    networks: {
+      'mainnet': {
+        path: 'subgraphs/service-registry/service-registry-eth/subgraph.yaml',
+        description: 'Ethereum Mainnet'
+      }
+    }
+  },
+  '4': {
+    name: 'Service Registry L2',
+    description: 'Service Registry on L2s',
+    networks: {
+      'optimism': {
+        path: 'subgraphs/service-registry/service-registry-optimism/subgraph.optimism.yaml',
+        description: 'Optimism'
+      },
+      'base': {
+        path: 'subgraphs/service-registry/service-registry-base/subgraph.base.yaml',
+        description: 'Base Network'
+      },
+      'celo': {
+        path: 'subgraphs/tokenomics-celo/subgraph.celo.yaml',
+        description: 'Celo Network'
+      },
+      'gnosis': {
+        path: 'subgraphs/service-registry/service-registry-gnosis/subgraph.gnosis.yaml',
+        description: 'Gnosis Chain'
+      },
+      'mode': {
+        path: 'subgraphs/tokenomics-mode/subgraph.mode.yaml',
+        description: 'Mode Network'
+      },
+      'optimism': {
+        path: 'subgraphs/tokenomics-optimism/subgraph.optimism.yaml',
+        description: 'Optimism Network'
+      },
+      'polygon': {
+        path: 'subgraphs/tokenomics-polygon/subgraph.polygon.yaml',
+        description: 'Polygon Network'
       }
     }
   }
@@ -132,6 +180,9 @@ async function main() {
     // Ask for version (optional)
     const version = await askQuestion('Enter version (default: v0.0.1): ') || 'v0.0.1';
     
+    // Ask for deployment platform
+    const platform = await askQuestion('Enter deployment platform (1. Graph Studio, 2. Alchemy): ') || '1';
+
     rl.close();
     
     console.log(`\n📦 Preparing deployment...`);
@@ -139,6 +190,7 @@ async function main() {
     console.log(`Network: ${selectedNetwork}`);
     console.log(`Subgraph: ${subgraphName}`);
     console.log(`Version: ${version}`);
+    console.log(`Platform: ${platform === '1' ? 'Graph Studio' : 'Alchemy'}`);
     console.log(`Config: ${networkConfig.path}\n`);
     
     // Determine build command based on network type
