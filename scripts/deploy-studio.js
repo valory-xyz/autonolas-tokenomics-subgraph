@@ -24,21 +24,33 @@ const networkTypes = {
     name: 'L2 Networks',
     description: 'Layer 2 Networks - OLAS holders only',
     networks: {
+      'arbitrum': {
+        path: 'subgraphs/tokenomics-arbitrum/subgraph.arbitrum.yaml',
+        description: 'Arbitrum Network'
+      },
       'base': {
         path: 'subgraphs/tokenomics-base/subgraph.base.yaml',
         description: 'Base Network'
+      },
+      'celo': {
+        path: 'subgraphs/tokenomics-celo/subgraph.celo.yaml',
+        description: 'Celo Network'
       },
       'gnosis': {
         path: 'subgraphs/tokenomics-gnosis/subgraph.gnosis.yaml',
         description: 'Gnosis Chain'
       },
-      'polygon': {
-        path: 'subgraphs/tokenomics-polygon/subgraph.polygon.yaml',
-        description: 'Polygon Network'
+      'mode': {
+        path: 'subgraphs/tokenomics-mode/subgraph.mode.yaml',
+        description: 'Mode Network'
       },
       'optimism': {
         path: 'subgraphs/tokenomics-optimism/subgraph.optimism.yaml',
         description: 'Optimism Network'
+      },
+      'polygon': {
+        path: 'subgraphs/tokenomics-polygon/subgraph.polygon.yaml',
+        description: 'Polygon Network'
       }
     }
   }
