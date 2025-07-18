@@ -1,0 +1,58 @@
+# This is the main configuration file for the subgraph.
+
+specVersion: 0.0.5
+schema:
+  file: ../../../shared/service-registry/schema.graphql
+dataSources:
+  # This is the STATIC data source. It listens to the main ServiceRegistryL2 contract
+  # to discover when new services are created.
+  - kind: ethereum/contract
+    name: ServiceRegistryL2
+    network: base
+    source:
+      address: "0x3d77596beb0f130a4415df3D2D8232B3d3D31e44"
+      abi: ServiceRegistryL2
+      startBlock: 116423039
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Service
+      abis:
+        # ABI for the main registry contract.
+        - name: ServiceRegistryL2
+          file: ../../../abis/ServiceRegistryL2.json
+        # ABI for the multisig contracts that will be created.
+        - name: GnosisSafe
+          file: ../../../abis/GnosisSafe.json
+      eventHandlers:
+        - event: CreateMultisigWithAgents(indexed uint256,indexed address)
+          handler: handleCreateMultisig
+        - event: RegisterInstance(indexed address,indexed uint256,indexed address,uint256)
+          handler: handleRegisterInstance
+      file: ../../../shared/service-registry/mappers/mapping.ts
+
+templates:
+  - kind: ethereum/contract
+    name: GnosisSafe
+    network: base
+    source:
+      # The ABI for the template is the Gnosis Safe multisig contract.
+      abi: GnosisSafe
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyServiceActivity
+        - DailyActiveServiceCount
+      abis:
+        - name: GnosisSafe
+          file: ../../../abis/GnosisSafe.json
+      eventHandlers:
+        - event: ExecutionSuccess(bytes32,uint256)
+          handler: handleServiceActivity
+        - event: ExecutionFromModuleSuccess(indexed address)
+          handler: handleServiceActivity
+      file: ../../../shared/service-registry/mappers/mapping.ts 

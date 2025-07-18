@@ -16,6 +16,13 @@
     "build-mode": "graph build subgraphs/tokenomics/tokenomics-mode/subgraph.mode.yaml",
     "build-optimism": "graph build subgraphs/tokenomics/tokenomics-optimism/subgraph.optimism.yaml",
     "build-polygon": "graph build subgraphs/tokenomics/tokenomics-polygon/subgraph.polygon.yaml",
+    "codegen-service-registry": "graph codegen subgraphs/service-registry/service-registry-eth/subgraph.yaml -o shared/service-registry/generated",
+    "build-service-registry-l1": "yarn codegen-service-registry && yarn build-service-registry-ethereum",
+    "build-service-registry-l2": "yarn codegen-service-registry && yarn build-service-registry-optimism && yarn build-service-registry-base && yarn build-service-registry-gnosis",
+    "build-service-registry-ethereum": "graph build subgraphs/service-registry/service-registry-eth/subgraph.yaml",
+    "build-service-registry-optimism": "graph build subgraphs/service-registry/service-registry-optimism/subgraph.optimism.yaml",
+    "build-service-registry-base": "graph build subgraphs/service-registry/service-registry-base/subgraph.base.yaml",
+    "build-service-registry-gnosis": "graph build subgraphs/service-registry/service-registry-gnosis/subgraph.gnosis.yaml",
     "deploy-studio": "node scripts/deploy-studio.js",
     "test": "graph test"
   },
