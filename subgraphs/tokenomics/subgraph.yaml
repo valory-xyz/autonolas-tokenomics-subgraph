@@ -26,7 +26,7 @@ dataSources:
         - TreasuryUpdated
       abis:
         - name: DepositoryV1
-          file: ./abis/DepositoryV1.json
+          file: ../../abis/DepositoryV1.json
       eventHandlers:
         - event: BondCalculatorUpdated(indexed address)
           handler: handleBondCalculatorUpdated
@@ -68,7 +68,7 @@ dataSources:
         - TreasuryUpdated
       abis:
         - name: DepositoryV2
-          file: ./abis/DepositoryV2.json
+          file: ../../abis/DepositoryV2.json
       eventHandlers:
         - event: BondCalculatorUpdated(indexed address)
           handler: handleBondCalculatorUpdated
@@ -122,7 +122,7 @@ dataSources:
         - TokenomicsTreasuryUpdated
       abis:
         - name: Tokenomics
-          file: ./abis/Tokenomics.json
+          file: ../../abis/Tokenomics.json
       eventHandlers:
         - event: AgentRegistryUpdated(indexed address)
           handler: handleAgentRegistryUpdated
@@ -189,7 +189,7 @@ dataSources:
         - DispenserTreasuryUpdated
       abis:
         - name: DispenserV1
-          file: ./abis/DispenserV1.json
+          file: ../../abis/DispenserV1.json
       eventHandlers:
         - event: IncentivesClaimed(indexed address,uint256,uint256)
           handler: handleIncentivesClaimed
@@ -228,7 +228,7 @@ dataSources:
         - WithheldAmountSynced
       abis:
         - name: DispenserV2
-          file: ./abis/DispenserV2.json
+          file: ../../abis/DispenserV2.json
       eventHandlers:
         - event: AddNomineeHash(indexed bytes32)
           handler: handleAddNomineeHash
@@ -276,7 +276,7 @@ dataSources:
         - Epoch
       abis:
         - name: OLAS
-          file: ./abis/OLAS.json # You'll need the OLAS token ABI
+          file: ../../abis/OLAS.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
@@ -296,7 +296,7 @@ dataSources:
         - VeolasDepositor
       abis:
         - name: veOLAS
-          file: ./abis/veOLAS.json
+          file: ../../abis/veOLAS.json
       eventHandlers:
         - event: Deposit(indexed address,uint256,uint256,uint8,uint256)
           handler: handleDeposit

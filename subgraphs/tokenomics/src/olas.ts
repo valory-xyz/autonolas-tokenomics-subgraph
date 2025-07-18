@@ -1,6 +1,7 @@
 import { Transfer } from "../generated/OLAS/OLAS";
 import { BondClaim, Epoch, Token } from "../generated/schema";
 import { findEpochId } from "./utils";
+import { handleTransferBalances } from "../../../shared/tokenomics/utils";
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 const VEOLAS_ADDRESS = Address.fromString(
   "0x7e01A500805f8A52Fad229b3015AD130A332B7b3"
@@ -14,7 +15,7 @@ const BOND_CLAIMER_ADDRESSES = [
 ];
 
 export function handleTransfer(event: Transfer): void {
-  if (BOND_CLAIMER_ADDRESSES.includes(event.params.from)) {
+  if (BOND_CLAIMER_ADDRESSES.indexOf(event.params.from) > -1) {
     const currentEpochId = findEpochId(event.block.number);
     let bondClaim = new BondClaim(
       event.transaction.hash.concatI32(event.logIndex.toI32())
@@ -42,6 +43,15 @@ export function handleTransfer(event: Transfer): void {
       }
     }
   }
+
+  // OLAS token and holder tracking
+  handleTransferBalances(
+    event.address,
+    event.params.from,
+    event.params.to,
+    event.params.amount
+  );
+
   if (
     event.params.to.equals(VEOLAS_ADDRESS) ||
     event.params.from.equals(VEOLAS_ADDRESS)
@@ -50,6 +60,7 @@ export function handleTransfer(event: Transfer): void {
     if (token == null) {
       token = new Token(VEOLAS_ADDRESS);
       token.balance = BIGINT_ZERO;
+      token.holderCount = 0;
     }
 
     // if 'to' is veOLAS contract, increase balance

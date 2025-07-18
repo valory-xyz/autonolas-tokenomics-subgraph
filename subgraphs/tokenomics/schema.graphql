@@ -450,12 +450,19 @@ type BondClaim @entity(immutable: false) {
   blockTimestamp: BigInt!
 }
 
-type Token @entity {
+type Token @entity(immutable: false) {
   id: Bytes!
+  balance: BigInt!
+  holderCount: Int!
+}
+
+type TokenHolder @entity(immutable: false) {
+  id: Bytes!
+  token: Bytes!
   balance: BigInt!
 }
 
-type VeolasDepositor @entity {
+type VeolasDepositor @entity(immutable: false) {
   id: Bytes!
   unlockTimestamp: BigInt!
 }
