@@ -54,7 +54,7 @@ export function handleTransferBalances(
       oldBalance.gt(BIGINT_ZERO) &&
       fromHolder.balance.equals(BIGINT_ZERO)
     ) {
-      token.holderCount = token.holderCount! - 1;
+      token.holderCount = token.holderCount - 1;
       store.remove("TokenHolder", fromAddress.toHex());
     }
   }
@@ -73,7 +73,7 @@ export function handleTransferBalances(
       oldBalance.equals(BIGINT_ZERO) &&
       toHolder.balance.gt(BIGINT_ZERO)
     ) {
-      token.holderCount = token.holderCount! + 1;
+      token.holderCount = token.holderCount + 1;
     }
   }
 
