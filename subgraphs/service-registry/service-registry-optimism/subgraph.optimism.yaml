@@ -10,12 +10,8 @@ dataSources:
     name: ServiceRegistryL2
     network: optimism
     source:
-      # The address of the ServiceRegistryL2 contract on Polygon.
-      # Make sure this is the correct address for the network you are deploying to.
       address: "0x3d77596beb0f130a4415df3D2D8232B3d3D31e44"
       abi: ServiceRegistryL2
-      # It's good practice to set a startBlock to speed up initial syncing.
-      # Find the block number when the contract was deployed.
       startBlock: 116423039
     mapping:
       kind: ethereum/events
@@ -31,8 +27,6 @@ dataSources:
         - name: GnosisSafe
           file: ../../../abis/GnosisSafe.json
       eventHandlers:
-        # This is the handler for the service creation event.
-        # The signature is updated to match the ABI you provided.
         - event: CreateMultisigWithAgents(indexed uint256,indexed address)
           handler: handleCreateMultisig
         - event: RegisterInstance(indexed address,indexed uint256,indexed address,uint256)
@@ -57,8 +51,6 @@ templates:
         - name: GnosisSafe
           file: ../../../abis/GnosisSafe.json
       eventHandlers:
-        # This event signals that the service has performed an action.
-        # It's a reliable indicator of "activity".
         - event: ExecutionSuccess(bytes32,uint256)
           handler: handleServiceActivity
         - event: ExecutionFromModuleSuccess(indexed address)

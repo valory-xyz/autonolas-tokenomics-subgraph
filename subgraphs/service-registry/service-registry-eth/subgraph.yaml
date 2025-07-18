@@ -8,14 +8,10 @@ dataSources:
   # to discover when new services are created.
   - kind: ethereum/contract
     name: ServiceRegistryL2
-    network: mainnet # The Graph's network name for Polygon
+    network: mainnet # The Graph's network name for Ethereum
     source:
-      # The address of the ServiceRegistryL2 contract on Polygon.
-      # Make sure this is the correct address for the network you are deploying to.
       address: "0x48b6af7B12C71f09e2fC8aF4855De4Ff54e775cA"
       abi: ServiceRegistryL2
-      # It's good practice to set a startBlock to speed up initial syncing.
-      # Find the block number when the contract was deployed.
       startBlock: 15178299
     mapping:
       kind: ethereum/events
@@ -31,8 +27,6 @@ dataSources:
         - name: GnosisSafe
           file: ../../../abis/GnosisSafe.json
       eventHandlers:
-        # This is the handler for the service creation event.
-        # The signature is updated to match the ABI you provided.
         - event: CreateMultisigWithAgents(indexed uint256,indexed address)
           handler: handleCreateMultisig
         - event: RegisterInstance(indexed address,indexed uint256,indexed address,uint256)
@@ -57,8 +51,6 @@ templates:
         - name: GnosisSafe
           file: ../../../abis/GnosisSafe.json
       eventHandlers:
-        # This event signals that the service has performed an action.
-        # It's a reliable indicator of "activity".
         - event: ExecutionSuccess(bytes32,uint256)
           handler: handleServiceActivity
         - event: ExecutionFromModuleSuccess(indexed address)
