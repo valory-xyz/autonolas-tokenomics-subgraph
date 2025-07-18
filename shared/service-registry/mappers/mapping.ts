@@ -45,8 +45,11 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
     service.agentIds = [];
     service.save();
 
-    // Create a link between the serviceId and the service entity
-    let serviceIdLink = new ServiceIdLink(event.params.serviceId.toString());
+    // Create or update the link between the serviceId and the service entity
+    let serviceIdLink = ServiceIdLink.load(event.params.serviceId.toString());
+    if (serviceIdLink == null) {
+      serviceIdLink = new ServiceIdLink(event.params.serviceId.toString());
+    }
     serviceIdLink.service = service.id;
     serviceIdLink.save();
 

@@ -26,7 +26,7 @@ type Service @entity(immutable: false) {
 """
 This entity links the serviceId to the service entity.
 """
-type ServiceIdLink @entity(immutable: true) {
+type ServiceIdLink @entity(immutable: false) {
   "The serviceId."
   id: ID!
 
