@@ -15,7 +15,7 @@ const networkTypes = {
     description: 'Ethereum Mainnet - Full tokenomics + OLAS holders',
     networks: {
       'mainnet': {
-        path: 'subgraphs/tokenomics/subgraph.yaml',
+        path: 'subgraphs/tokenomics/tokenomics-eth/subgraph.yaml',
         description: 'Ethereum Mainnet'
       }
     }
@@ -25,31 +25,31 @@ const networkTypes = {
     description: 'Layer 2 Networks - OLAS holders only',
     networks: {
       'arbitrum': {
-        path: 'subgraphs/tokenomics-arbitrum/subgraph.arbitrum.yaml',
+        path: 'subgraphs/tokenomics/tokenomics-arbitrum/subgraph.arbitrum.yaml',
         description: 'Arbitrum Network'
       },
       'base': {
-        path: 'subgraphs/tokenomics-base/subgraph.base.yaml',
+        path: 'subgraphs/tokenomics/tokenomics-base/subgraph.base.yaml',
         description: 'Base Network'
       },
       'celo': {
-        path: 'subgraphs/tokenomics-celo/subgraph.celo.yaml',
+        path: 'subgraphs/tokenomics/tokenomics-celo/subgraph.celo.yaml',
         description: 'Celo Network'
       },
       'gnosis': {
-        path: 'subgraphs/tokenomics-gnosis/subgraph.gnosis.yaml',
+        path: 'subgraphs/tokenomics/tokenomics-gnosis/subgraph.gnosis.yaml',
         description: 'Gnosis Chain'
       },
       'mode': {
-        path: 'subgraphs/tokenomics-mode/subgraph.mode.yaml',
+        path: 'subgraphs/tokenomics/tokenomics-mode/subgraph.mode.yaml',
         description: 'Mode Network'
       },
       'optimism': {
-        path: 'subgraphs/tokenomics-optimism/subgraph.optimism.yaml',
+        path: 'subgraphs/tokenomics/tokenomics-optimism/subgraph.optimism.yaml',
         description: 'Optimism Network'
       },
       'polygon': {
-        path: 'subgraphs/tokenomics-polygon/subgraph.polygon.yaml',
+        path: 'subgraphs/tokenomics/tokenomics-polygon/subgraph.polygon.yaml',
         description: 'Polygon Network'
       }
     }
