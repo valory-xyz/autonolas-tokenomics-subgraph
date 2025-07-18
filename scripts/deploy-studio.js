@@ -73,6 +73,22 @@ const networkTypes = {
       'gnosis': {
         path: 'subgraphs/service-registry/service-registry-gnosis/subgraph.gnosis.yaml',
         description: 'Gnosis Chain'
+      },
+      'arbitrum': {
+        path: 'subgraphs/service-registry/service-registry-arbitrum/subgraph.arbitrum.yaml',
+        description: 'Arbitrum Network'
+      },
+      'celo': {
+        path: 'subgraphs/service-registry/service-registry-celo/subgraph.celo.yaml',
+        description: 'Celo Network'
+      },
+      'mode': {
+        path: 'subgraphs/service-registry/service-registry-mode/subgraph.mode.yaml',
+        description: 'Mode Network'
+      },
+      'polygon': {
+        path: 'subgraphs/service-registry/service-registry-polygon/subgraph.polygon.yaml',
+        description: 'Polygon Network'
       }
     }
   }

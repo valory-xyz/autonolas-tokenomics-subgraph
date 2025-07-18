@@ -23,6 +23,10 @@
     "build-service-registry-optimism": "graph build subgraphs/service-registry/service-registry-optimism/subgraph.optimism.yaml",
     "build-service-registry-base": "graph build subgraphs/service-registry/service-registry-base/subgraph.base.yaml",
     "build-service-registry-gnosis": "graph build subgraphs/service-registry/service-registry-gnosis/subgraph.gnosis.yaml",
+    "build-service-registry-arbitrum": "graph build subgraphs/service-registry/service-registry-arbitrum/subgraph.arbitrum.yaml",
+    "build-service-registry-celo": "graph build subgraphs/service-registry/service-registry-celo/subgraph.celo.yaml",
+    "build-service-registry-mode": "graph build subgraphs/service-registry/service-registry-mode/subgraph.mode.yaml",
+    "build-service-registry-polygon": "graph build subgraphs/service-registry/service-registry-polygon/subgraph.polygon.yaml",
     "deploy-studio": "node scripts/deploy-studio.js",
     "test": "graph test"
   },

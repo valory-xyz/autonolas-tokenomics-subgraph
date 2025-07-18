@@ -8,11 +8,11 @@ dataSources:
   # to discover when new services are created.
   - kind: ethereum/contract
     name: ServiceRegistryL2
-    network: base
+    network: arbitrum-one
     source:
-      address: "0x3C1fF68f5aa342D296d4DEe4Bb1cACCA912D95fE"
+      address: "0xE3607b00E75f6405248323A9417ff6b39B244b50"
       abi: ServiceRegistryL2
-      startBlock: 10827380
+      startBlock: 24205712
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -36,7 +36,7 @@ dataSources:
 templates:
   - kind: ethereum/contract
     name: GnosisSafe
-    network: base
+    network: arbitrum-one
     source:
       # The ABI for the template is the Gnosis Safe multisig contract.
       abi: GnosisSafe
