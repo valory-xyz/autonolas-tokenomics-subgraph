@@ -1,7 +1,7 @@
 import {
   Token,
   TokenHolder,
-} from "../../subgraphs/tokenomics/generated/schema";
+} from "../../subgraphs/tokenomics-eth/generated/schema";
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 
 const BIGINT_ZERO = BigInt.fromI32(0);
