@@ -11,7 +11,7 @@ const rl = readline.createInterface({
 // Network configurations
 const networkTypes = {
   '1': {
-    name: 'L1 Mainnet',
+    name: 'Tokenomics L1',
     description: 'Ethereum Mainnet - Full tokenomics + OLAS holders',
     networks: {
       'mainnet': {
@@ -21,7 +21,7 @@ const networkTypes = {
     }
   },
   '2': {
-    name: 'L2 Networks',
+    name: 'Tokenomics L2',
     description: 'Layer 2 Networks - OLAS holders only',
     networks: {
       'arbitrum': {
@@ -53,6 +53,28 @@ const networkTypes = {
         description: 'Polygon Network'
       }
     }
+  },
+  '3': {
+    name: 'Service Registry',
+    description: 'Service Registry Subgraphs',
+    networks: {
+      'ethereum': {
+        path: 'subgraphs/service-registry/service-registry-eth/subgraph.yaml',
+        description: 'Ethereum Mainnet'
+      },
+      'optimism': {
+        path: 'subgraphs/service-registry/service-registry-optimism/subgraph.optimism.yaml',
+        description: 'Optimism Network'
+      },
+      'base': {
+        path: 'subgraphs/service-registry/service-registry-base/subgraph.base.yaml',
+        description: 'Base Network'
+      },
+      'gnosis': {
+        path: 'subgraphs/service-registry/service-registry-gnosis/subgraph.gnosis.yaml',
+        description: 'Gnosis Chain'
+      }
+    }
   }
 };
 
@@ -66,20 +88,21 @@ function askQuestion(question) {
 
 async function main() {
   try {
-    console.log('🚀 Autonolas Tokenomics Subgraph Studio Deployment\n');
+    console.log('🚀 Autonolas Subgraph Studio Deployment\n');
     
     // Show network types
-    console.log('Select network type:');
+    console.log('Select subgraph type:');
     Object.keys(networkTypes).forEach(type => {
       console.log(`  ${type}. ${networkTypes[type].name} - ${networkTypes[type].description}`);
     });
     console.log('');
     
     // Ask for network type
-    const networkType = await askQuestion('Enter network type (1 or 2): ');
+    const networkTypeKey = await askQuestion(`Enter subgraph type (${Object.keys(networkTypes).join(' / ')}): `);
+    const networkType = networkTypes[networkTypeKey];
     
-    if (!networkTypes[networkType]) {
-      console.error(`❌ Invalid network type: ${networkType}`);
+    if (!networkType) {
+      console.error(`❌ Invalid subgraph type: ${networkTypeKey}`);
       process.exit(1);
     }
     
@@ -87,29 +110,34 @@ async function main() {
     let networkConfig;
     
     // If L1 (mainnet), auto-select
-    if (networkType === '1') {
+    if (networkTypeKey === '1') {
       selectedNetwork = 'mainnet';
-      networkConfig = networkTypes[networkType].networks[selectedNetwork];
+      networkConfig = networkType.networks[selectedNetwork];
     } else {
-      // If L2, show L2 options
-      console.log('\nAvailable L2 networks:');
-      const l2Networks = Object.keys(networkTypes[networkType].networks);
-      l2Networks.forEach(network => {
-        console.log(`  ${network}: ${networkTypes[networkType].networks[network].description}`);
+      // If L2 or service registry, show options
+      console.log(`\nAvailable networks for ${networkType.name}:`);
+      const availableNetworks = Object.keys(networkType.networks);
+      availableNetworks.forEach((network, index) => {
+        console.log(`  ${index + 1}. ${network}: ${networkType.networks[network].description}`);
       });
       console.log('');
       
-      selectedNetwork = await askQuestion(`Enter L2 network (${l2Networks.join('/')}): `);
-      networkConfig = networkTypes[networkType].networks[selectedNetwork];
+      const networkIndexStr = await askQuestion(`Enter network number (1-${availableNetworks.length}): `);
+      const networkIndex = parseInt(networkIndexStr, 10) - 1;
+
+      if (networkIndex >= 0 && networkIndex < availableNetworks.length) {
+        selectedNetwork = availableNetworks[networkIndex];
+        networkConfig = networkType.networks[selectedNetwork];
+      }
       
       if (!networkConfig) {
-        console.error(`❌ Invalid L2 network: ${selectedNetwork}`);
+        console.error(`❌ Invalid network selection: ${networkIndexStr}`);
         process.exit(1);
       }
     }
     
     // Ask for subgraph name
-    const subgraphName = await askQuestion('Enter subgraph name (e.g., olas-base-tokenomics-test): ');
+    const subgraphName = await askQuestion('Enter subgraph name (e.g., olas-tokenomics-mainnet): ');
     
     if (!subgraphName) {
       console.error('❌ Subgraph name is required');
@@ -125,15 +153,22 @@ async function main() {
     rl.close();
     
     console.log(`\n📦 Preparing deployment...`);
-    console.log(`Network Type: ${networkTypes[networkType].name}`);
+    console.log(`Subgraph Type: ${networkType.name}`);
     console.log(`Network: ${selectedNetwork}`);
-    console.log(`Subgraph: ${subgraphName}`);
+    console.log(`Subgraph Name: ${subgraphName}`);
     console.log(`Version: ${version}`);
     console.log(`Platform: ${platform === '1' ? 'Graph Studio' : 'Alchemy'}`);
     console.log(`Config: ${networkConfig.path}\n`);
     
     // Determine build command based on network type
-    const buildCommand = networkType === '1' ? 'yarn build-l1' : 'yarn build-l2';
+    let buildCommand;
+    if (networkTypeKey === '1') {
+      buildCommand = 'yarn build-l1';
+    } else if (networkTypeKey === '2') {
+      buildCommand = 'yarn build-l2';
+    } else if (networkTypeKey === '3') {
+      buildCommand = `yarn codegen-service-registry && yarn build-service-registry-${selectedNetwork}`;
+    }
 
     console.log(`🔨 Building subgraph with: ${buildCommand}`);
     execSync(buildCommand, {
@@ -182,7 +217,7 @@ async function main() {
     });
     
     // Cleanup temporary files for L2 builds
-    if (networkType === '2') {
+    if (networkTypeKey === '2') {
       console.log(`\n🧹 Cleaning up temporary files...`);
       try {
         execSync('rm -rf generated-l2', { stdio: 'pipe' });
