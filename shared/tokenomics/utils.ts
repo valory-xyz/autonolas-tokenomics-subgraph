@@ -40,35 +40,38 @@ export function handleTransferBalances(
 ): void {
   let token = getOrCreateToken(tokenAddress);
 
-  // Handle sender
+  // Update Token balance
   if (fromAddress.equals(ZERO_ADDRESS)) {
     // Mint
     token.balance = token.balance.plus(amount);
-  } else {
+  } else if (toAddress.equals(ZERO_ADDRESS)) {
+    // Burn
+    token.balance = token.balance.minus(amount);
+  }
+
+  // Update TokenHolders
+  if (!fromAddress.equals(ZERO_ADDRESS)) {
     let fromHolder = getOrCreateTokenHolder(tokenAddress, fromAddress);
     let oldBalance = fromHolder.balance;
     fromHolder.balance = fromHolder.balance.minus(amount);
     fromHolder.save();
 
+    // Decrement holderCount if their balance drops from > 0 to 0
     if (
       oldBalance.gt(BIGINT_ZERO) &&
       fromHolder.balance.equals(BIGINT_ZERO)
     ) {
       token.holderCount = token.holderCount - 1;
-      store.remove("TokenHolder", fromAddress.toHex());
     }
   }
 
-  // Handle receiver
-  if (toAddress.equals(ZERO_ADDRESS)) {
-    // Burn
-    token.balance = token.balance.minus(amount);
-  } else {
+  if (!toAddress.equals(ZERO_ADDRESS)) {
     let toHolder = getOrCreateTokenHolder(tokenAddress, toAddress);
     let oldBalance = toHolder.balance;
     toHolder.balance = toHolder.balance.plus(amount);
     toHolder.save();
 
+    // Increment holderCount if their balance was 0 and now is > 0
     if (
       oldBalance.equals(BIGINT_ZERO) &&
       toHolder.balance.gt(BIGINT_ZERO)
