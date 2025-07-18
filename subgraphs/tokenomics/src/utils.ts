@@ -1,8 +1,6 @@
 import { BigInt, Bytes, crypto } from "@graphprotocol/graph-ts";
 import { Epoch } from "../generated/schema";
 
-
-
 export function findEpochId(blockNumber: BigInt): string {
   // Find the current epoch based on the block number
   let epochCounter = 1;
