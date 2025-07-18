@@ -8,7 +8,7 @@
     "copy-generated-l1": "cp -r generated subgraphs/tokenomics/",
     "build-ethereum": "graph build subgraphs/tokenomics/subgraph.yaml",
     "codegen-l2": "graph codegen subgraphs/tokenomics-base/subgraph.base.yaml --output-dir generated-l2",
-    "copy-generated-l2": "cp -r generated-l2/* shared/tokenomics/generated/",
+    "copy-generated-l2": "rsync -a generated-l2/ shared/tokenomics/generated/ && rm -rf generated-l2",
     "build-arbitrum": "graph build subgraphs/tokenomics-arbitrum/subgraph.arbitrum.yaml",
     "build-base": "graph build subgraphs/tokenomics-base/subgraph.base.yaml",
     "build-celo": "graph build subgraphs/tokenomics-celo/subgraph.celo.yaml",
