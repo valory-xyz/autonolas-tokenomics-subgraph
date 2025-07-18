@@ -8,7 +8,7 @@ dataSources:
     source:
       address: "0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f" 
       abi: OLAS
-      startBlock: 32672101
+      startBlock: 30254468
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
