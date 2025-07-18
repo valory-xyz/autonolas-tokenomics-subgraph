@@ -1,14 +1,14 @@
 specVersion: 0.0.5
 schema:
-  file: ../../shared/tokenomics/schema-l2.graphql
+  file: ../../../shared/tokenomics/schema-l2.graphql
 dataSources:
   - kind: ethereum
     name: OLAS
-    network: celo
+    network: base
     source:
-      address: "0xaCFfAe8e57Ec6E394Eb1b41939A8CF7892DbDc51"
+      address: "0x54330d28ca3357F294334BDC454a032e7f353416" # OLAS token on Base
       abi: OLAS
-      startBlock: 24781592
+      startBlock: 10622421
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -19,8 +19,8 @@ dataSources:
         - Transfer
       abis:
         - name: OLAS
-          file: ../../abis/OLAS.json
+          file: ../../../abis/OLAS.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      file: ../../shared/tokenomics/mappers/olas-l2.ts 
+      file: ../../../shared/tokenomics/mappers/olas-l2.ts 
