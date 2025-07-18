@@ -26,11 +26,7 @@ dataSources:
         - TreasuryUpdated
       abis:
         - name: DepositoryV1
-<<<<<<<< HEAD:subgraphs/tokenomics/tokenomics-eth/subgraph.yaml
           file: ../../../abis/DepositoryV1.json
-========
-          file: ../../abis/DepositoryV1.json
->>>>>>>> main:subgraphs/tokenomics/subgraph.yaml
       eventHandlers:
         - event: BondCalculatorUpdated(indexed address)
           handler: handleBondCalculatorUpdated
@@ -72,11 +68,7 @@ dataSources:
         - TreasuryUpdated
       abis:
         - name: DepositoryV2
-<<<<<<<< HEAD:subgraphs/tokenomics/tokenomics-eth/subgraph.yaml
           file: ../../../abis/DepositoryV2.json
-========
-          file: ../../abis/DepositoryV2.json
->>>>>>>> main:subgraphs/tokenomics/subgraph.yaml
       eventHandlers:
         - event: BondCalculatorUpdated(indexed address)
           handler: handleBondCalculatorUpdated
@@ -130,11 +122,7 @@ dataSources:
         - TokenomicsTreasuryUpdated
       abis:
         - name: Tokenomics
-<<<<<<<< HEAD:subgraphs/tokenomics/tokenomics-eth/subgraph.yaml
           file: ../../../abis/Tokenomics.json
-========
-          file: ../../abis/Tokenomics.json
->>>>>>>> main:subgraphs/tokenomics/subgraph.yaml
       eventHandlers:
         - event: AgentRegistryUpdated(indexed address)
           handler: handleAgentRegistryUpdated
@@ -201,11 +189,7 @@ dataSources:
         - DispenserTreasuryUpdated
       abis:
         - name: DispenserV1
-<<<<<<<< HEAD:subgraphs/tokenomics/tokenomics-eth/subgraph.yaml
           file: ../../../abis/DispenserV1.json
-========
-          file: ../../abis/DispenserV1.json
->>>>>>>> main:subgraphs/tokenomics/subgraph.yaml
       eventHandlers:
         - event: IncentivesClaimed(indexed address,uint256,uint256)
           handler: handleIncentivesClaimed
@@ -244,11 +228,7 @@ dataSources:
         - WithheldAmountSynced
       abis:
         - name: DispenserV2
-<<<<<<<< HEAD:subgraphs/tokenomics/tokenomics-eth/subgraph.yaml
           file: ../../../abis/DispenserV2.json
-========
-          file: ../../abis/DispenserV2.json
->>>>>>>> main:subgraphs/tokenomics/subgraph.yaml
       eventHandlers:
         - event: AddNomineeHash(indexed bytes32)
           handler: handleAddNomineeHash
@@ -296,11 +276,7 @@ dataSources:
         - Epoch
       abis:
         - name: OLAS
-<<<<<<<< HEAD:subgraphs/tokenomics/tokenomics-eth/subgraph.yaml
           file: ../../../abis/OLAS.json
-========
-          file: ../../abis/OLAS.json
->>>>>>>> main:subgraphs/tokenomics/subgraph.yaml
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
@@ -320,11 +296,7 @@ dataSources:
         - VeolasDepositor
       abis:
         - name: veOLAS
-<<<<<<<< HEAD:subgraphs/tokenomics/tokenomics-eth/subgraph.yaml
           file: ../../../abis/veOLAS.json
-========
-          file: ../../abis/veOLAS.json
->>>>>>>> main:subgraphs/tokenomics/subgraph.yaml
       eventHandlers:
         - event: Deposit(indexed address,uint256,uint256,uint8,uint256)
           handler: handleDeposit
