@@ -65,50 +65,6 @@ const networkTypes = {
         description: 'Gnosis Chain'
       }
     }
-  },
-  '3': {
-    name: 'Service Registry L1',
-    description: 'Service Registry on L1',
-    networks: {
-      'mainnet': {
-        path: 'subgraphs/service-registry/service-registry-eth/subgraph.yaml',
-        description: 'Ethereum Mainnet'
-      }
-    }
-  },
-  '4': {
-    name: 'Service Registry L2',
-    description: 'Service Registry on L2s',
-    networks: {
-      'optimism': {
-        path: 'subgraphs/service-registry/service-registry-optimism/subgraph.optimism.yaml',
-        description: 'Optimism'
-      },
-      'base': {
-        path: 'subgraphs/service-registry/service-registry-base/subgraph.base.yaml',
-        description: 'Base Network'
-      },
-      'celo': {
-        path: 'subgraphs/tokenomics-celo/subgraph.celo.yaml',
-        description: 'Celo Network'
-      },
-      'gnosis': {
-        path: 'subgraphs/service-registry/service-registry-gnosis/subgraph.gnosis.yaml',
-        description: 'Gnosis Chain'
-      },
-      'mode': {
-        path: 'subgraphs/tokenomics-mode/subgraph.mode.yaml',
-        description: 'Mode Network'
-      },
-      'optimism': {
-        path: 'subgraphs/tokenomics-optimism/subgraph.optimism.yaml',
-        description: 'Optimism Network'
-      },
-      'polygon': {
-        path: 'subgraphs/tokenomics-polygon/subgraph.polygon.yaml',
-        description: 'Polygon Network'
-      }
-    }
   }
 };
 
@@ -215,22 +171,39 @@ async function main() {
       }
     }
 
-    console.log(`\n🚀 Deploying to Studio...`);
+    console.log(`\n🚀 Deploying to ${platform === '1' ? 'Graph Studio' : 'Alchemy'}...`);
 
-    // Check if deploy key is set
-    if (!process.env.GRAPH_DEPLOY_KEY) {
-      console.error(`❌ GRAPH_DEPLOY_KEY environment variable is not set`);
-      console.log(`\n📝 To fix this:`);
-      console.log(`1. Go to https://thegraph.com/studio/`);
-      console.log(`2. Create or select your subgraph`);
-      console.log(`3. Copy your deploy key`);
-      console.log(`4. Set it as an environment variable:`);
-      console.log(`   export GRAPH_DEPLOY_KEY=your_deploy_key_here\n`);
+    // Build the deployment command based on the selected platform
+    let deployCommand;
+
+    if (platform === '1') { // Graph Studio
+      if (!process.env.GRAPH_DEPLOY_KEY) {
+        console.error(`❌ GRAPH_DEPLOY_KEY environment variable is not set`);
+        console.log(`\n📝 To fix this:`);
+        console.log(`1. Go to https://thegraph.com/studio/`);
+        console.log(`2. Create or select your subgraph`);
+        console.log(`3. Copy your deploy key`);
+        console.log(`4. Set it as an environment variable:`);
+        console.log(`   export GRAPH_DEPLOY_KEY=your_deploy_key_here\n`);
+        process.exit(1);
+      }
+      deployCommand = `graph deploy --deploy-key ${process.env.GRAPH_DEPLOY_KEY} --version-label ${version} ${subgraphName} ${networkConfig.path}`;
+    } else if (platform === '2') { // Alchemy
+      if (!process.env.ALCHEMY_DEPLOY_KEY) {
+        console.error(`❌ ALCHEMY_DEPLOY_KEY environment variable is not set`);
+        console.log(`\n📝 To fix this:`);
+        console.log(`1. Go to your Alchemy dashboard`);
+        console.log(`2. Navigate to the Subgraphs section`);
+        console.log(`3. Find your deploy key`);
+        console.log(`4. Set it as an environment variable:`);
+        console.log(`   export ALCHEMY_DEPLOY_KEY=your_deploy_key_here\n`);
+        process.exit(1);
+      }
+      deployCommand = `graph deploy --node https://subgraphs.alchemy.com/api/subgraphs/deploy --ipfs https://ipfs.satsuma.xyz --deploy-key ${process.env.ALCHEMY_DEPLOY_KEY} --version-label ${version} ${subgraphName} ${networkConfig.path}`;
+    } else {
+      console.error(`❌ Invalid deployment platform: ${platform}`);
       process.exit(1);
     }
-
-    // Build the deployment command for Graph Studio
-    const deployCommand = `graph deploy --deploy-key ${process.env.GRAPH_DEPLOY_KEY} --version-label ${version} ${subgraphName} ${networkConfig.path}`;
     
     // Execute deployment
     execSync(deployCommand, { 
@@ -238,8 +211,13 @@ async function main() {
       env: { ...process.env, FORCE_COLOR: '1' }
     });
 
-    console.log(`\n✅ Successfully deployed to Studio!`);
-    console.log(`📊 Dashboard: https://thegraph.com/studio/subgraph/${subgraphName}`);
+    if (platform === '1') {
+      console.log(`\n✅ Successfully deployed to Studio!`);
+      console.log(`📊 Dashboard: https://thegraph.com/studio/subgraph/${subgraphName}`);
+    } else {
+      console.log(`\n✅ Successfully deployed to Alchemy!`);
+      console.log(`📊 Dashboard: Check your Alchemy dashboard for subgraph details.`);
+    }
     
   } catch (error) {
     console.error(`❌ Deployment failed: ${error.message}`);

@@ -3,7 +3,4 @@ node_modules/
 build/
 generated/
 generated-l2/
-
-.env
-
 .env
