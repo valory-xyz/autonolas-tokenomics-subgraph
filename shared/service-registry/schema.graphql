@@ -1,4 +1,3 @@
-# schema.graphql
 type Multisig @entity(immutable: false) {
   id: Bytes!
   creator: Bytes!
