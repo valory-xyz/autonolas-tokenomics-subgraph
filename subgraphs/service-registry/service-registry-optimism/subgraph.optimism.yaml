@@ -25,6 +25,8 @@ dataSources:
           handler: handleCreateMultisig
         - event: RegisterInstance(indexed address,indexed uint256,indexed address,uint256)
           handler: handleRegisterInstance
+        - event: TerminateService(indexed uint256)
+          handler: handleTerminateService
       file: ../../../shared/service-registry/mappers/mapping.ts
 
 templates:
