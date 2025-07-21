@@ -12,7 +12,7 @@ dataSources:
     source:
       address: "0xE3607b00E75f6405248323A9417ff6b39B244b50"
       abi: ServiceRegistryL2
-      startBlock: 24205712
+      startBlock: 174008819
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
