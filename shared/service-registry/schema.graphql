@@ -1,15 +1,16 @@
 # schema.graphql
-type Service @entity(immutable: false) {
+type Multisig @entity(immutable: false) {
   id: Bytes!
   creator: Bytes!
   creationTimestamp: BigInt!
   txHash: Bytes!
   agentIds: [Int!]!
+  service: Service @derivedFrom(field: "multisig")
 }
 
-type ServiceIdLink @entity(immutable: false) {
+type Service @entity(immutable: false) {
   id: ID!
-  service: Service!
+  multisig: Multisig!
 }
 
 type DailyServiceActivity @entity(immutable: true) {
