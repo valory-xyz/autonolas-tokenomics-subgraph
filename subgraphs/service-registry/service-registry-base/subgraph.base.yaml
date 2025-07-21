@@ -4,8 +4,6 @@ specVersion: 0.0.5
 schema:
   file: ../../../shared/service-registry/schema.graphql
 dataSources:
-  # This is the STATIC data source. It listens to the main ServiceRegistryL2 contract
-  # to discover when new services are created.
   - kind: ethereum/contract
     name: ServiceRegistryL2
     network: base
@@ -20,10 +18,8 @@ dataSources:
       entities:
         - Service
       abis:
-        # ABI for the main registry contract.
         - name: ServiceRegistryL2
           file: ../../../abis/ServiceRegistryL2.json
-        # ABI for the multisig contracts that will be created.
         - name: GnosisSafe
           file: ../../../abis/GnosisSafe.json
       eventHandlers:
@@ -38,7 +34,6 @@ templates:
     name: GnosisSafe
     network: base
     source:
-      # The ABI for the template is the Gnosis Safe multisig contract.
       abi: GnosisSafe
     mapping:
       kind: ethereum/events
