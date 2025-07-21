@@ -20,23 +20,23 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
   let multisig = Multisig.load(multisigAddress);
 
   if (multisig == null) {
-    multisig = new Multisig(multisigAddress);
-    multisig.creator = event.transaction.from;
-    multisig.creationTimestamp = event.block.timestamp;
-    multisig.txHash = event.transaction.hash;
-    multisig.agentIds = [];
-    multisig.save();
-
     let serviceId = event.params.serviceId.toString();
     let service = Service.load(serviceId);
     if (service == null) {
       service = new Service(serviceId);
     }
-    service.multisig = multisig.id;
-    service.save();
 
+    multisig = new Multisig(multisigAddress);
+    multisig.creator = event.transaction.from;
+    multisig.creationTimestamp = event.block.timestamp;
+    multisig.txHash = event.transaction.hash;
+    multisig.agentIds = [];
     multisig.service = service.id;
+
+    service.multisig = multisig.id;
+
     multisig.save();
+    service.save();
 
     GnosisSafeTemplate.create(event.params.multisig);
   }
