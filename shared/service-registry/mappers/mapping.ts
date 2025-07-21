@@ -1,6 +1,7 @@
 import { BigInt, ethereum } from "@graphprotocol/graph-ts";
 import {
   CreateMultisigWithAgents,
+  CreateService,
   RegisterInstance,
   TerminateService,
 } from "../generated/ServiceRegistryL2/ServiceRegistryL2";
@@ -13,6 +14,15 @@ import {
 import { GnosisSafe as GnosisSafeTemplate } from "../generated/templates";
 
 const ONE_DAY = BigInt.fromI32(86400);
+
+export function handleCreateService(event: CreateService): void {
+  let service = Service.load(event.params.serviceId.toString());
+  if (service == null) {
+    service = new Service(event.params.serviceId.toString());
+    service.agentIds = [];
+    service.save();
+  }
+}
 
 export function handleRegisterInstance(event: RegisterInstance): void {
   let service = Service.load(event.params.serviceId.toString());

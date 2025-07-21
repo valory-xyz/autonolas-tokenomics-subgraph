@@ -22,6 +22,8 @@ dataSources:
         - name: GnosisSafe
           file: ../../../abis/GnosisSafe.json
       eventHandlers:
+        - event: CreateService(indexed uint256,bytes32)
+          handler: handleCreateService
         - event: CreateMultisigWithAgents(indexed uint256,indexed address)
           handler: handleCreateMultisig
         - event: RegisterInstance(indexed address,indexed uint256,indexed address,uint256)
