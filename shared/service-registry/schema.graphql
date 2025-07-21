@@ -5,7 +5,7 @@ type Multisig @entity(immutable: false) {
   creationTimestamp: BigInt!
   txHash: Bytes!
   agentIds: [Int!]!
-  service: Service @derivedFrom(field: "multisig")
+  service: Service!
 }
 
 type Service @entity(immutable: false) {

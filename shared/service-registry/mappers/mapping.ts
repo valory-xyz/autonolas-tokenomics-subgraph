@@ -13,6 +13,8 @@ import {
 } from "../generated/schema";
 import { GnosisSafe as GnosisSafeTemplate } from "../generated/templates";
 
+const ONE_DAY = BigInt.fromI32(86400);
+
 export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
   let multisigAddress = event.params.multisig;
   let multisig = Multisig.load(multisigAddress);
@@ -32,6 +34,9 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
     }
     service.multisig = multisig.id;
     service.save();
+
+    multisig.service = service.id;
+    multisig.save();
 
     GnosisSafeTemplate.create(event.params.multisig);
   }
@@ -57,7 +62,7 @@ export function handleRegisterInstance(event: RegisterInstance): void {
 
 export function handleServiceActivity(event: ethereum.Event): void {
   let timestamp = event.block.timestamp;
-  let dayID = timestamp.div(BigInt.fromI32(86400)).times(BigInt.fromI32(86400));
+  let dayID = timestamp.div(ONE_DAY).times(ONE_DAY);
 
   let serviceAddress = event.address;
 
@@ -66,7 +71,7 @@ export function handleServiceActivity(event: ethereum.Event): void {
   if (multisig == null) {
     return;
   }
-  
+
   let service = Service.load(multisig.service);
   if (service == null) {
     return;
