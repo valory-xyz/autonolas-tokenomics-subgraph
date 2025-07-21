@@ -1,7 +1,7 @@
 import { BigInt, Address } from "@graphprotocol/graph-ts";
 import { Token, TokenHolder } from "./generated/schema";
 
-export const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
+export const ADDRESS_ZERO = Address.zero();
 const BIGINT_ZERO = BigInt.fromI32(0);
 
 export function getOrCreateToken(tokenAddress: Address): Token {
@@ -40,16 +40,16 @@ export function handleTransferBalances(
   let token = getOrCreateToken(tokenAddress);
 
   // Update Token balance
-  if (fromAddress.equals(Address.fromString(ADDRESS_ZERO))) {
+  if (fromAddress.equals(ADDRESS_ZERO)) {
     // Mint
     token.balance = token.balance.plus(amount);
-  } else if (toAddress.equals(Address.fromString(ADDRESS_ZERO))) {
+  } else if (toAddress.equals(ADDRESS_ZERO)) {
     // Burn
     token.balance = token.balance.minus(amount);
   }
 
   // Update TokenHolders
-  if (!fromAddress.equals(Address.fromString(ADDRESS_ZERO))) {
+  if (!fromAddress.equals(ADDRESS_ZERO)) {
     let fromHolder = getOrCreateTokenHolder(tokenAddress, fromAddress);
     let oldBalance = fromHolder.balance;
     fromHolder.balance = fromHolder.balance.minus(amount);
@@ -64,7 +64,7 @@ export function handleTransferBalances(
     }
   }
 
-  if (!toAddress.equals(Address.fromString(ADDRESS_ZERO))) {
+  if (!toAddress.equals(ADDRESS_ZERO)) {
     let toHolder = getOrCreateTokenHolder(tokenAddress, toAddress);
     let oldBalance = toHolder.balance;
     toHolder.balance = toHolder.balance.plus(amount);
