@@ -179,9 +179,9 @@ async function main() {
     // Determine build command based on network type
     let buildCommand;
     if (networkTypeKey === '1') {
-      buildCommand = 'yarn build-l1';
+      buildCommand = 'yarn build-tokenomics-l1';
     } else if (networkTypeKey === '2') {
-      buildCommand = 'yarn build-l2';
+      buildCommand = 'yarn build-tokenomics-l2';
     } else if (networkTypeKey === '3') {
       // For service registry, differentiate between L1 (ethereum) and L2
       if (selectedNetwork === 'ethereum') {
