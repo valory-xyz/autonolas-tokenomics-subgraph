@@ -183,7 +183,12 @@ async function main() {
     } else if (networkTypeKey === '2') {
       buildCommand = 'yarn build-l2';
     } else if (networkTypeKey === '3') {
-      buildCommand = `yarn codegen-service-registry && yarn build-service-registry-${selectedNetwork}`;
+      // For service registry, differentiate between L1 (ethereum) and L2
+      if (selectedNetwork === 'ethereum') {
+        buildCommand = 'yarn build-service-registry-l1';
+      } else {
+        buildCommand = 'yarn build-service-registry-l2';
+      }
     }
 
     console.log(`🔨 Building subgraph with: ${buildCommand}`);
