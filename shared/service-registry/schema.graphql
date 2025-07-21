@@ -1,3 +1,9 @@
+type Service @entity(immutable: false) {
+  id: ID!
+  agentIds: [Int!]!
+  multisigs: [Multisig!]! @derivedFrom(field: "service")
+}
+
 type Multisig @entity(immutable: false) {
   id: Bytes!
   creator: Bytes!
@@ -5,11 +11,6 @@ type Multisig @entity(immutable: false) {
   txHash: Bytes!
   agentIds: [Int!]!
   service: Service!
-}
-
-type Service @entity(immutable: false) {
-  id: ID!
-  multisig: Multisig!
 }
 
 type DailyServiceActivity @entity(immutable: true) {

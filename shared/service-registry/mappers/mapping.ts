@@ -2,61 +2,56 @@ import { BigInt, ethereum } from "@graphprotocol/graph-ts";
 import {
   CreateMultisigWithAgents,
   RegisterInstance,
+  TerminateService,
 } from "../generated/ServiceRegistryL2/ServiceRegistryL2";
 import {
   Multisig,
+  Service,
   DailyActiveServiceCount,
   DailyServiceActivity,
-  Service,
-  DailyActiveAgentCount,
-  DailyAgentActivity,
 } from "../generated/schema";
 import { GnosisSafe as GnosisSafeTemplate } from "../generated/templates";
 
 const ONE_DAY = BigInt.fromI32(86400);
 
+export function handleRegisterInstance(event: RegisterInstance): void {
+  let service = Service.load(event.params.serviceId.toString());
+  if (service != null) {
+    let agentIds = service.agentIds;
+    agentIds.push(event.params.agentId.toI32());
+    service.agentIds = agentIds;
+    service.save();
+  }
+}
+
 export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
   let multisigAddress = event.params.multisig;
   let multisig = Multisig.load(multisigAddress);
+  let service = Service.load(event.params.serviceId.toString());
 
-  if (multisig == null) {
-    let serviceId = event.params.serviceId.toString();
-    let service = Service.load(serviceId);
-    if (service == null) {
-      service = new Service(serviceId);
-    }
-
+  if (multisig == null && service != null) {
     multisig = new Multisig(multisigAddress);
     multisig.creator = event.transaction.from;
     multisig.creationTimestamp = event.block.timestamp;
     multisig.txHash = event.transaction.hash;
-    multisig.agentIds = [];
+    multisig.agentIds = service.agentIds;
     multisig.service = service.id;
-
-    service.multisig = multisig.id;
-
     multisig.save();
+    
+    // Clear the temporary agentIds from the service
+    service.agentIds = [];
     service.save();
 
     GnosisSafeTemplate.create(event.params.multisig);
   }
 }
 
-export function handleRegisterInstance(event: RegisterInstance): void {
-  let serviceId = event.params.serviceId.toString();
-  let service = Service.load(serviceId);
-
-  if (service) {
-    let multisig = Multisig.load(service.multisig);
-    if (multisig) {
-      let agentIds = multisig.agentIds;
-      let agentId = event.params.agentId.toI32();
-      if (!agentIds.includes(agentId)) {
-        agentIds.push(agentId);
-        multisig.agentIds = agentIds;
-        multisig.save();
-      }
-    }
+export function handleTerminateService(event: TerminateService): void {
+  let service = Service.load(event.params.serviceId.toString());
+  if (service != null) {
+    // Clear the agentIds to prepare for a new deployment
+    service.agentIds = [];
+    service.save();
   }
 }
 
@@ -65,66 +60,37 @@ export function handleServiceActivity(event: ethereum.Event): void {
   let dayID = timestamp.div(ONE_DAY).times(ONE_DAY);
 
   let serviceAddress = event.address;
-
   let multisig = Multisig.load(serviceAddress);
 
   if (multisig == null) {
     return;
   }
-
+  
   let service = Service.load(multisig.service);
   if (service == null) {
     return;
   }
 
-  let dailyActivityId = dayID.toString() + "-" + service.id;
-  let dailyActivity = DailyServiceActivity.load(dailyActivityId);
+  let dailyServiceActivityId = "day-".concat(dayID.toString()).concat("-service-").concat(service.id);
+  let dailyServiceActivity = DailyServiceActivity.load(dailyServiceActivityId);
 
-  if (dailyActivity == null) {
-    dailyActivity = new DailyServiceActivity(dailyActivityId);
-    dailyActivity.service = service.id;
-    dailyActivity.dayTimestamp = dayID;
-    dailyActivity.save();
+  if (dailyServiceActivity == null) {
+    dailyServiceActivity = new DailyServiceActivity(dailyServiceActivityId);
+    dailyServiceActivity.service = service.id;
+    dailyServiceActivity.dayTimestamp = dayID;
+    dailyServiceActivity.save();
 
-    let dailyCount = DailyActiveServiceCount.load(dayID.toString());
-    if (dailyCount == null) {
-      dailyCount = new DailyActiveServiceCount(dayID.toString());
-      dailyCount.count = 0;
-    }
-
-    dailyCount.count = dailyCount.count + 1;
-    dailyCount.save();
-  }
-
-  let agentIds = multisig.agentIds;
-  for (let i = 0; i < agentIds.length; i++) {
-    let agentId = agentIds[i];
-    let dailyAgentActivityId =
-      dayID.toString() +
-      "-" +
-      agentId.toString() +
-      "-" +
-      serviceAddress.toHexString();
-    let dailyAgentActivity = DailyAgentActivity.load(dailyAgentActivityId);
-
-    if (dailyAgentActivity == null) {
-      dailyAgentActivity = new DailyAgentActivity(dailyAgentActivityId);
-      dailyAgentActivity.save();
-
-      let dailyActiveAgentCountId = dayID.toString() + "-" + agentId.toString();
-      let dailyActiveAgentCount = DailyActiveAgentCount.load(
-        dailyActiveAgentCountId
+    let dailyActiveServiceCountId = "service-count";
+    let dailyActiveServiceCount = DailyActiveServiceCount.load(
+      dailyActiveServiceCountId
+    );
+    if (dailyActiveServiceCount == null) {
+      dailyActiveServiceCount = new DailyActiveServiceCount(
+        dailyActiveServiceCountId
       );
-      if (dailyActiveAgentCount == null) {
-        dailyActiveAgentCount = new DailyActiveAgentCount(
-          dailyActiveAgentCountId
-        );
-        dailyActiveAgentCount.dayTimestamp = dayID;
-        dailyActiveAgentCount.agentId = agentId;
-        dailyActiveAgentCount.count = 0;
-      }
-      dailyActiveAgentCount.count = dailyActiveAgentCount.count + 1;
-      dailyActiveAgentCount.save();
+      dailyActiveServiceCount.count = 0;
     }
+    dailyActiveServiceCount.count += 1;
+    dailyActiveServiceCount.save();
   }
 } 
