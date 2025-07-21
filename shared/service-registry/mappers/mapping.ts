@@ -2,7 +2,7 @@
 // This file contains the AssemblyScript functions that process blockchain events
 // and update the entities defined in schema.graphql.
 
-import { BigInt, Bytes } from "@graphprotocol/graph-ts"
+import { BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts"
 import {
   // Import the specific event from the auto-generated types for the main contract
   CreateMultisigWithAgents,
@@ -76,7 +76,7 @@ export function handleRegisterInstance(event: RegisterInstance): void {
 }
 
 
-export function handleServiceActivity(event: ExecutionSuccess): void {
+export function handleServiceActivity(event: ethereum.Event): void {
   let timestamp = event.block.timestamp
   // Calculate the timestamp for the beginning of the day by using integer division.
   // 86400 is the number of seconds in a day.
