@@ -123,9 +123,7 @@ export function handleCreateService(event: CreateService): void {
 export function handleRegisterInstance(event: RegisterInstance): void {
   let service = Service.load(event.params.serviceId.toString());
   if (service != null) {
-    let agentIds = service.agentIds;
-    agentIds.push(event.params.agentId.toI32());
-    service.agentIds = agentIds;
+    service.agentIds = [event.params.agentId.toI32()];
     service.save();
   }
 }
