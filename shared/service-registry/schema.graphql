@@ -19,3 +19,17 @@ type DailyServiceActivity @entity(immutable: true) {
   agentIds: [Int!]!
 }
 
+type DailyActiveAgent @entity(immutable: false) {
+  id: ID!
+  dayTimestamp: BigInt!
+  count: Int!
+  agentIds: [Int!]!
+}
+
+type DailyAgentActivity @entity(immutable: false) {
+  id: ID!
+  agentId: Int!
+  dayTimestamp: BigInt!
+  txCount: Int!
+}
+

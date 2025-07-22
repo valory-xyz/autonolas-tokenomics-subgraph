@@ -9,7 +9,13 @@ import {
   ExecutionSuccess,
   ExecutionFromModuleSuccess,
 } from "../generated/templates/GnosisSafe/GnosisSafe";
-import { Multisig, Service, DailyServiceActivity } from "../generated/schema";
+import {
+  Multisig,
+  Service,
+  DailyServiceActivity,
+  DailyActiveAgent,
+  DailyAgentActivity,
+} from "../generated/schema";
 import { GnosisSafe as GnosisSafeTemplate } from "../generated/templates";
 
 const ONE_DAY = BigInt.fromI32(86400);
@@ -21,6 +27,71 @@ function getDayTimestamp(event: ethereum.Event): BigInt {
 function getDailyActivityId(serviceId: string, event: ethereum.Event): string {
   const dayTimestamp = getDayTimestamp(event);
   return "day-".concat(dayTimestamp.toString()).concat("-service-").concat(serviceId);
+}
+
+function getDailyActiveAgentId(event: ethereum.Event): string {
+  const dayTimestamp = getDayTimestamp(event);
+  return "day-".concat(dayTimestamp.toString());
+}
+
+function getDailyAgentActivityId(
+  event: ethereum.Event,
+  agentId: BigInt
+): string {
+  const dayTimestamp = getDayTimestamp(event);
+  return "day-"
+    .concat(dayTimestamp.toString())
+    .concat("-agent-")
+    .concat(agentId.toString());
+}
+
+function updateDailyAgentActivity(
+  event: ethereum.Event,
+  multisig: Multisig
+): void {
+  const dayTimestamp = getDayTimestamp(event);
+  for (let i = 0; i < multisig.agentIds.length; i++) {
+    const agentId = multisig.agentIds[i];
+    const id = getDailyAgentActivityId(event, BigInt.fromI32(agentId));
+    let dailyAgentActivity = DailyAgentActivity.load(id);
+
+    if (dailyAgentActivity == null) {
+      dailyAgentActivity = new DailyAgentActivity(id);
+      dailyAgentActivity.agentId = agentId;
+      dailyAgentActivity.dayTimestamp = dayTimestamp;
+      dailyAgentActivity.txCount = 0;
+    }
+
+    dailyAgentActivity.txCount = dailyAgentActivity.txCount + 1;
+    dailyAgentActivity.save();
+  }
+}
+
+function updateDailyActiveAgents(event: ethereum.Event, multisig: Multisig): void {
+  const id = getDailyActiveAgentId(event);
+  let dailyActiveAgent = DailyActiveAgent.load(id);
+
+  if (dailyActiveAgent == null) {
+    dailyActiveAgent = new DailyActiveAgent(id);
+    dailyActiveAgent.dayTimestamp = getDayTimestamp(event);
+    dailyActiveAgent.count = 0;
+    dailyActiveAgent.agentIds = [];
+  }
+
+  const newAgentIds: Array<i32> = [];
+  for (let i = 0; i < multisig.agentIds.length; i++) {
+    const agentId = multisig.agentIds[i];
+    if (!dailyActiveAgent.agentIds.includes(agentId)) {
+      newAgentIds.push(agentId);
+    }
+  }
+
+  if (newAgentIds.length > 0) {
+    dailyActiveAgent.agentIds = dailyActiveAgent.agentIds.concat(newAgentIds);
+    dailyActiveAgent.count = dailyActiveAgent.agentIds.length;
+  }
+
+  dailyActiveAgent.save();
 }
 
 function updateDailyActivity(
@@ -108,6 +179,8 @@ export function handleExecutionSuccess(event: ExecutionSuccess): void {
   }
 
   updateDailyActivity(service, event, multisig);
+  updateDailyActiveAgents(event, multisig);
+  updateDailyAgentActivity(event, multisig);
 }
 
 export function handleExecutionFromModuleSuccess(
@@ -130,4 +203,6 @@ export function handleExecutionFromModuleSuccess(
   }
 
   updateDailyActivity(service, event, multisig);
+  updateDailyActiveAgents(event, multisig);
+  updateDailyAgentActivity(event, multisig);
 } 
