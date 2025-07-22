@@ -126,6 +126,16 @@ export function handleRegisterInstance(event: RegisterInstance): void {
   if (service != null) {
     service.agentIds = [event.params.agentId.toI32()];
     service.save();
+
+    // PATCH: Also update existing multisig with new agent
+    let multisigAddress = service.multisig;
+    if (multisigAddress) {
+      let multisig = Multisig.load(multisigAddress);
+      if (multisig) {
+        multisig.agentIds = [event.params.agentId.toI32()];
+        multisig.save();
+      }
+    }
   }
 }
 
