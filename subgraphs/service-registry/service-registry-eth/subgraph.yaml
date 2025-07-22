@@ -1,6 +1,6 @@
 specVersion: 0.0.5
 schema:
-  file: ../../../shared/service-registry/schema.graphql
+  file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
     name: ServiceRegistry
@@ -11,15 +11,15 @@ dataSources:
       startBlock: 15178299
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.7
+      apiVersion: 0.0.5
       language: wasm/assemblyscript
+      file: src/mapping.ts
       entities:
         - Service
+        - Multisig
       abis:
         - name: ServiceRegistry
-          file: ../../../abis/ServiceRegistry.json
-        - name: GnosisSafe
-          file: ../../../abis/GnosisSafe.json
+          file: abis/ServiceRegistry.json
       eventHandlers:
         - event: CreateService(indexed uint256)
           handler: handleCreateService
@@ -29,7 +29,7 @@ dataSources:
           handler: handleRegisterInstance
         - event: TerminateService(indexed uint256)
           handler: handleTerminateService
-      file: ./src/mapping.ts
+      callHandlers: []
 
 templates:
   - kind: ethereum/contract
@@ -39,17 +39,19 @@ templates:
       abi: GnosisSafe
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.7
+      apiVersion: 0.0.5
       language: wasm/assemblyscript
+      file: src/mapping.ts
       entities:
+        - Service
+        - Multisig
         - DailyServiceActivity
-        - DailyActiveServiceCount
       abis:
         - name: GnosisSafe
-          file: ../../../abis/GnosisSafe.json
+          file: abis/GnosisSafe.json
       eventHandlers:
         - event: ExecutionSuccess(bytes32,uint256)
-          handler: handleServiceActivity
+          handler: handleExecutionSuccess
         - event: ExecutionFromModuleSuccess(indexed address)
-          handler: handleServiceActivity
-      file: ./src/mapping.ts 
+          handler: handleExecutionFromModuleSuccess
+      

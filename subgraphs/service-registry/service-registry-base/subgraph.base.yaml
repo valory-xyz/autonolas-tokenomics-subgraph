@@ -13,15 +13,14 @@ dataSources:
       startBlock: 10827380
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.7
+      apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
         - Service
+        - Multisig
       abis:
         - name: ServiceRegistryL2
           file: ../../../abis/ServiceRegistryL2.json
-        - name: GnosisSafe
-          file: ../../../abis/GnosisSafe.json
       eventHandlers:
         - event: CreateService(indexed uint256,bytes32)
           handler: handleCreateService
@@ -41,17 +40,19 @@ templates:
       abi: GnosisSafe
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.7
+      apiVersion: 0.0.6
       language: wasm/assemblyscript
+      file: ../../../shared/service-registry/mappers/mapping.ts
       entities:
+        - Service
+        - Multisig
         - DailyServiceActivity
-        - DailyActiveServiceCount
       abis:
         - name: GnosisSafe
           file: ../../../abis/GnosisSafe.json
       eventHandlers:
         - event: ExecutionSuccess(bytes32,uint256)
-          handler: handleServiceActivity
+          handler: handleExecutionSuccess
         - event: ExecutionFromModuleSuccess(indexed address)
-          handler: handleServiceActivity
-      file: ../../../shared/service-registry/mappers/mapping.ts 
+          handler: handleExecutionFromModuleSuccess
+      
