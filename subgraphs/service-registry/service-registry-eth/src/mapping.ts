@@ -4,6 +4,7 @@ import {
   CreateService,
   RegisterInstance,
   TerminateService,
+  UpdateService,
 } from "../generated/ServiceRegistry/ServiceRegistry";
 import {
   ExecutionSuccess,
@@ -136,17 +137,18 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
   let service = Service.load(event.params.serviceId.toString());
 
   if (multisig == null && service != null) {
+    // Update Service entity
+    service.multisig = multisigAddress;
+    service.save();
+
+    // Create Multisig entity
     multisig = new Multisig(multisigAddress);
+    multisig.serviceId = event.params.serviceId.toI32();
     multisig.creator = event.transaction.from;
     multisig.creationTimestamp = event.block.timestamp;
     multisig.txHash = event.transaction.hash;
-    multisig.agentIds = service.agentIds;
-    multisig.service = service.id;
+    multisig.agentIds = service.agentIds; // Copy agent IDs from service
     multisig.save();
-
-    // Clear the temporary agentIds from the service
-    service.agentIds = [];
-    service.save();
 
     GnosisSafeTemplate.create(event.params.multisig);
   }
@@ -161,48 +163,70 @@ export function handleTerminateService(event: TerminateService): void {
   }
 }
 
+export function handleUpdateService(event: UpdateService): void {
+  let service = Service.load(event.params.serviceId.toString());
+  if (service != null) {
+    // Clear the agentIds when service is updated
+    // New registrations after this point will be considered "latest"
+    service.agentIds = [];
+    service.save();
+  }
+}
+
 export function handleExecutionSuccess(event: ExecutionSuccess): void {
-  const multisigAddress = event.address;
-  const multisig = Multisig.load(multisigAddress);
-  if (multisig == null) {
-    // This can happen for older multisigs that are not part of any service
-    return;
-  }
+  let multisig = Multisig.load(event.address);
+  if (multisig != null) {
+    let serviceId = multisig.serviceId.toString();
+    let service = Service.load(serviceId);
+    if (service != null) {
+      let dailyActivityId = getDailyActivityId(serviceId, event);
+      let dailyServiceActivity = DailyServiceActivity.load(dailyActivityId);
 
-  const service = Service.load(multisig.service);
-  if (service == null) {
-    log.error("Service {} not found for multisig {}", [
-      multisig.service,
-      multisigAddress.toHexString(),
-    ]);
-    return;
-  }
+      if (dailyServiceActivity == null) {
+        dailyServiceActivity = new DailyServiceActivity(dailyActivityId);
+        dailyServiceActivity.service = service.id;
+        dailyServiceActivity.dayTimestamp = getDayTimestamp(event);
+        dailyServiceActivity.agentIds = multisig.agentIds;
+        dailyServiceActivity.save();
+      }
 
-  updateDailyActivity(service, event, multisig);
-  updateDailyActiveAgents(event, multisig);
-  updateDailyAgentActivity(event, multisig);
+      updateDailyActiveAgents(event, multisig);
+      updateDailyAgentActivity(event, multisig);
+    } else {
+      log.error("Service {} not found for multisig {}", [
+        serviceId,
+        event.address.toHexString(),
+      ]);
+    }
+  }
 }
 
 export function handleExecutionFromModuleSuccess(
-  event: ExecutionFromModuleSuccess,
+  event: ExecutionFromModuleSuccess
 ): void {
-  const multisigAddress = event.address;
-  const multisig = Multisig.load(multisigAddress);
-  if (multisig == null) {
-    // This can happen for older multisigs that are not part of any service
-    return;
-  }
+  let multisig = Multisig.load(event.address);
+  if (multisig != null) {
+    let serviceId = multisig.serviceId.toString();
+    let service = Service.load(serviceId);
+    if (service != null) {
+      let dailyActivityId = getDailyActivityId(serviceId, event);
+      let dailyServiceActivity = DailyServiceActivity.load(dailyActivityId);
 
-  const service = Service.load(multisig.service);
-  if (service == null) {
-    log.error("Service {} not found for multisig {}", [
-      multisig.service,
-      multisigAddress.toHexString(),
-    ]);
-    return;
-  }
+      if (dailyServiceActivity == null) {
+        dailyServiceActivity = new DailyServiceActivity(dailyActivityId);
+        dailyServiceActivity.service = service.id;
+        dailyServiceActivity.dayTimestamp = getDayTimestamp(event);
+        dailyServiceActivity.agentIds = multisig.agentIds;
+        dailyServiceActivity.save();
+      }
 
-  updateDailyActivity(service, event, multisig);
-  updateDailyActiveAgents(event, multisig);
-  updateDailyAgentActivity(event, multisig);
+      updateDailyActiveAgents(event, multisig);
+      updateDailyAgentActivity(event, multisig);
+    } else {
+      log.error("Service {} not found for multisig {}", [
+        serviceId,
+        event.address.toHexString(),
+      ]);
+    }
+  }
 } 
