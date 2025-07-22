@@ -12,6 +12,18 @@ type Multisig @entity(immutable: false) {
   txHash: Bytes!
   agentIds: [Int!]!
 }
+
+type AgentRegistration @entity(immutable: true) {
+  id: ID! # serviceId-agentId-blockNumber-logIndex
+  serviceId: String!
+  agentId: Int!
+  operator: Bytes!
+  agentInstance: Bytes!
+  registrationTimestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: Bytes!
+}
+
 type DailyServiceActivity @entity(immutable: true) {
   id: ID!
   service: Service!
@@ -27,7 +39,7 @@ type DailyActiveAgent @entity(immutable: false) {
 }
 
 type DailyAgentActivity @entity(immutable: false) {
-  id: ID!
+  id: ID! # dayTimestamp-agentId
   agentId: Int!
   dayTimestamp: BigInt!
   txCount: Int!

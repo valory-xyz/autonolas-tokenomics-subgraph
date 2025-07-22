@@ -16,6 +16,7 @@ import {
   DailyServiceActivity,
   DailyActiveAgent,
   DailyAgentActivity,
+  AgentRegistration,
 } from "../generated/schema";
 import { GnosisSafe as GnosisSafeTemplate } from "../generated/templates";
 
@@ -112,6 +113,15 @@ function updateDailyActivity(
   }
 }
 
+function getLatestAgentBeforeDeployment(serviceId: string, deploymentTimestamp: BigInt): Array<i32> {
+  let service = Service.load(serviceId);
+  if (service == null || service.agentIds.length == 0) {
+    return [];
+  }
+  
+  return service.agentIds;
+}
+
 export function handleCreateService(event: CreateService): void {
   let service = Service.load(event.params.serviceId.toString());
   if (service == null) {
@@ -124,6 +134,24 @@ export function handleCreateService(event: CreateService): void {
 export function handleRegisterInstance(event: RegisterInstance): void {
   let service = Service.load(event.params.serviceId.toString());
   if (service != null) {
+    let registrationId = event.params.serviceId.toString()
+      .concat("-")
+      .concat(event.params.agentId.toString())
+      .concat("-")
+      .concat(event.block.number.toString())
+      .concat("-")
+      .concat(event.logIndex.toString());
+    
+    let registration = new AgentRegistration(registrationId);
+    registration.serviceId = event.params.serviceId.toString();
+    registration.agentId = event.params.agentId.toI32();
+    registration.operator = event.params.operator;
+    registration.agentInstance = event.params.agentInstance;
+    registration.registrationTimestamp = event.block.timestamp;
+    registration.blockNumber = event.block.number;
+    registration.transactionHash = event.transaction.hash;
+    registration.save();
+
     service.agentIds = [event.params.agentId.toI32()];
     service.save();
   }
@@ -135,17 +163,21 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
   let service = Service.load(event.params.serviceId.toString());
 
   if (multisig == null && service != null) {
-    // Update Service entity
     service.multisig = multisigAddress;
     service.save();
 
-    // Create Multisig entity
     multisig = new Multisig(multisigAddress);
     multisig.serviceId = event.params.serviceId.toI32();
     multisig.creator = event.transaction.from;
     multisig.creationTimestamp = event.block.timestamp;
     multisig.txHash = event.transaction.hash;
-    multisig.agentIds = service.agentIds; // Copy agent IDs from service
+    
+    let agentIds = getLatestAgentBeforeDeployment(
+      event.params.serviceId.toString(),
+      event.block.timestamp
+    );
+    multisig.agentIds = agentIds;
+    
     multisig.save();
 
     GnosisSafeTemplate.create(event.params.multisig);
