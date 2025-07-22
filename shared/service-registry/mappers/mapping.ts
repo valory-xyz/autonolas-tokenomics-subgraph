@@ -27,12 +27,12 @@ export function handleCreateService(event: CreateService): void {
 export function handleRegisterInstance(event: RegisterInstance): void {
   let service = Service.load(event.params.serviceId.toString());
   if (service != null) {
-    let agentIds = service.agentIds;
+      let agentIds = service.agentIds;
     agentIds.push(event.params.agentId.toI32());
-    service.agentIds = agentIds;
-    service.save();
-  }
-}
+        service.agentIds = agentIds;
+        service.save();
+      }
+    }
 
 export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
   let multisigAddress = event.params.multisig;
@@ -68,14 +68,14 @@ export function handleTerminateService(event: TerminateService): void {
 export function handleServiceActivity(event: ethereum.Event): void {
   let timestamp = event.block.timestamp;
   let dayID = timestamp.div(ONE_DAY).times(ONE_DAY);
-
+  
   let serviceAddress = event.address;
   let multisig = Multisig.load(serviceAddress);
 
   if (multisig == null) {
     return;
   }
-  
+
   let service = Service.load(multisig.service);
   if (service == null) {
     return;
@@ -85,10 +85,10 @@ export function handleServiceActivity(event: ethereum.Event): void {
   let dailyServiceActivity = DailyServiceActivity.load(dailyServiceActivityId);
 
   if (dailyServiceActivity == null) {
-    dailyServiceActivity = new DailyServiceActivity(dailyServiceActivityId);
-    dailyServiceActivity.service = service.id;
-    dailyServiceActivity.dayTimestamp = dayID;
-    dailyServiceActivity.save();
+    const newDailyActivity = new DailyServiceActivity(dailyServiceActivityId);
+    newDailyActivity.service = service.id;
+    newDailyActivity.dayTimestamp = dayID;
+    newDailyActivity.save();
 
     let dailyActiveServiceCountId = "service-count";
     let dailyActiveServiceCount = DailyActiveServiceCount.load(
@@ -99,7 +99,7 @@ export function handleServiceActivity(event: ethereum.Event): void {
         dailyActiveServiceCountId
       );
       dailyActiveServiceCount.count = 0;
-    }
+        }
     dailyActiveServiceCount.count += 1;
     dailyActiveServiceCount.save();
   }

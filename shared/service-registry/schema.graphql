@@ -12,11 +12,11 @@ type Multisig @entity(immutable: false) {
   agentIds: [Int!]!
   service: Service!
 }
-
-type DailyServiceActivity @entity(immutable: true) {
+type DailyServiceActivity @entity {
   id: ID!
   service: Service!
   dayTimestamp: BigInt!
+  agentIds: [BigInt!]!
 }
 
 type DailyActiveServiceCount @entity(immutable: false) {
