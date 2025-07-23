@@ -1,22 +1,23 @@
-import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
+import { BigInt, ethereum, log } from '@graphprotocol/graph-ts';
 import {
   CreateMultisigWithAgents,
   CreateService,
   RegisterInstance,
   TerminateService,
-} from "../generated/ServiceRegistryL2/ServiceRegistryL2";
+} from '../generated/ServiceRegistryL2/ServiceRegistryL2';
 import {
   ExecutionSuccess,
   ExecutionFromModuleSuccess,
-} from "../generated/templates/GnosisSafe/GnosisSafe";
+} from '../generated/templates/GnosisSafe/GnosisSafe';
 import {
   Multisig,
   Service,
   DailyServiceActivity,
   DailyActiveAgent,
   DailyAgentActivity,
-} from "../generated/schema";
-import { GnosisSafe as GnosisSafeTemplate } from "../generated/templates";
+  AgentTypeActivity,
+} from '../generated/schema';
+import { GnosisSafe as GnosisSafeTemplate } from '../generated/templates';
 
 const ONE_DAY = BigInt.fromI32(86400);
 const MARKET_MAKER_AGENTS = [13];
@@ -30,12 +31,15 @@ function getDayTimestamp(event: ethereum.Event): BigInt {
 
 function getDailyActivityId(serviceId: string, event: ethereum.Event): string {
   const dayTimestamp = getDayTimestamp(event);
-  return "day-".concat(dayTimestamp.toString()).concat("-service-").concat(serviceId);
+  return 'day-'
+    .concat(dayTimestamp.toString())
+    .concat('-service-')
+    .concat(serviceId);
 }
 
 function getDailyActiveAgentId(event: ethereum.Event): string {
   const dayTimestamp = getDayTimestamp(event);
-  return "day-".concat(dayTimestamp.toString());
+  return 'day-'.concat(dayTimestamp.toString());
 }
 
 function getDailyAgentActivityId(
@@ -43,9 +47,9 @@ function getDailyAgentActivityId(
   agentId: BigInt
 ): string {
   const dayTimestamp = getDayTimestamp(event);
-  return "day-"
+  return 'day-'
     .concat(dayTimestamp.toString())
-    .concat("-agent-")
+    .concat('-agent-')
     .concat(agentId.toString());
 }
 
@@ -54,20 +58,20 @@ function getAgentType(multisig: Multisig): string {
     const agentId = multisig.agentIds[i];
 
     if (MARKET_MAKER_AGENTS.includes(agentId)) {
-      return "market_maker";
+      return 'market_maker';
     }
     if (VALORY_TRADER_AGENTS.includes(agentId)) {
-      return "valory_trader";
+      return 'valory_trader';
     }
     if (MECH_AGENTS.includes(agentId)) {
-      return "mech";
+      return 'mech';
     }
     if (OTHER_TRADER_AGENTS.includes(agentId)) {
-      return "other_trader";
+      return 'other_trader';
     }
   }
 
-  return "unknown";
+  return 'unknown';
 }
 
 function updateDailyAgentActivity(
@@ -92,7 +96,10 @@ function updateDailyAgentActivity(
   }
 }
 
-function updateDailyActiveAgents(event: ethereum.Event, multisig: Multisig): void {
+function updateDailyActiveAgents(
+  event: ethereum.Event,
+  multisig: Multisig
+): void {
   const id = getDailyActiveAgentId(event);
   let dailyActiveAgent = DailyActiveAgent.load(id);
 
@@ -103,7 +110,7 @@ function updateDailyActiveAgents(event: ethereum.Event, multisig: Multisig): voi
     dailyActiveAgent.agentIds = [];
   }
 
-  const newAgentIds: Int32Array[] = [];
+  const newAgentIds = dailyActiveAgent.agentIds.slice(0, 0);
   for (let i = 0; i < multisig.agentIds.length; i++) {
     const agentId = multisig.agentIds[i];
     if (!dailyActiveAgent.agentIds.includes(agentId)) {
@@ -119,10 +126,25 @@ function updateDailyActiveAgents(event: ethereum.Event, multisig: Multisig): voi
   dailyActiveAgent.save();
 }
 
+function updateAgentTypeActivity(multisig: Multisig): void {
+  const agentType = multisig.agentType;
+  let agentTypeActivity = AgentTypeActivity.load(agentType);
+
+  if (agentTypeActivity == null) {
+    agentTypeActivity = new AgentTypeActivity(agentType);
+    agentTypeActivity.agentType = agentType;
+    agentTypeActivity.totalTransactions = BigInt.fromI32(0);
+  }
+
+  agentTypeActivity.totalTransactions =
+    agentTypeActivity.totalTransactions.plus(BigInt.fromI32(1));
+  agentTypeActivity.save();
+}
+
 function updateDailyActivity(
   service: Service,
   event: ethereum.Event,
-  multisig: Multisig,
+  multisig: Multisig
 ): void {
   const id = getDailyActivityId(service.id, event);
   const dailyActivity = DailyServiceActivity.load(id);
@@ -216,8 +238,9 @@ export function handleExecutionSuccess(event: ExecutionSuccess): void {
 
       updateDailyActiveAgents(event, multisig);
       updateDailyAgentActivity(event, multisig);
+      updateAgentTypeActivity(multisig); // Count transaction for agent type
     } else {
-      log.error("Service {} not found for multisig {}", [
+      log.error('Service {} not found for multisig {}', [
         serviceId,
         event.address.toHexString(),
       ]);
@@ -246,11 +269,12 @@ export function handleExecutionFromModuleSuccess(
 
       updateDailyActiveAgents(event, multisig);
       updateDailyAgentActivity(event, multisig);
+      updateAgentTypeActivity(multisig); // Count transaction for agent type
     } else {
-      log.error("Service {} not found for multisig {}", [
+      log.error('Service {} not found for multisig {}', [
         serviceId,
         event.address.toHexString(),
       ]);
     }
   }
-} 
+}

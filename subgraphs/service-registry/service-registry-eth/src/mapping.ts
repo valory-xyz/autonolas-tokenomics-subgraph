@@ -1,25 +1,30 @@
-import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
+import { BigInt, ethereum, log } from '@graphprotocol/graph-ts';
 import {
   CreateMultisigWithAgents,
   CreateService,
   RegisterInstance,
   TerminateService,
   UpdateService,
-} from "../generated/ServiceRegistry/ServiceRegistry";
+} from '../generated/ServiceRegistry/ServiceRegistry';
 import {
   ExecutionSuccess,
   ExecutionFromModuleSuccess,
-} from "../generated/templates/GnosisSafe/GnosisSafe";
+} from '../generated/templates/GnosisSafe/GnosisSafe';
 import {
   Multisig,
   Service,
   DailyServiceActivity,
   DailyActiveAgent,
   DailyAgentActivity,
-} from "../generated/schema";
-import { GnosisSafe as GnosisSafeTemplate } from "../generated/templates";
+  AgentTypeActivity,
+} from '../generated/schema';
+import { GnosisSafe as GnosisSafeTemplate } from '../generated/templates';
 
 const ONE_DAY = BigInt.fromI32(86400);
+const MARKET_MAKER_AGENTS = [13];
+const VALORY_TRADER_AGENTS = [14, 25];
+const MECH_AGENTS = [9, 26, 29, 37, 36];
+const OTHER_TRADER_AGENTS = [33, 44, 46, 45];
 
 function getDayTimestamp(event: ethereum.Event): BigInt {
   return event.block.timestamp.div(ONE_DAY).times(ONE_DAY);
@@ -27,12 +32,15 @@ function getDayTimestamp(event: ethereum.Event): BigInt {
 
 function getDailyActivityId(serviceId: string, event: ethereum.Event): string {
   const dayTimestamp = getDayTimestamp(event);
-  return "day-".concat(dayTimestamp.toString()).concat("-service-").concat(serviceId);
+  return 'day-'
+    .concat(dayTimestamp.toString())
+    .concat('-service-')
+    .concat(serviceId);
 }
 
 function getDailyActiveAgentId(event: ethereum.Event): string {
   const dayTimestamp = getDayTimestamp(event);
-  return "day-".concat(dayTimestamp.toString());
+  return 'day-'.concat(dayTimestamp.toString());
 }
 
 function getDailyAgentActivityId(
@@ -40,10 +48,46 @@ function getDailyAgentActivityId(
   agentId: BigInt
 ): string {
   const dayTimestamp = getDayTimestamp(event);
-  return "day-"
+  return 'day-'
     .concat(dayTimestamp.toString())
-    .concat("-agent-")
+    .concat('-agent-')
     .concat(agentId.toString());
+}
+
+function getAgentType(multisig: Multisig): string {
+  for (let i = 0; i < multisig.agentIds.length; i++) {
+    const agentId = multisig.agentIds[i];
+
+    if (MARKET_MAKER_AGENTS.includes(agentId)) {
+      return 'market_maker';
+    }
+    if (VALORY_TRADER_AGENTS.includes(agentId)) {
+      return 'valory_trader';
+    }
+    if (MECH_AGENTS.includes(agentId)) {
+      return 'mech';
+    }
+    if (OTHER_TRADER_AGENTS.includes(agentId)) {
+      return 'other_trader';
+    }
+  }
+
+  return 'unknown';
+}
+
+function updateAgentTypeActivity(multisig: Multisig): void {
+  const agentType = multisig.agentType;
+  let agentTypeActivity = AgentTypeActivity.load(agentType);
+
+  if (agentTypeActivity == null) {
+    agentTypeActivity = new AgentTypeActivity(agentType);
+    agentTypeActivity.agentType = agentType;
+    agentTypeActivity.totalTransactions = BigInt.fromI32(0);
+  }
+
+  agentTypeActivity.totalTransactions =
+    agentTypeActivity.totalTransactions.plus(BigInt.fromI32(1));
+  agentTypeActivity.save();
 }
 
 function updateDailyAgentActivity(
@@ -68,7 +112,10 @@ function updateDailyAgentActivity(
   }
 }
 
-function updateDailyActiveAgents(event: ethereum.Event, multisig: Multisig): void {
+function updateDailyActiveAgents(
+  event: ethereum.Event,
+  multisig: Multisig
+): void {
   const id = getDailyActiveAgentId(event);
   let dailyActiveAgent = DailyActiveAgent.load(id);
 
@@ -79,7 +126,7 @@ function updateDailyActiveAgents(event: ethereum.Event, multisig: Multisig): voi
     dailyActiveAgent.agentIds = [];
   }
 
-  const newAgentIds: Array<i32> = [];
+  let newAgentIds = dailyActiveAgent.agentIds.slice(0, 0);
   for (let i = 0; i < multisig.agentIds.length; i++) {
     const agentId = multisig.agentIds[i];
     if (!dailyActiveAgent.agentIds.includes(agentId)) {
@@ -98,7 +145,7 @@ function updateDailyActiveAgents(event: ethereum.Event, multisig: Multisig): voi
 function updateDailyActivity(
   service: Service,
   event: ethereum.Event,
-  multisig: Multisig,
+  multisig: Multisig
 ): void {
   const id = getDailyActivityId(service.id, event);
   const dailyActivity = DailyServiceActivity.load(id);
@@ -133,6 +180,7 @@ export function handleRegisterInstance(event: RegisterInstance): void {
       let multisig = Multisig.load(multisigAddress);
       if (multisig) {
         multisig.agentIds = [event.params.agentId.toI32()];
+        multisig.agentType = getAgentType(multisig);
         multisig.save();
       }
     }
@@ -156,6 +204,7 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
     multisig.creationTimestamp = event.block.timestamp;
     multisig.txHash = event.transaction.hash;
     multisig.agentIds = service.agentIds; // Copy agent IDs from service
+    multisig.agentType = getAgentType(multisig);
     multisig.save();
 
     GnosisSafeTemplate.create(event.params.multisig);
@@ -200,8 +249,9 @@ export function handleExecutionSuccess(event: ExecutionSuccess): void {
 
       updateDailyActiveAgents(event, multisig);
       updateDailyAgentActivity(event, multisig);
+      updateAgentTypeActivity(multisig);
     } else {
-      log.error("Service {} not found for multisig {}", [
+      log.error('Service {} not found for multisig {}', [
         serviceId,
         event.address.toHexString(),
       ]);
@@ -230,11 +280,12 @@ export function handleExecutionFromModuleSuccess(
 
       updateDailyActiveAgents(event, multisig);
       updateDailyAgentActivity(event, multisig);
+      updateAgentTypeActivity(multisig);
     } else {
-      log.error("Service {} not found for multisig {}", [
+      log.error('Service {} not found for multisig {}', [
         serviceId,
         event.address.toHexString(),
       ]);
     }
   }
-} 
+}

@@ -13,6 +13,7 @@ type Multisig @entity(immutable: false) {
   agentIds: [Int!]!
   agentType: String! # Classification: market_maker, valory_trader, mech, other_trader, unknown
 }
+
 type DailyServiceActivity @entity(immutable: true) {
   id: ID!
   service: Service!
@@ -32,5 +33,11 @@ type DailyAgentActivity @entity(immutable: false) {
   agentId: Int!
   dayTimestamp: BigInt!
   txCount: Int!
+}
+
+type AgentTypeActivity @entity(immutable: false) {
+  id: ID! # agentType (market_maker, valory_trader, mech, etc.)
+  agentType: String!
+  totalTransactions: BigInt!
 }
 

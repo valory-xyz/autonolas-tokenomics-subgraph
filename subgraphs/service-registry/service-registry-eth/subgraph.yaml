@@ -46,6 +46,7 @@ templates:
         - Service
         - Multisig
         - DailyServiceActivity
+        - AgentTypeActivity
       abis:
         - name: GnosisSafe
           file: ../../../abis/GnosisSafe.json
