@@ -10,13 +10,11 @@ type Multisig @entity(immutable: false) {
   creator: Bytes!
   creationTimestamp: BigInt!
   txHash: Bytes!
-  agentIds: [Int!]!
 }
-type DailyServiceActivity @entity(immutable: true) {
+type DailyMultisigActivity @entity(immutable: true) {
   id: ID!
-  service: Service!
+  multisig: Multisig!
   dayTimestamp: BigInt!
-  agentIds: [Int!]!
 }
 
 type DailyActiveAgent @entity(immutable: false) {
@@ -31,4 +29,4 @@ type DailyAgentActivity @entity(immutable: false) {
   agentId: Int!
   dayTimestamp: BigInt!
   txCount: Int!
-} 
+}
