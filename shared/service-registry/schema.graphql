@@ -11,6 +11,7 @@ type Multisig @entity(immutable: false) {
   creationTimestamp: BigInt!
   txHash: Bytes!
   agentIds: [Int!]!
+  agentType: String! # Classification: market_maker, valory_trader, mech, other_trader, unknown
 }
 type DailyServiceActivity @entity(immutable: true) {
   id: ID!
