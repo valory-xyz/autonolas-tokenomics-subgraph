@@ -26,7 +26,10 @@ function getDayTimestamp(event: ethereum.Event): BigInt {
 
 function getDailyActivityId(serviceId: string, event: ethereum.Event): string {
   const dayTimestamp = getDayTimestamp(event);
-  return "day-".concat(dayTimestamp.toString()).concat("-service-").concat(serviceId);
+  return "day-"
+    .concat(dayTimestamp.toString())
+    .concat("-service-")
+    .concat(serviceId);
 }
 
 function getDailyActiveAgentId(event: ethereum.Event): string {
@@ -36,7 +39,7 @@ function getDailyActiveAgentId(event: ethereum.Event): string {
 
 function getDailyAgentActivityId(
   event: ethereum.Event,
-  agentId: BigInt
+  agentId: BigInt,
 ): string {
   const dayTimestamp = getDayTimestamp(event);
   return "day-"
@@ -47,7 +50,7 @@ function getDailyAgentActivityId(
 
 function updateDailyAgentActivity(
   event: ethereum.Event,
-  multisig: Multisig
+  multisig: Multisig,
 ): void {
   const dayTimestamp = getDayTimestamp(event);
   for (let i = 0; i < multisig.agentIds.length; i++) {
@@ -67,7 +70,10 @@ function updateDailyAgentActivity(
   }
 }
 
-function updateDailyActiveAgents(event: ethereum.Event, multisig: Multisig): void {
+function updateDailyActiveAgents(
+  event: ethereum.Event,
+  multisig: Multisig,
+): void {
   const id = getDailyActiveAgentId(event);
   let dailyActiveAgent = DailyActiveAgent.load(id);
 
@@ -125,16 +131,6 @@ export function handleRegisterInstance(event: RegisterInstance): void {
   if (service != null) {
     service.agentIds = [event.params.agentId.toI32()];
     service.save();
-
-    // PATCH: Also update existing multisig with new agent
-    let multisigAddress = service.multisig;
-    if (multisigAddress) {
-      let multisig = Multisig.load(multisigAddress);
-      if (multisig) {
-        multisig.agentIds = [event.params.agentId.toI32()];
-        multisig.save();
-      }
-    }
   }
 }
 
@@ -143,21 +139,26 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
   let multisig = Multisig.load(multisigAddress);
   let service = Service.load(event.params.serviceId.toString());
 
-  if (multisig == null && service != null) {
-    // Update Service entity
+  if (service != null) {
+    // Update Service entity with the multisig address
     service.multisig = multisigAddress;
     service.save();
 
-    // Create Multisig entity
-    multisig = new Multisig(multisigAddress);
-    multisig.serviceId = event.params.serviceId.toI32();
-    multisig.creator = event.transaction.from;
-    multisig.creationTimestamp = event.block.timestamp;
-    multisig.txHash = event.transaction.hash;
-    multisig.agentIds = service.agentIds; // Copy agent IDs from service
-    multisig.save();
+    // If multisig doesn't exist, create it
+    if (multisig == null) {
+      multisig = new Multisig(multisigAddress);
+      multisig.creator = event.transaction.from;
+      multisig.creationTimestamp = event.block.timestamp;
+      GnosisSafeTemplate.create(event.params.multisig);
+    }
 
-    GnosisSafeTemplate.create(event.params.multisig);
+    // ALWAYS update the serviceId and txHash
+    multisig.serviceId = event.params.serviceId.toI32();
+    multisig.txHash = event.transaction.hash;
+
+    // THIS IS THE KEY: Always lock in the agentIds from the service at this moment
+    multisig.agentIds = service.agentIds;
+    multisig.save();
   }
 }
 
@@ -199,7 +200,7 @@ export function handleExecutionSuccess(event: ExecutionSuccess): void {
 }
 
 export function handleExecutionFromModuleSuccess(
-  event: ExecutionFromModuleSuccess
+  event: ExecutionFromModuleSuccess,
 ): void {
   let multisig = Multisig.load(event.address);
   if (multisig != null) {
@@ -226,4 +227,4 @@ export function handleExecutionFromModuleSuccess(
       ]);
     }
   }
-} 
+}
