@@ -11,11 +11,14 @@ import {
   ExecutionFromModuleSuccess,
 } from "../generated/templates/GnosisSafe/GnosisSafe";
 import {
+  Agent,
   Multisig,
   Service,
   DailyServiceActivity,
-  DailyActiveAgent,
-  DailyAgentActivity,
+  DailyUniqueAgents,
+  DailyAgentPerformance,
+  DailyActiveMultisigs,
+  GlobalMetrics,
 } from "../generated/schema";
 import { GnosisSafe as GnosisSafeTemplate } from "../generated/templates";
 
@@ -33,14 +36,14 @@ function getDailyActivityId(serviceId: string, event: ethereum.Event): string {
     .concat(serviceId);
 }
 
-function getDailyActiveAgentId(event: ethereum.Event): string {
+function getDailyUniqueAgentsId(event: ethereum.Event): string {
   const dayTimestamp = getDayTimestamp(event);
   return "day-".concat(dayTimestamp.toString());
 }
 
-function getDailyAgentActivityId(
+function getDailyAgentPerformanceId(
   event: ethereum.Event,
-  agentId: BigInt,
+  agentId: BigInt
 ): string {
   const dayTimestamp = getDayTimestamp(event);
   return "day-"
@@ -49,62 +52,80 @@ function getDailyAgentActivityId(
     .concat(agentId.toString());
 }
 
-function updateDailyAgentActivity(
+function updateDailyAgentPerformance(
   event: ethereum.Event,
-  multisig: Multisig,
+  multisig: Multisig
 ): void {
   const dayTimestamp = getDayTimestamp(event);
   for (let i = 0; i < multisig.agentIds.length; i++) {
     const agentId = multisig.agentIds[i];
-    const id = getDailyAgentActivityId(event, BigInt.fromI32(agentId));
-    let dailyAgentActivity = DailyAgentActivity.load(id);
+    const id = getDailyAgentPerformanceId(event, BigInt.fromI32(agentId));
+    let entity = DailyAgentPerformance.load(id);
 
-    if (dailyAgentActivity == null) {
-      dailyAgentActivity = new DailyAgentActivity(id);
-      dailyAgentActivity.agentId = agentId;
-      dailyAgentActivity.dayTimestamp = dayTimestamp;
-      dailyAgentActivity.txCount = 0;
+    if (entity == null) {
+      entity = new DailyAgentPerformance(id);
+      entity.agentId = agentId;
+      entity.dayTimestamp = dayTimestamp;
+      entity.txCount = 0;
+      entity.activeMultisigs = [];
+      entity.uniqueActiveMultisigCount = 0;
     }
 
-    dailyAgentActivity.txCount = dailyAgentActivity.txCount + 1;
-    dailyAgentActivity.save();
+    entity.txCount = entity.txCount + 1;
+
+    if (!entity.activeMultisigs.includes(multisig.id)) {
+      let multisigs = entity.activeMultisigs;
+      multisigs.push(multisig.id);
+      entity.activeMultisigs = multisigs;
+      entity.uniqueActiveMultisigCount = entity.activeMultisigs.length;
+    }
+    entity.save();
+
+    // Update global agent entity
+    let agent = Agent.load(agentId.toString());
+    if (agent == null) {
+      agent = new Agent(agentId.toString());
+      agent.totalTxCount = BigInt.fromI32(0);
+    }
+    agent.totalTxCount = agent.totalTxCount.plus(BigInt.fromI32(1));
+    agent.save();
   }
 }
 
-function updateDailyActiveAgents(
+function updateDailyUniqueAgents(
   event: ethereum.Event,
-  multisig: Multisig,
+  multisig: Multisig
 ): void {
-  const id = getDailyActiveAgentId(event);
-  let dailyActiveAgent = DailyActiveAgent.load(id);
+  const id = getDailyUniqueAgentsId(event);
+  let dailyUniqueAgents = DailyUniqueAgents.load(id);
 
-  if (dailyActiveAgent == null) {
-    dailyActiveAgent = new DailyActiveAgent(id);
-    dailyActiveAgent.dayTimestamp = getDayTimestamp(event);
-    dailyActiveAgent.count = 0;
-    dailyActiveAgent.agentIds = [];
+  if (dailyUniqueAgents == null) {
+    dailyUniqueAgents = new DailyUniqueAgents(id);
+    dailyUniqueAgents.dayTimestamp = getDayTimestamp(event);
+    dailyUniqueAgents.count = 0;
+    dailyUniqueAgents.agentIds = [];
   }
 
   const newAgentIds: Array<i32> = [];
   for (let i = 0; i < multisig.agentIds.length; i++) {
     const agentId = multisig.agentIds[i];
-    if (!dailyActiveAgent.agentIds.includes(agentId)) {
+    if (!dailyUniqueAgents.agentIds.includes(agentId)) {
       newAgentIds.push(agentId);
     }
   }
 
   if (newAgentIds.length > 0) {
-    dailyActiveAgent.agentIds = dailyActiveAgent.agentIds.concat(newAgentIds);
-    dailyActiveAgent.count = dailyActiveAgent.agentIds.length;
+    dailyUniqueAgents.agentIds = dailyUniqueAgents.agentIds.concat(newAgentIds);
+    dailyUniqueAgents.count = dailyUniqueAgents.agentIds.length;
   }
 
-  dailyActiveAgent.save();
+  dailyUniqueAgents.save();
 }
 
 function updateDailyActivity(
   service: Service,
   event: ethereum.Event,
-  multisig: Multisig,
+  multisig: Multisig
 ): void {
   const id = getDailyActivityId(service.id, event);
   const dailyActivity = DailyServiceActivity.load(id);
@@ -116,6 +137,45 @@ function updateDailyActivity(
     newDailyActivity.agentIds = multisig.agentIds;
     newDailyActivity.save();
   }
+}
+
+function updateDailyActiveMultisigs(
+  event: ethereum.Event,
+  multisig: Multisig
+): void {
+  const dayTimestamp = getDayTimestamp(event);
+  const dailyId = "day-" + dayTimestamp.toString();
+
+  let dailyEntity = DailyActiveMultisigs.load(dailyId);
+  if (dailyEntity == null) {
+    dailyEntity = new DailyActiveMultisigs(dailyId);
+    dailyEntity.dayTimestamp = dayTimestamp;
+    dailyEntity.activeMultisigs = [];
+    dailyEntity.count = 0;
+  }
+
+  if (!dailyEntity.activeMultisigs.includes(multisig.id)) {
+    let multisigs = dailyEntity.activeMultisigs;
+    multisigs.push(multisig.id);
+    dailyEntity.activeMultisigs = multisigs;
+    dailyEntity.count = dailyEntity.activeMultisigs.length;
+  }
+  dailyEntity.save();
+}
+
+function updateGlobalMetrics(event: ethereum.Event): void {
+  let globalMetrics = GlobalMetrics.load("1");
+
+  if (globalMetrics == null) {
+    globalMetrics = new GlobalMetrics("1");
+    globalMetrics.totalTxCount = BigInt.fromI32(0);
+  }
+
+  globalMetrics.totalTxCount = globalMetrics.totalTxCount.plus(
+    BigInt.fromI32(1)
+  );
+  globalMetrics.lastUpdated = event.block.timestamp;
+  globalMetrics.save();
 }
 
 export function handleCreateService(event: CreateService): void {
@@ -141,11 +201,9 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
   let service = Service.load(event.params.serviceId.toString());
 
   if (service != null) {
-    // Update Service entity with the multisig address
     service.multisig = multisigAddress;
     service.save();
 
-    // If multisig doesn't exist, create it
     if (multisig == null) {
       multisig = new Multisig(multisigAddress);
       multisig.creator = event.transaction.from;
@@ -153,11 +211,8 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
       GnosisSafeTemplate.create(event.params.multisig);
     }
 
-    // ALWAYS update the serviceId and txHash
     multisig.serviceId = event.params.serviceId.toI32();
     multisig.txHash = event.transaction.hash;
-
-    // THIS IS THE KEY: Always lock in the agentIds from the service at this moment
     multisig.agentIds = service.agentIds;
     multisig.save();
   }
@@ -166,17 +221,6 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
 export function handleTerminateService(event: TerminateService): void {
   let service = Service.load(event.params.serviceId.toString());
   if (service != null) {
-    // Clear the agentIds to prepare for a new deployment
-    service.agentIds = [];
-    service.save();
-  }
-}
-
-export function handleUpdateService(event: UpdateService): void {
-  let service = Service.load(event.params.serviceId.toString());
-  if (service != null) {
-    // Clear the agentIds when service is updated
-    // New registrations after this point will be considered "latest"
     service.agentIds = [];
     service.save();
   }
@@ -185,25 +229,16 @@ export function handleUpdateService(event: UpdateService): void {
 export function handleExecutionSuccess(event: ExecutionSuccess): void {
   let multisig = Multisig.load(event.address);
   if (multisig != null) {
-    let serviceId = multisig.serviceId.toString();
-    let service = Service.load(serviceId);
+    let service = Service.load(multisig.serviceId.toString());
     if (service != null) {
-      let dailyActivityId = getDailyActivityId(serviceId, event);
-      let dailyServiceActivity = DailyServiceActivity.load(dailyActivityId);
-
-      if (dailyServiceActivity == null) {
-        dailyServiceActivity = new DailyServiceActivity(dailyActivityId);
-        dailyServiceActivity.service = service.id;
-        dailyServiceActivity.dayTimestamp = getDayTimestamp(event);
-        dailyServiceActivity.agentIds = multisig.agentIds;
-        dailyServiceActivity.save();
-      }
-
-      updateDailyActiveAgents(event, multisig);
-      updateDailyAgentActivity(event, multisig);
+      updateDailyActivity(service, event, multisig);
+      updateDailyUniqueAgents(event, multisig);
+      updateDailyAgentPerformance(event, multisig);
+      updateDailyActiveMultisigs(event, multisig);
+      updateGlobalMetrics(event);
     } else {
       log.error("Service {} not found for multisig {}", [
-        serviceId,
+        multisig.serviceId.toString(),
         event.address.toHexString(),
       ]);
     }
@@ -211,29 +246,20 @@ export function handleExecutionSuccess(event: ExecutionSuccess): void {
 }
 
 export function handleExecutionFromModuleSuccess(
-  event: ExecutionFromModuleSuccess,
+  event: ExecutionFromModuleSuccess
 ): void {
   let multisig = Multisig.load(event.address);
   if (multisig != null) {
-    let serviceId = multisig.serviceId.toString();
-    let service = Service.load(serviceId);
+    let service = Service.load(multisig.serviceId.toString());
     if (service != null) {
-      let dailyActivityId = getDailyActivityId(serviceId, event);
-      let dailyServiceActivity = DailyServiceActivity.load(dailyActivityId);
-
-      if (dailyServiceActivity == null) {
-        dailyServiceActivity = new DailyServiceActivity(dailyActivityId);
-        dailyServiceActivity.service = service.id;
-        dailyServiceActivity.dayTimestamp = getDayTimestamp(event);
-        dailyServiceActivity.agentIds = multisig.agentIds;
-        dailyServiceActivity.save();
-      }
-
-      updateDailyActiveAgents(event, multisig);
-      updateDailyAgentActivity(event, multisig);
+      updateDailyActivity(service, event, multisig);
+      updateDailyUniqueAgents(event, multisig);
+      updateDailyAgentPerformance(event, multisig);
+      updateDailyActiveMultisigs(event, multisig);
+      updateGlobalMetrics(event);
     } else {
       log.error("Service {} not found for multisig {}", [
-        serviceId,
+        multisig.serviceId.toString(),
         event.address.toHexString(),
       ]);
     }

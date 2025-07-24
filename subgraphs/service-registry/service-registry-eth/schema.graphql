@@ -19,16 +19,36 @@ type DailyServiceActivity @entity(immutable: true) {
   agentIds: [Int!]!
 }
 
-type DailyActiveAgent @entity(immutable: false) {
+type DailyUniqueAgents @entity(immutable: false) {
   id: ID!
   dayTimestamp: BigInt!
   count: Int!
   agentIds: [Int!]!
 }
 
-type DailyAgentActivity @entity(immutable: false) {
+type DailyAgentPerformance @entity(immutable: false) {
   id: ID!
-  agentId: Int!
   dayTimestamp: BigInt!
+  agentId: Int!
   txCount: Int!
-} 
+  activeMultisigs: [Bytes!]!
+  uniqueActiveMultisigCount: Int!
+}
+
+type DailyActiveMultisigs @entity(immutable: false) {
+  id: ID!
+  dayTimestamp: BigInt!
+  activeMultisigs: [Bytes!]!
+  count: Int!
+}
+
+type Agent @entity(immutable: false) {
+  id: ID! # agentId
+  totalTxCount: BigInt!
+}
+
+type GlobalMetrics @entity(immutable: false) {
+  id: ID! # always "1" - single global metrics entity per subgraph
+  totalTxCount: BigInt!
+  lastUpdated: BigInt!
+}
