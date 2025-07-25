@@ -16,6 +16,11 @@ dataSources:
       entities:
         - Service
         - Multisig
+        - DailyUniqueAgents
+        - DailyAgentPerformance
+        - DailyActiveMultisigs
+        - Agent
+        - GlobalMetrics
       abis:
         - name: ServiceRegistryL2
           file: ../../../abis/ServiceRegistryL2.json
@@ -45,6 +50,11 @@ templates:
         - Service
         - Multisig
         - DailyServiceActivity
+        - DailyUniqueAgents
+        - DailyAgentPerformance
+        - DailyActiveMultisigs
+        - Agent
+        - GlobalMetrics
       abis:
         - name: GnosisSafe
           file: ../../../abis/GnosisSafe.json
