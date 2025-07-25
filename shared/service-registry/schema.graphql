@@ -23,7 +23,13 @@ type DailyUniqueAgents @entity(immutable: false) {
   id: ID!
   dayTimestamp: BigInt!
   count: Int!
-  agentIds: [Int!]!
+  agents: [DailyUniqueAgent!]! @derivedFrom(field: "dailyUniqueAgents")
+}
+
+type DailyUniqueAgent @entity(immutable: false) {
+  id: ID!
+  dailyUniqueAgents: DailyUniqueAgents!
+  agent: AgentPerformance!
 }
 
 type DailyAgentPerformance @entity(immutable: false) {
@@ -31,24 +37,36 @@ type DailyAgentPerformance @entity(immutable: false) {
   dayTimestamp: BigInt!
   agentId: Int!
   txCount: Int!
-  activeMultisigs: [Bytes!]!
-  uniqueActiveMultisigCount: Int!
+  multisigs: [DailyAgentMultisig!]! @derivedFrom(field: "dailyAgentPerformance")
+  activeMultisigCount: Int!
+}
+
+type DailyAgentMultisig @entity(immutable: false) {
+  id: ID!
+  dailyAgentPerformance: DailyAgentPerformance!
+  multisig: Multisig!
 }
 
 type DailyActiveMultisigs @entity(immutable: false) {
   id: ID!
   dayTimestamp: BigInt!
-  activeMultisigs: [Bytes!]!
+  multisigs: [DailyActiveMultisig!]! @derivedFrom(field: "dailyActiveMultisigs")
   count: Int!
+}
+
+type DailyActiveMultisig @entity(immutable: false) {
+  id: ID!
+  dailyActiveMultisigs: DailyActiveMultisigs!
+  multisig: Multisig!
 }
 
 type AgentPerformance @entity(immutable: false) {
   id: ID! # agentId
-  totalTxCount: BigInt!
+  txCount: BigInt!
 }
 
-type GlobalMetrics @entity(immutable: false) {
-  id: ID! # always "1" - single global metrics entity per subgraph
-  totalTxCount: BigInt!
+type Global @entity(immutable: false) {
+  id: ID!
+  txCount: BigInt!
   lastUpdated: BigInt!
 }
