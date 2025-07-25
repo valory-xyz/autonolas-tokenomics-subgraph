@@ -106,7 +106,14 @@ export function handleCreateService(event: CreateService): void {
 
 export function handleRegisterInstance(event: RegisterInstance): void {
   let service = getOrCreateService(event.params.serviceId);
-  service.agentIds = [event.params.agentId.toI32()];
+  const newAgentId = event.params.agentId.toI32();
+  
+  // Add agent if not already in the list to avoid duplicates
+  if (!service.agentIds.includes(newAgentId)) {
+    let agentIds = service.agentIds;
+    agentIds.push(newAgentId);
+    service.agentIds = agentIds;
+  }
   service.save();
 }
 
@@ -118,7 +125,7 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
     service.multisig = multisig.id;
     service.save();
 
-    GnosisSafeTemplate.create(event.params.multisig);
+      GnosisSafeTemplate.create(event.params.multisig);
 
     multisig.serviceId = event.params.serviceId.toI32();
     multisig.txHash = event.transaction.hash;

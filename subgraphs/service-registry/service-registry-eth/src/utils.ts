@@ -144,6 +144,9 @@ export function createDailyUniqueAgent(
   dailyUniqueAgents: DailyUniqueAgents,
   agent: AgentPerformance
 ): void {
+  // Links an agent to the daily unique agents list for deduplication
+  // Ensures each agent is counted only once per day, regardless of how many transactions they made
+  // Updates the daily unique agent count automatically
   const id = dailyUniqueAgents.id
     .concat("-")
     .concat(agent.id);
@@ -163,6 +166,9 @@ export function createDailyAgentMultisig(
   dailyAgentPerformance: DailyAgentPerformance,
   multisig: Multisig
 ): void {
+  // Tracks which multisigs a specific agent was active in on a given day (agent-centric view)
+  // Example: Agent 40 worked with Multisig A and B today, so we create 2 links
+  // Used for agent performance analytics: "How many different multisigs did this agent work with?"
   const id = dailyAgentPerformance.id
     .concat("-")
     .concat(multisig.id.toHexString());
@@ -183,6 +189,9 @@ export function createDailyActiveMultisig(
   dailyActiveMultisigs: DailyActiveMultisigs,
   multisig: Multisig
 ): void {
+  // Tracks which multisigs had any activity at all on a given day (system-wide view)
+  // Example: Today Multisig A and B were active, regardless of which agents used them
+  // Used for system analytics: "How many total multisigs were active today?"
   const id = dailyActiveMultisigs.id
     .concat("-")
     .concat(multisig.id.toHexString());

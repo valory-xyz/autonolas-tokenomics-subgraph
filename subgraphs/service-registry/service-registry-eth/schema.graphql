@@ -12,7 +12,7 @@ type Multisig @entity(immutable: false) {
   txHash: Bytes!
   agentIds: [Int!]!
 }
-type DailyServiceActivity @entity(immutable: true) {
+type DailyServiceActivity @entity(immutable: false) {
   id: ID!
   service: Service!
   dayTimestamp: BigInt!
