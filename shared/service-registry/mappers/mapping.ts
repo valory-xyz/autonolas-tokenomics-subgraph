@@ -42,7 +42,7 @@ function getDailyUniqueAgentsId(event: ethereum.Event): string {
 
 function getDailyAgentPerformanceId(
   event: ethereum.Event,
-  agentId: BigInt
+  agentId: i32
 ): string {
   const dayTimestamp = getDayTimestamp(event);
   return "day-"
@@ -56,12 +56,17 @@ function updateDailyAgentPerformance(
   multisig: Multisig
 ): void {
   const dayTimestamp = getDayTimestamp(event);
+
+  // Process each agent associated with this multisig
   for (let i = 0; i < multisig.agentIds.length; i++) {
     const agentId = multisig.agentIds[i];
-    const id = getDailyAgentPerformanceId(event, BigInt.fromI32(agentId));
+
+    // Generate unique ID for this agent's daily performance
+    const id = getDailyAgentPerformanceId(event, agentId);
     let entity = DailyAgentPerformance.load(id);
 
     if (entity == null) {
+      // Create new daily performance entity for this agent
       entity = new DailyAgentPerformance(id);
       entity.agentId = agentId;
       entity.dayTimestamp = dayTimestamp;
@@ -70,14 +75,30 @@ function updateDailyAgentPerformance(
       entity.uniqueActiveMultisigCount = 0;
     }
 
+    // CRITICAL: Validate that this entity belongs to the correct agent
+    // This prevents cross-agent contamination
+    if (entity.agentId != agentId) {
+      log.error(
+        "CRITICAL BUG: Agent ID mismatch! Entity {} has agentId {} but expected {}",
+        [id, entity.agentId.toString(), agentId.toString()]
+      );
+      // Skip this update to prevent data corruption
+      continue;
+    }
+
+    // Increment transaction count for this agent
     entity.txCount = entity.txCount + 1;
 
+    // Add this multisig to the agent's active multisigs list (if not already present)
     if (!entity.activeMultisigs.includes(multisig.id)) {
-      let multisigs = entity.activeMultisigs;
-      multisigs.push(multisig.id);
-      entity.activeMultisigs = multisigs;
+      // Create a new array to avoid reference issues
+      let activeMultisigs = entity.activeMultisigs;
+      activeMultisigs.push(multisig.id);
+      entity.activeMultisigs = activeMultisigs;
       entity.uniqueActiveMultisigCount = entity.activeMultisigs.length;
     }
+
+    // Save the entity
     entity.save();
 
     // Update global agent entity
