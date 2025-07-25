@@ -42,7 +42,7 @@ type DailyActiveMultisigs @entity(immutable: false) {
   count: Int!
 }
 
-type Agent @entity(immutable: false) {
+type AgentPerformance @entity(immutable: false) {
   id: ID! # agentId
   totalTxCount: BigInt!
 }
