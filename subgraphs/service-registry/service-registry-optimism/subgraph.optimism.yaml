@@ -1,0 +1,68 @@
+specVersion: 0.0.5
+schema:
+  file: ../../../shared/service-registry/schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: ServiceRegistryL2
+    network: optimism
+    source:
+      address: "0x3d77596beb0f130a4415df3D2D8232B3d3D31e44"
+      abi: ServiceRegistryL2
+      startBlock: 116423039
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Service
+        - Multisig
+        - DailyUniqueAgents
+        - DailyAgentPerformance
+        - DailyActiveMultisigs
+        - Agent
+        - GlobalMetrics
+      abis:
+        - name: ServiceRegistryL2
+          file: ../../../abis/ServiceRegistryL2.json
+        - name: GnosisSafe
+          file: ../../../abis/GnosisSafe.json
+      eventHandlers:
+        - event: CreateService(indexed uint256,bytes32)
+          handler: handleCreateService
+        - event: CreateMultisigWithAgents(indexed uint256,indexed address)
+          handler: handleCreateMultisig
+        - event: RegisterInstance(indexed address,indexed uint256,indexed address,uint256)
+          handler: handleRegisterInstance
+        - event: TerminateService(indexed uint256)
+          handler: handleTerminateService
+      file: ../../../shared/service-registry/mappers/mapping.ts
+
+templates:
+  - kind: ethereum/contract
+    name: GnosisSafe
+    network: optimism
+    source:
+      abi: GnosisSafe
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ../../../shared/service-registry/mappers/mapping.ts
+      entities:
+        - Service
+        - Multisig
+        - DailyServiceActivity
+        - DailyUniqueAgents
+        - DailyAgentPerformance
+        - DailyActiveMultisigs
+        - Agent
+        - GlobalMetrics
+      abis:
+        - name: GnosisSafe
+          file: ../../../abis/GnosisSafe.json
+      eventHandlers:
+        - event: ExecutionSuccess(bytes32,uint256)
+          handler: handleExecutionSuccess
+        - event: ExecutionFromModuleSuccess(indexed address)
+          handler: handleExecutionFromModuleSuccess
+      

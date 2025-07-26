@@ -1,14 +1,14 @@
 specVersion: 0.0.5
 schema:
-  file: ../../shared/tokenomics/schema-l2.graphql
+  file: ../../../shared/tokenomics/schema-l2.graphql
 dataSources:
   - kind: ethereum
     name: OLAS
-    network: mode-mainnet
+    network: gnosis
     source:
-      address: "0xcfD1D50ce23C46D3Cf6407487B2F8934e96DC8f9" 
+      address: "0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f" 
       abi: OLAS
-      startBlock: 14443184
+      startBlock: 30254468
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -19,8 +19,8 @@ dataSources:
         - Transfer
       abis:
         - name: OLAS
-          file: ../../abis/OLAS.json
+          file: ../../../abis/OLAS.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      file: ../../shared/tokenomics/mappers/olas-l2.ts 
+      file: ../../../shared/tokenomics/mappers/olas-l2.ts 

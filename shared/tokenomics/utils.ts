@@ -1,11 +1,8 @@
-import {
-  Token,
-  TokenHolder,
-} from "../../subgraphs/tokenomics/generated/schema";
-import { Address, BigInt } from "@graphprotocol/graph-ts";
+import { BigInt, Address } from "@graphprotocol/graph-ts";
+import { Token, TokenHolder } from "./generated/schema";
 
+export const ADDRESS_ZERO = Address.zero();
 const BIGINT_ZERO = BigInt.fromI32(0);
-const ZERO_ADDRESS = Address.zero();
 
 export function getOrCreateToken(tokenAddress: Address): Token {
   let token = Token.load(tokenAddress);
@@ -43,16 +40,16 @@ export function handleTransferBalances(
   let token = getOrCreateToken(tokenAddress);
 
   // Update Token balance
-  if (fromAddress.equals(ZERO_ADDRESS)) {
+  if (fromAddress.equals(ADDRESS_ZERO)) {
     // Mint
     token.balance = token.balance.plus(amount);
-  } else if (toAddress.equals(ZERO_ADDRESS)) {
+  } else if (toAddress.equals(ADDRESS_ZERO)) {
     // Burn
     token.balance = token.balance.minus(amount);
   }
 
   // Update TokenHolders
-  if (!fromAddress.equals(ZERO_ADDRESS)) {
+  if (!fromAddress.equals(ADDRESS_ZERO)) {
     let fromHolder = getOrCreateTokenHolder(tokenAddress, fromAddress);
     let oldBalance = fromHolder.balance;
     fromHolder.balance = fromHolder.balance.minus(amount);
@@ -67,7 +64,7 @@ export function handleTransferBalances(
     }
   }
 
-  if (!toAddress.equals(ZERO_ADDRESS)) {
+  if (!toAddress.equals(ADDRESS_ZERO)) {
     let toHolder = getOrCreateTokenHolder(tokenAddress, toAddress);
     let oldBalance = toHolder.balance;
     toHolder.balance = toHolder.balance.plus(amount);
