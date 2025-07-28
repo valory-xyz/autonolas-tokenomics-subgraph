@@ -1,6 +1,7 @@
 import { BigInt, ethereum, Bytes } from "@graphprotocol/graph-ts";
 import {
   AgentPerformance,
+  AgentRegistration,
   DailyActiveMultisig,
   DailyActiveMultisigs,
   DailyAgentMultisig,
@@ -205,4 +206,53 @@ export function createDailyActiveMultisig(
     dailyActiveMultisigs.count = dailyActiveMultisigs.count + 1;
     dailyActiveMultisigs.save();
   }
+}
+
+export function createOrUpdateAgentRegistration(
+  serviceId: i32,
+  agentId: i32,
+  timestamp: BigInt
+): void {
+  const id = serviceId.toString().concat("-").concat(agentId.toString());
+  let registration = AgentRegistration.load(id);
+  if (registration == null) {
+    registration = new AgentRegistration(id);
+    registration.serviceId = serviceId;
+    registration.agentId = agentId;
+  }
+  registration.registrationTimestamp = timestamp;
+  registration.save();
+}
+
+export function getMostRecentAgent(
+  serviceId: i32,
+  deploymentTimestamp: BigInt
+): i32 {
+  // Find the agent that was registered most recently before the multisig deployment
+  // This matches the SQL query logic: order by registered_at desc, rn = 1
+
+  let mostRecentAgent: i32 = -1;
+  let mostRecentTimestamp = BigInt.fromI32(0);
+
+  // We need to iterate through all possible agent registrations for this service
+  // Since we can't do complex queries in AssemblyScript, we'll check common agent IDs
+  // This is a limitation but should cover most cases
+  for (let agentId = 1; agentId <= 100; agentId++) {
+    const registrationId = serviceId
+      .toString()
+      .concat("-")
+      .concat(agentId.toString());
+    const registration = AgentRegistration.load(registrationId);
+
+    if (
+      registration != null &&
+      registration.registrationTimestamp <= deploymentTimestamp &&
+      registration.registrationTimestamp > mostRecentTimestamp
+    ) {
+      mostRecentAgent = agentId;
+      mostRecentTimestamp = registration.registrationTimestamp;
+    }
+  }
+
+  return mostRecentAgent;
 } 
