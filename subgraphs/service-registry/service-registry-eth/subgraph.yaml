@@ -17,6 +17,7 @@ dataSources:
       entities:
         - Service
         - Multisig
+        - AgentRegistration
         - DailyUniqueAgents
         - DailyAgentPerformance
         - DailyActiveMultisigs
@@ -50,6 +51,7 @@ templates:
       entities:
         - Service
         - Multisig
+        - AgentRegistration
         - DailyServiceActivity
         - DailyUniqueAgents
         - DailyAgentPerformance
