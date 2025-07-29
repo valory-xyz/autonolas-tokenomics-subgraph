@@ -226,6 +226,7 @@ export function createOrUpdateAgentRegistration(
 
 export function getMostRecentAgent(
   serviceId: i32,
+  agentIds: i32[],
   deploymentTimestamp: BigInt
 ): i32 {
   // Find the agent that was registered most recently before the multisig deployment
@@ -237,7 +238,8 @@ export function getMostRecentAgent(
   // We need to iterate through all possible agent registrations for this service
   // Since we can't do complex queries in AssemblyScript, we'll check common agent IDs
   // This is a limitation but should cover most cases
-  for (let agentId = 1; agentId <= 100; agentId++) {
+  for (let i = 0; i < agentIds.length; i++) {
+    const agentId = agentIds[i];
     const registrationId = serviceId
       .toString()
       .concat("-")

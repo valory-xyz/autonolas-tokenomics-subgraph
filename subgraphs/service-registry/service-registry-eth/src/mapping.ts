@@ -141,6 +141,7 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
     // This matches the SQL query logic to prevent double counting
     const mostRecentAgent = getMostRecentAgent(
       event.params.serviceId.toI32(),
+      service.agentIds,
       event.block.timestamp
     );
 
