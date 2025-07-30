@@ -213,10 +213,10 @@ export function createOrUpdateAgentRegistration(
   let registration = AgentRegistration.load(id);
   if (registration == null) {
     registration = new AgentRegistration(id);
-    registration.serviceId = serviceId;
-    registration.agentId = agentId;
-    registration.registrationTimestamp = timestamp;
   }
+  registration.serviceId = serviceId;
+  registration.agentId = agentId;
+  registration.registrationTimestamp = timestamp;
   registration.save();
 }
 
