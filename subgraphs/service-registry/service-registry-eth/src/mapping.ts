@@ -4,16 +4,16 @@ import {
   CreateService,
   RegisterInstance,
   TerminateService,
-} from "../generated/ServiceRegistry/ServiceRegistry";
+} from "../../../../shared/service-registry/generated/ServiceRegistryL2/ServiceRegistryL2";
 import {
   ExecutionSuccess,
   ExecutionFromModuleSuccess,
-} from "../generated/templates/GnosisSafe/GnosisSafe";
+} from "../../../../shared/service-registry/generated/templates/GnosisSafe/GnosisSafe";
 import {
   Multisig,
   Service,
-} from "../generated/schema";
-import { GnosisSafe as GnosisSafeTemplate } from "../generated/templates";
+} from "../../../../shared/service-registry/generated/schema";
+import { GnosisSafe as GnosisSafeTemplate } from "../../../../shared/service-registry/generated/templates";
 import {
   getOrCreateService,
   getOrCreateMultisig,
@@ -26,7 +26,9 @@ import {
   createDailyUniqueAgent,
   createDailyAgentMultisig,
   createDailyActiveMultisig,
-} from "./utils";
+  createOrUpdateAgentRegistration,
+  getMostRecentAgentId,
+} from "../../../../shared/service-registry/utils";
 
 function updateDailyAgentPerformance(
   event: ethereum.Event,
@@ -93,9 +95,7 @@ function updateDailyActiveMultisigs(
 
 function updateGlobalMetrics(event: ethereum.Event): void {
   const global = getGlobal();
-  global.txCount = global.txCount.plus(
-    BigInt.fromI32(1)
-  );
+  global.txCount = global.txCount.plus(BigInt.fromI32(1));
   global.lastUpdated = event.block.timestamp;
   global.save();
 }
@@ -107,7 +107,14 @@ export function handleCreateService(event: CreateService): void {
 export function handleRegisterInstance(event: RegisterInstance): void {
   let service = getOrCreateService(event.params.serviceId);
   const newAgentId = event.params.agentId.toI32();
-  
+
+  // Track agent registration timestamp for later use in multisig creation
+  createOrUpdateAgentRegistration(
+    event.params.serviceId.toI32(),
+    newAgentId,
+    event.block.timestamp
+  );
+
   // Add agent if not already in the list to avoid duplicates
   if (!service.agentIds.includes(newAgentId)) {
     let agentIds = service.agentIds;
@@ -125,11 +132,29 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
     service.multisig = multisig.id;
     service.save();
 
-      GnosisSafeTemplate.create(event.params.multisig);
+    GnosisSafeTemplate.create(event.params.multisig);
 
     multisig.serviceId = event.params.serviceId.toI32();
     multisig.txHash = event.transaction.hash;
-    multisig.agentIds = service.agentIds;
+
+    // Use the most recently registered agent instead of all agents
+    // This matches the SQL query logic to prevent double counting
+    const mostRecentAgentId = getMostRecentAgentId(
+      event.params.serviceId.toI32(),
+      service.agentIds,
+      event.block.timestamp
+    );
+
+    if (mostRecentAgentId != -1) {
+      multisig.agentIds = [mostRecentAgentId];
+    } else {
+      // Fallback to existing logic if no agent found
+      log.warning("No recent agent found for service {}, using all agents", [
+        event.params.serviceId.toString(),
+      ]);
+      multisig.agentIds = service.agentIds;
+    }
+
     multisig.save();
   }
 }

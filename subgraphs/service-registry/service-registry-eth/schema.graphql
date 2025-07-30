@@ -4,6 +4,13 @@ type Service @entity(immutable: false) {
   agentIds: [Int!]!
 }
 
+type AgentRegistration @entity(immutable: false) {
+  id: ID! # serviceId-agentId
+  serviceId: Int!
+  agentId: Int!
+  registrationTimestamp: BigInt!
+}
+
 type Multisig @entity(immutable: false) {
   id: Bytes! # multisig address
   serviceId: Int!
