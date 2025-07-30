@@ -224,7 +224,7 @@ export function createOrUpdateAgentRegistration(
   registration.save();
 }
 
-export function getMostRecentAgent(
+export function getMostRecentAgentId(
   serviceId: i32,
   agentIds: i32[],
   deploymentTimestamp: BigInt
@@ -232,7 +232,7 @@ export function getMostRecentAgent(
   // Find the agent that was registered most recently before the multisig deployment
   // This matches the SQL query logic: order by registered_at desc, rn = 1
 
-  let mostRecentAgent: i32 = -1;
+  let mostRecentAgentId: i32 = -1;
   let mostRecentTimestamp = BigInt.fromI32(0);
 
   // We need to iterate through all possible agent registrations for this service
@@ -251,10 +251,10 @@ export function getMostRecentAgent(
       registration.registrationTimestamp <= deploymentTimestamp &&
       registration.registrationTimestamp > mostRecentTimestamp
     ) {
-      mostRecentAgent = agentId;
+      mostRecentAgentId = agentId;
       mostRecentTimestamp = registration.registrationTimestamp;
     }
   }
 
-  return mostRecentAgent;
+  return mostRecentAgentId;
 } 

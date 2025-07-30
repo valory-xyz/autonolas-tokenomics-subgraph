@@ -27,7 +27,7 @@ import {
   createDailyAgentMultisig,
   createDailyActiveMultisig,
   createOrUpdateAgentRegistration,
-  getMostRecentAgent,
+  getMostRecentAgentId,
 } from "../utils";
 
 function updateDailyAgentPerformance(
@@ -139,14 +139,14 @@ export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
 
     // Use the most recently registered agent instead of all agents
     // This matches the SQL query logic to prevent double counting
-    const mostRecentAgent = getMostRecentAgent(
+    const mostRecentAgentId = getMostRecentAgentId(
       event.params.serviceId.toI32(),
       service.agentIds,
       event.block.timestamp
     );
 
-    if (mostRecentAgent != -1) {
-      multisig.agentIds = [mostRecentAgent];
+    if (mostRecentAgentId != -1) {
+      multisig.agentIds = [mostRecentAgentId];
     } else {
       // Fallback to existing logic if no agent found
       log.warning("No recent agent found for service {}, using all agents", [
