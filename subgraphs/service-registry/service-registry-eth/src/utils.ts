@@ -215,8 +215,8 @@ export function createOrUpdateAgentRegistration(
     registration = new AgentRegistration(id);
     registration.serviceId = serviceId;
     registration.agentId = agentId;
+    registration.registrationTimestamp = timestamp;
   }
-  registration.registrationTimestamp = timestamp;
   registration.save();
 }
 
