@@ -1,4 +1,4 @@
-import { BigInt, ethereum, Bytes } from "@graphprotocol/graph-ts";
+import { BigInt, ethereum, Bytes, log } from "@graphprotocol/graph-ts";
 import {
   AgentPerformance,
   AgentRegistration,
@@ -216,12 +216,15 @@ export function createOrUpdateAgentRegistration(
   const id = serviceId.toString().concat("-").concat(agentId.toString());
   let registration = AgentRegistration.load(id);
   if (registration == null) {
+    // Only create new registration if it doesn't exist
+    // This preserves the FIRST registration timestamp (matches Dune logic)
     registration = new AgentRegistration(id);
+    registration.serviceId = serviceId;
+    registration.agentId = agentId;
+    registration.registrationTimestamp = timestamp;
+    registration.save();
   }
-  registration.serviceId = serviceId;
-  registration.agentId = agentId;
-  registration.registrationTimestamp = timestamp;
-  registration.save();
+  // Don't update existing registrations - first registration timestamp is what matters for attribution
 }
 
 export function getMostRecentAgentId(
@@ -235,11 +238,10 @@ export function getMostRecentAgentId(
   let mostRecentAgentId: i32 = -1;
   let mostRecentTimestamp = BigInt.fromI32(0);
 
-  // We need to iterate through all possible agent registrations for this service
-  // Since we can't do complex queries in AssemblyScript, we'll check common agent IDs
-  // This is a limitation but should cover most cases
-  for (let i = 0; i < agentIds.length; i++) {
-    const agentId = agentIds[i];
+  // Check all possible agent registrations for this service (1-100 range)
+  // This fixes the bug where we only checked current service.agentIds
+  // which caused historical attribution errors due to time paradox
+  for (let agentId = 1; agentId <= 100; agentId++) {
     const registrationId = serviceId
       .toString()
       .concat("-")

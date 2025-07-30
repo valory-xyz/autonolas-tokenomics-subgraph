@@ -34,20 +34,25 @@ function updateDailyAgentPerformance(
   event: ethereum.Event,
   multisig: Multisig
 ): void {
-  // Process each agent associated with this multisig
-  for (let i = 0; i < multisig.agentIds.length; i++) {
-    const agentId = multisig.agentIds[i];
-    const entity = getOrCreateDailyAgentPerformance(event, agentId);
+  // Calculate the correct agent for this transaction based on when it happened
+  // This bypasses cached multisig.agentIds which may be incorrect due to service lifecycle changes
+  const correctAgentId = getMostRecentAgentId(
+    multisig.serviceId,
+    [], // Don't use cached service.agentIds - search all possible agents
+    event.block.timestamp // Use transaction time to find who was active then
+  );
+
+  if (correctAgentId != -1) {
+    const entity = getOrCreateDailyAgentPerformance(event, correctAgentId);
 
     // CRITICAL: Validate that this entity belongs to the correct agent
     // This prevents cross-agent contamination
-    if (entity.agentId != agentId) {
+    if (entity.agentId != correctAgentId) {
       log.error(
         "CRITICAL BUG: Agent ID mismatch! Entity {} has agentId {} but expected {}",
-        [entity.id, entity.agentId.toString(), agentId.toString()]
+        [entity.id, entity.agentId.toString(), correctAgentId.toString()]
       );
-      // Skip this update to prevent data corruption
-      continue;
+      return; // Skip this update to prevent data corruption
     }
 
     // Increment transaction count for this agent
@@ -57,9 +62,15 @@ function updateDailyAgentPerformance(
     createDailyAgentMultisig(entity, multisig);
 
     // Update global agent entity
-    const agent = getOrCreateAgentPerformance(agentId);
+    const agent = getOrCreateAgentPerformance(correctAgentId);
     agent.txCount = agent.txCount.plus(BigInt.fromI32(1));
     agent.save();
+  } else {
+    // Log warning if no agent found for this transaction
+    log.warning("No agent found for transaction at service {} timestamp {}", [
+      multisig.serviceId.toString(),
+      event.block.timestamp.toString()
+    ]);
   }
 }
 
@@ -68,9 +79,16 @@ function updateDailyUniqueAgents(
   multisig: Multisig
 ): void {
   const dailyUniqueAgents = getOrCreateDailyUniqueAgents(event);
-  for (let i = 0; i < multisig.agentIds.length; i++) {
-    const agentId = multisig.agentIds[i];
-    const agent = getOrCreateAgentPerformance(agentId);
+  
+  // Calculate the correct agent for this transaction based on when it happened
+  const correctAgentId = getMostRecentAgentId(
+    multisig.serviceId,
+    [], // Don't use cached service.agentIds - search all possible agents
+    event.block.timestamp // Use transaction time to find who was active then
+  );
+
+  if (correctAgentId != -1) {
+    const agent = getOrCreateAgentPerformance(correctAgentId);
     createDailyUniqueAgent(dailyUniqueAgents, agent);
   }
 }
@@ -81,7 +99,19 @@ function updateDailyActivity(
   multisig: Multisig
 ): void {
   const dailyActivity = getOrCreateDailyServiceActivity(service.id, event);
-  dailyActivity.agentIds = multisig.agentIds;
+  
+  // Calculate the correct agent for this transaction based on when it happened
+  const correctAgentId = getMostRecentAgentId(
+    multisig.serviceId,
+    [], // Don't use cached service.agentIds - search all possible agents
+    event.block.timestamp // Use transaction time to find who was active then
+  );
+
+  if (correctAgentId != -1) {
+    dailyActivity.agentIds = [correctAgentId];
+  } else {
+    dailyActivity.agentIds = [];
+  }
   dailyActivity.save();
 }
 
