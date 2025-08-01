@@ -1,0 +1,12 @@
+type LegacyMech @entity {
+  id: Bytes!
+  agentId: Int!
+  totalFeesIn: BigInt!
+  totalFeesOut: BigInt!
+}
+
+type Global @entity {
+  id: ID!
+  totalFeesIn: BigInt!
+  totalFeesOut: BigInt!
+}
