@@ -26,6 +26,8 @@
     "build-service-registry-celo": "graph build subgraphs/service-registry/service-registry-celo/subgraph.celo.yaml",
     "build-service-registry-mode": "graph build subgraphs/service-registry/service-registry-mode/subgraph.mode.yaml",
     "build-service-registry-polygon": "graph build subgraphs/service-registry/service-registry-polygon/subgraph.polygon.yaml",
+    "codegen-legacy-mech-fees": "graph codegen subgraphs/legacy-mech-fees-gnosis/subgraph.yaml -o subgraphs/legacy-mech-fees-gnosis/generated",
+    "build-legacy-mech-fees": "yarn codegen-legacy-mech-fees && graph build subgraphs/legacy-mech-fees-gnosis/subgraph.yaml",
     "deploy-studio": "node scripts/deploy-studio.js",
     "test": "graph test"
   },

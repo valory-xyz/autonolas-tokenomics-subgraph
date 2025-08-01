@@ -91,6 +91,16 @@ const networkTypes = {
         description: 'Polygon Network'
       }
     }
+  },
+  '4': {
+    name: 'Legacy Mech Fees',
+    description: 'Legacy Mech Fees Subgraphs',
+    networks: {
+      'gnosis': {
+        path: 'subgraphs/legacy-mech-fees-gnosis/subgraph.yaml',
+        description: 'Gnosis Chain'
+      }
+    }
   }
 };
 
@@ -125,10 +135,11 @@ async function main() {
     let selectedNetwork;
     let networkConfig;
     
-    // If L1 (mainnet), auto-select
-    if (networkTypeKey === '1') {
-      selectedNetwork = 'mainnet';
-      networkConfig = networkType.networks[selectedNetwork];
+    // If L1 (mainnet) or Legacy Mech Fees, auto-select
+    if (networkTypeKey === '1' || networkTypeKey === '4') {
+      const networkKey = Object.keys(networkType.networks)[0];
+      selectedNetwork = networkKey;
+      networkConfig = networkType.networks[networkKey];
     } else {
       // If L2 or service registry, show options
       console.log(`\nAvailable networks for ${networkType.name}:`);
@@ -189,6 +200,8 @@ async function main() {
       } else {
         buildCommand = 'yarn build-service-registry-l2';
       }
+    } else if (networkTypeKey === '4') {
+      buildCommand = 'yarn build-legacy-mech-fees';
     }
 
     console.log(`🔨 Building subgraph with: ${buildCommand}`);
