@@ -1,6 +1,7 @@
 type LegacyMech @entity {
   id: Bytes!
   agentId: Int!
+  price: BigInt!
   totalFeesIn: BigInt!
   totalFeesOut: BigInt!
 }
