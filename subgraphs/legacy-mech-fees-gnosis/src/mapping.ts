@@ -5,7 +5,7 @@ import { LegacyMech, Global } from "../generated/schema";
 import { LegacyMech as LegacyMechTemplate } from "../generated/templates";
 
 const BURNER_ADDRESS = Address.fromString("0x153196110040a0c729227c603db3a6c6d91851b2");
-
+const ZERO_POINT_ZERO_ONE = BigInt.fromString("10000000000000000");
 
 export function handleCreateMech(event: CreateMech): void {
 
@@ -70,17 +70,13 @@ export function handleRequest(call: RequestCall): void {
   log.info("Request Destination: {}", [call.to.toHexString()]);
   log.info("Request Value: {}", [call.transaction.value.toString()]);
 
-  const amount = call.transaction.value;
-
-  if (amount.equals(BigInt.fromI32(0))) {
-    return;
-  }
+  
   
   const mechAddress = call.to;
   const mech = LegacyMech.load(mechAddress);
   if (mech == null) { return; }
   
-  mech.totalFeesIn = mech.totalFeesIn.plus(amount);
+  mech.totalFeesIn = mech.totalFeesIn.plus(ZERO_POINT_ZERO_ONE);
   mech.save();
   
   let global = Global.load("global");
@@ -89,6 +85,6 @@ export function handleRequest(call: RequestCall): void {
     global.totalFeesIn = BigInt.fromI32(0);
     global.totalFeesOut = BigInt.fromI32(0);
   }
-  global.totalFeesIn = global.totalFeesIn.plus(amount);
+  global.totalFeesIn = global.totalFeesIn.plus(ZERO_POINT_ZERO_ONE);
   global.save();
 }
