@@ -18,4 +18,8 @@ type Global @entity {
   id: ID!
   totalFeesIn: BigInt!
   totalFeesOut: BigInt!
+  totalFeesInLegacyMech: BigInt!
+  totalFeesInLegacyMechMarketPlace: BigInt!
+  totalFeesOutLegacyMech: BigInt!
+  totalFeesOutLegacyMechMarketPlace: BigInt!
 }

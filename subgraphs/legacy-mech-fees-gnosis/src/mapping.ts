@@ -13,8 +13,10 @@ import {
 } from "../generated/templates";
 import { RequestCall as MarketPlaceRequestCall } from "../generated/LegacyMarketPlace/LegacyMarketPlace";
 import {
-  updateGlobalFeesIn,
-  updateGlobalFeesOut,
+  updateGlobalFeesInLegacyMech,
+  updateGlobalFeesInLegacyMechMarketPlace,
+  updateGlobalFeesOutLegacyMech,
+  updateGlobalFeesOutLegacyMechMarketPlace,
 } from "./utils";
 
 const BURNER_ADDRESS = Address.fromString(
@@ -71,24 +73,21 @@ export function handleExec(call: ExecCall): void {
   }
 
   const mechAddress = call.to;
-  let feesOut = BigInt.fromI32(0);
 
   // Check if it's an LM or LMM and update accordingly
   const lm = LegacyMech.load(mechAddress);
   if (lm != null) {
     lm.totalFeesOut = lm.totalFeesOut.plus(amount);
     lm.save();
-    feesOut = amount;
+    updateGlobalFeesOutLegacyMech(amount);
   } else {
     const lmm = LegacyMechMarketPlace.load(mechAddress);
     if (lmm != null) {
       lmm.totalFeesOut = lmm.totalFeesOut.plus(amount);
       lmm.save();
-      feesOut = amount;
+      updateGlobalFeesOutLegacyMechMarketPlace(amount);
     }
   }
-
-  updateGlobalFeesOut(feesOut);
 }
 
 // Event handler for direct requests to standard LMs
@@ -103,7 +102,7 @@ export function handleRequest(event: RequestEvent): void {
   mech.totalFeesIn = mech.totalFeesIn.plus(fee);
   mech.save();
 
-  updateGlobalFeesIn(fee);
+  updateGlobalFeesInLegacyMech(fee);
 }
 
 // Call handler for requests routed through the marketplace to LMMs
@@ -119,5 +118,5 @@ export function handleRequestFromMarketPlace(call: MarketPlaceRequestCall): void
   mech.totalFeesIn = mech.totalFeesIn.plus(fee);
   mech.save();
 
-  updateGlobalFeesIn(fee);
+  updateGlobalFeesInLegacyMechMarketPlace(fee);
 }
