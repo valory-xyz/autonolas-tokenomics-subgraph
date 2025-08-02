@@ -6,7 +6,7 @@ import { LegacyMech as LegacyMechTemplate } from "../generated/templates";
 
 const BURNER_ADDRESS = Address.fromString("0x153196110040a0c729227c603db3a6c6d91851b2");
 
-export function handleCreateMech(event: CreateMech): void {
+export function handleCreateMechLM(event: CreateMech): void {
 
   log.info("CreateMech Txn Hash: {}", [event.transaction.hash.toHexString()]);
   log.info("CreateMech Destination: {}", [event.transaction.to!.toHexString()]);
@@ -27,6 +27,27 @@ export function handleCreateMech(event: CreateMech): void {
   mech.save();
   
   LegacyMechTemplate.create(mechAddress);
+}
+
+export function handleCreateMechLMM(event: CreateMech): void {
+  log.info("CreateMech Txn Hash: {}", [event.transaction.hash.toHexString()]);
+  log.info("CreateMech Destination: {}", [event.transaction.to!.toHexString()]);
+
+  const mechAddress = event.params.mech;
+  const agentId = event.params.agentId;
+  const price = event.params.price;
+
+  if (LegacyMechMarketPlace.load(mechAddress) != null) {
+    return;
+  }
+
+  const mech = new LegacyMechMarketPlace(mechAddress);
+  mech.totalFeesIn = BigInt.fromI32(0);
+  mech.totalFeesOut = BigInt.fromI32(0);
+  mech.agentId = agentId.toI32();
+  mech.price = price;
+  mech.save();
+
 }
 
 
