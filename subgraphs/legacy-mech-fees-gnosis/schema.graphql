@@ -6,6 +6,14 @@ type LegacyMech @entity {
   totalFeesOut: BigInt!
 }
 
+type LegacyMechMarketPlace @entity {
+  id: Bytes!
+  agentId: Int!
+  price: BigInt!
+  totalFeesIn: BigInt!
+  totalFeesOut: BigInt!
+}
+
 type Global @entity {
   id: ID!
   totalFeesIn: BigInt!
