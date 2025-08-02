@@ -12,6 +12,10 @@ import {
   LegacyMechMarketPlace as LegacyMechMarketPlaceTemplate,
 } from "../generated/templates";
 import { RequestCall as MarketPlaceRequestCall } from "../generated/LegacyMarketPlace/LegacyMarketPlace";
+import {
+  updateGlobalFeesIn,
+  updateGlobalFeesOut,
+} from "./utils";
 
 const BURNER_ADDRESS = Address.fromString(
   "0x153196110040a0c729227c603db3a6c6d91851b2"
@@ -84,16 +88,7 @@ export function handleExec(call: ExecCall): void {
     }
   }
 
-  if (feesOut.gt(BigInt.fromI32(0))) {
-    let global = Global.load("global");
-    if (global == null) {
-      global = new Global("global");
-      global.totalFeesIn = BigInt.fromI32(0);
-      global.totalFeesOut = BigInt.fromI32(0);
-    }
-    global.totalFeesOut = global.totalFeesOut.plus(feesOut);
-    global.save();
-  }
+  updateGlobalFeesOut(feesOut);
 }
 
 // Event handler for direct requests to standard LMs
@@ -104,17 +99,11 @@ export function handleRequest(event: RequestEvent): void {
     return;
   }
 
-  mech.totalFeesIn = mech.totalFeesIn.plus(mech.price);
+  const fee = mech.price;
+  mech.totalFeesIn = mech.totalFeesIn.plus(fee);
   mech.save();
 
-  let global = Global.load("global");
-  if (global == null) {
-    global = new Global("global");
-    global.totalFeesIn = BigInt.fromI32(0);
-    global.totalFeesOut = BigInt.fromI32(0);
-  }
-  global.totalFeesIn = global.totalFeesIn.plus(mech.price);
-  global.save();
+  updateGlobalFeesIn(fee);
 }
 
 // Call handler for requests routed through the marketplace to LMMs
@@ -125,17 +114,10 @@ export function handleRequestFromMarketPlace(call: MarketPlaceRequestCall): void
     return;
   }
 
-  // The fee is the value sent with the transaction
+  // The fee is the value sent with the transaction, which is only available in a call handler
   const fee = call.transaction.value;
   mech.totalFeesIn = mech.totalFeesIn.plus(fee);
   mech.save();
 
-  let global = Global.load("global");
-  if (global == null) {
-    global = new Global("global");
-    global.totalFeesIn = BigInt.fromI32(0);
-    global.totalFeesOut = BigInt.fromI32(0);
-  }
-  global.totalFeesIn = global.totalFeesIn.plus(fee);
-  global.save();
+  updateGlobalFeesIn(fee);
 }
