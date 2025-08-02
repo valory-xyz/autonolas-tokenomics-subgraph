@@ -2,7 +2,7 @@ specVersion: 0.0.5
 schema:
   file: ./schema.graphql
 dataSources:
-  # --- Legacy Mech Factories ---
+  # --- Legacy Mech (LM) Factories ---
   - kind: ethereum/contract
     name: LMFactory
     network: xdai
@@ -21,10 +21,10 @@ dataSources:
       file: ./src/mapping.ts
       eventHandlers:
         - event: CreateMech(indexed address,indexed uint256,indexed uint256)
-          handler: handleCreateMech
+          handler: handleCreateMechLM
 
   - kind: ethereum/contract
-    name: LMFactory
+    name: LMFactory2
     network: xdai
     source:
       address: "0x4be7a91e67be963806fefa9c1fd6c53dfc358d94"
@@ -41,8 +41,9 @@ dataSources:
       file: ./src/mapping.ts
       eventHandlers:
         - event: CreateMech(indexed address,indexed uint256,indexed uint256)
-          handler: handleCreateMech
+          handler: handleCreateMechLM
   
+  # --- Legacy Market-Maker (LMM) Factories ---
   - kind: ethereum/contract
     name: LMMFactory
     network: xdai
@@ -54,17 +55,17 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wassm/assemblyscript
-      entities: [LegacyMech]
+      entities: [LegacyMechMarketPlace]
       abis:
         - name: Factory
           file: ../../abis/AgentFactory-LMM.json
       file: ./src/mapping.ts
       eventHandlers:
         - event: CreateMech(indexed address,indexed uint256,indexed uint256)
-          handler: handleCreateMech
+          handler: handleCreateMechLMM
 
   - kind: ethereum/contract
-    name: LMMFactory
+    name: LMMFactory2
     network: xdai
     source:
       address: "0x6d8cbebcad7397c63347d44448147db05e7d17b0"
@@ -74,53 +75,55 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wassm/assemblyscript
-      entities: [LegacyMech]
+      entities: [LegacyMechMarketPlace]
       abis:
         - name: Factory
           file: ../../abis/AgentFactory-LMM.json
       file: ./src/mapping.ts
       eventHandlers:
         - event: CreateMech(indexed address,indexed uint256,indexed uint256)
-          handler: handleCreateMech
+          handler: handleCreateMechLMM
 
   - kind: ethereum/contract
-    name: LMMFactory
+    name: LMMFactory3
     network: xdai
     source:
-      address: "0x6d8cbebcad7397c63347d44448147db05e7d17b0"
+      address: "0x25c980328762a03f70c2649ef4be691b811b690a"
       abi: Factory
       startBlock: 36582492
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wassm/assemblyscript
-      entities: [LegacyMech]
+      entities: [LegacyMechMarketPlace]
       abis:
         - name: Factory
           file: ../../abis/AgentFactory-LMM.json
       file: ./src/mapping.ts
       eventHandlers:
         - event: CreateMech(indexed address,indexed uint256,indexed uint256)
-          handler: handleCreateMech
+          handler: handleCreateMechLMM
 
+  # --- Legacy Marketplace Contract ---
   - kind: ethereum/contract
     name: LegacyMarketPlace
     network: xdai
     source:
       address: "0x4554fE75c1f5576c1d7F765B2A036c199Adae329"
       abi: LegacyMarketPlace
+      startBlock: 35714019
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
-      entities: [LegacyMech]
+      entities: [LegacyMechMarketPlace]
       abis:
         - name: LegacyMarketPlace
           file: ../../abis/LegacyMarketPlace.json
       file: ./src/mapping.ts
       callHandlers:
-        - function: request(bytes)
-          handler: handleMarketPlaceRequest
+        - function: request(bytes,address,address,uint256,address,uint256,uint256)
+          handler: handleRequestFromMarketPlace
 
 templates:
   - name: LegacyMech
@@ -137,23 +140,24 @@ templates:
       abis:
         - name: AgentMech
           file: ../../abis/AgentMech.json
+      eventHandlers:
+        - event: Request(indexed address,uint256,bytes)
+          handler: handleRequest
       callHandlers:
         - function: exec(address,uint256,bytes,uint8,uint256)
           handler: handleExec
-        - function: request(bytes)
-          handler: handleRequest
 
   - name: LegacyMechMarketPlace
     kind: ethereum/contract
     network: xdai
     source:
-      abi: LegacyMarketPlace
+      abi: AgentMech
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       file: ./src/mapping.ts
-      entities: [LegacyMech]
+      entities: [LegacyMechMarketPlace, Global]
       abis:
         - name: AgentMech
           file: ../../abis/AgentMech.json
