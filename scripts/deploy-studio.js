@@ -13,6 +13,7 @@ const networkTypes = {
   '1': {
     name: 'Tokenomics L1',
     description: 'Ethereum Mainnet - Full tokenomics + OLAS holders',
+    buildCommand: 'yarn build-tokenomics-l1',
     networks: {
       'mainnet': {
         path: 'subgraphs/tokenomics/tokenomics-eth/subgraph.yaml',
@@ -23,6 +24,7 @@ const networkTypes = {
   '2': {
     name: 'Tokenomics L2',
     description: 'Layer 2 Networks - OLAS holders only',
+    buildCommand: 'yarn build-tokenomics-l2',
     networks: {
       'arbitrum': {
         path: 'subgraphs/tokenomics/tokenomics-arbitrum/subgraph.arbitrum.yaml',
@@ -57,6 +59,10 @@ const networkTypes = {
   '3': {
     name: 'Service Registry',
     description: 'Service Registry Subgraphs',
+    buildCommand: (selectedNetwork) =>
+      selectedNetwork === 'ethereum'
+        ? 'yarn build-service-registry-l1'
+        : 'yarn build-service-registry-l2',
     networks: {
       'ethereum': {
         path: 'subgraphs/service-registry/service-registry-eth/subgraph.yaml',
@@ -95,6 +101,7 @@ const networkTypes = {
   '4': {
     name: 'Predict',
     description: 'Olas Predict Subgraph',
+    buildCommand: 'yarn build-predict',
     networks: {
       'gnosis': {
         path: 'subgraphs/predict/subgraph.yaml',
@@ -190,19 +197,11 @@ async function main() {
     
     // Determine build command based on network type
     let buildCommand;
-    if (networkTypeKey === '1') {
-      buildCommand = 'yarn build-tokenomics-l1';
-    } else if (networkTypeKey === '2') {
-      buildCommand = 'yarn build-tokenomics-l2';
-    } else if (networkTypeKey === '3') {
-      // For service registry, differentiate between L1 (ethereum) and L2
-      if (selectedNetwork === 'ethereum') {
-        buildCommand = 'yarn build-service-registry-l1';
-      } else {
-        buildCommand = 'yarn build-service-registry-l2';
-      }
-    } else if (networkTypeKey === '4') {
-      buildCommand = 'yarn build-predict'
+
+    if (typeof networkType.buildCommand === 'function') {
+      buildCommand = networkType.buildCommand(selectedNetwork);
+    } else {
+      buildCommand = networkType.buildCommand;
     }
 
     console.log(`🔨 Building subgraph with: ${buildCommand}`);
