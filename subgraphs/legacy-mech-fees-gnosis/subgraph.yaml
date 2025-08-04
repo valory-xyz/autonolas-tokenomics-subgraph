@@ -143,6 +143,8 @@ templates:
       eventHandlers:
         - event: Request(indexed address,uint256,bytes)
           handler: handleRequest
+        - event: PriceUpdated(uint256)
+          handler: handlePriceUpdateLM
       callHandlers:
         - function: exec(address,uint256,bytes,uint8,uint256)
           handler: handleExecLM
@@ -161,6 +163,9 @@ templates:
       abis:
         - name: AgentMechLMM
           file: ../../abis/AgentMech-LMM.json
+      eventHandlers:
+        - event: PriceUpdated(uint256)
+          handler: handlePriceUpdateLMM
       callHandlers:
         - function: exec(address,uint256,bytes,uint8,uint256)
           handler: handleExecLMM

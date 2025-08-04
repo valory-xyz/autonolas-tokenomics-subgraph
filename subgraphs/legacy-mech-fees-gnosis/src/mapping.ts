@@ -2,6 +2,8 @@ import { BigInt, Address } from "@graphprotocol/graph-ts";
 import { ExecCall as ExecCallLM } from "../generated/templates/LegacyMech/AgentMechLM";
 import { ExecCall as ExecCallLMM } from "../generated/templates/LegacyMechMarketPlace/AgentMechLMM";
 import { Request as RequestEvent } from "../generated/templates/LegacyMech/AgentMechLM";
+import { PriceUpdated as PriceUpdatedLMEvent } from "../generated/templates/LegacyMech/AgentMechLM";
+import { PriceUpdated as PriceUpdatedLMMEvent } from "../generated/templates/LegacyMechMarketPlace/AgentMechLMM";
 import { CreateMech } from "../generated/LMFactory/Factory";
 import {
   LegacyMech,
@@ -85,6 +87,18 @@ export function handleExecLM(call: ExecCallLM): void {
   updateGlobalFeesOutLegacyMech(amount);
 }
 
+// Handler for price updates for LMs
+export function handlePriceUpdateLM(event: PriceUpdatedLMEvent): void {
+  const mechAddress = event.address;
+  const mech = LegacyMech.load(mechAddress);
+  if (mech == null) {
+    return;
+  }
+
+  mech.price = event.params.price;
+  mech.save();
+}
+
 // Handler for outgoing transfers for LMMs
 export function handleExecLMM(call: ExecCallLMM): void {
   const destination = call.inputs.to;
@@ -103,6 +117,18 @@ export function handleExecLMM(call: ExecCallLMM): void {
   lmm.totalFeesOut = lmm.totalFeesOut.plus(amount);
   lmm.save();
   updateGlobalFeesOutLegacyMechMarketPlace(amount);
+}
+
+// Handler for price updates for LMMs
+export function handlePriceUpdateLMM(event: PriceUpdatedLMMEvent): void {
+  const mechAddress = event.address;
+  const mech = LegacyMechMarketPlace.load(mechAddress);
+  if (mech == null) {
+    return;
+  }
+
+  mech.price = event.params.price;
+  mech.save();
 }
 
 // Event handler for direct requests to standard LMs
