@@ -91,7 +91,17 @@ const networkTypes = {
         description: 'Polygon Network'
       }
     }
-  }
+  },
+  '4': {
+    name: 'Predict',
+    description: 'Olas Predict Subgraph',
+    networks: {
+      'gnosis': {
+        path: 'subgraphs/predict/subgraph.yaml',
+        description: 'Gnosis Chain'
+      }
+    }
+  },
 };
 
 function askQuestion(question) {
@@ -125,27 +135,29 @@ async function main() {
     let selectedNetwork;
     let networkConfig;
     
-    // If L1 (mainnet), auto-select
-    if (networkTypeKey === '1') {
-      selectedNetwork = 'mainnet';
+    const availableNetworks = Object.keys(networkType.networks);
+
+    // Auto-select if only one network is available
+    if (availableNetworks.length === 1) {
+      selectedNetwork = availableNetworks[0];
       networkConfig = networkType.networks[selectedNetwork];
+      console.log(`✅ Only one network available. Auto-selected: ${selectedNetwork}`);
     } else {
-      // If L2 or service registry, show options
+      // Multiple networks available – show list
       console.log(`\nAvailable networks for ${networkType.name}:`);
-      const availableNetworks = Object.keys(networkType.networks);
       availableNetworks.forEach((network, index) => {
         console.log(`  ${index + 1}. ${network}: ${networkType.networks[network].description}`);
       });
       console.log('');
-      
+    
       const networkIndexStr = await askQuestion(`Enter network number (1-${availableNetworks.length}): `);
       const networkIndex = parseInt(networkIndexStr, 10) - 1;
-
+    
       if (networkIndex >= 0 && networkIndex < availableNetworks.length) {
         selectedNetwork = availableNetworks[networkIndex];
         networkConfig = networkType.networks[selectedNetwork];
       }
-      
+    
       if (!networkConfig) {
         console.error(`❌ Invalid network selection: ${networkIndexStr}`);
         process.exit(1);
@@ -189,6 +201,8 @@ async function main() {
       } else {
         buildCommand = 'yarn build-service-registry-l2';
       }
+    } else if (networkTypeKey === '4') {
+      buildCommand = 'yarn build-predict'
     }
 
     console.log(`🔨 Building subgraph with: ${buildCommand}`);
