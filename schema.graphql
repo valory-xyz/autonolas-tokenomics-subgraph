@@ -64,6 +64,10 @@ type Global @entity (immutable: false) {
   id: ID!
   totalTraderAgents: Int!
   totalActiveTraderAgents: Int!
+  totalBets: Int!
+  totalPayout: BigInt!
+  totalTraded: BigInt!
+  totalFees: BigInt!
 }
 
 type LogSetQuestionFee @entity(immutable: true) {
