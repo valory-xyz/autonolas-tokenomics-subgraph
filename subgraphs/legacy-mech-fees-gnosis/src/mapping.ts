@@ -114,7 +114,7 @@ export function handleRequestFromMarketPlace(call: MarketPlaceRequestCall): void
   }
 
   // The fee is the value sent with the transaction, which is only available in a call handler
-  const fee = call.transaction.value;
+  const fee = mech.price;
   mech.totalFeesIn = mech.totalFeesIn.plus(fee);
   mech.save();
 
