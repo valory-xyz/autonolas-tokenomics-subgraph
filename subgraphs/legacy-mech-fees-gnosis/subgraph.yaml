@@ -130,7 +130,7 @@ templates:
     kind: ethereum/contract
     network: xdai
     source:
-      abi: AgentMech
+      abi: AgentMechLM
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -138,20 +138,20 @@ templates:
       file: ./src/mapping.ts
       entities: [LegacyMech, Global]
       abis:
-        - name: AgentMech
-          file: ../../abis/AgentMech.json
+        - name: AgentMechLM
+          file: ../../abis/AgentMech-LM.json
       eventHandlers:
         - event: Request(indexed address,uint256,bytes)
           handler: handleRequest
       callHandlers:
         - function: exec(address,uint256,bytes,uint8,uint256)
-          handler: handleExec
+          handler: handleExecLM
 
   - name: LegacyMechMarketPlace
     kind: ethereum/contract
     network: xdai
     source:
-      abi: AgentMech
+      abi: AgentMechLMM
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -159,8 +159,8 @@ templates:
       file: ./src/mapping.ts
       entities: [LegacyMechMarketPlace, Global]
       abis:
-        - name: AgentMech
-          file: ../../abis/AgentMech.json
+        - name: AgentMechLMM
+          file: ../../abis/AgentMech-LMM.json
       callHandlers:
         - function: exec(address,uint256,bytes,uint8,uint256)
-          handler: handleExec
+          handler: handleExecLMM

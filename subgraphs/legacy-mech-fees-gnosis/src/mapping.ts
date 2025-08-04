@@ -1,6 +1,7 @@
 import { BigInt, Address } from "@graphprotocol/graph-ts";
-import { ExecCall } from "../generated/templates/LegacyMech/AgentMech";
-import { Request as RequestEvent } from "../generated/templates/LegacyMech/AgentMech";
+import { ExecCall as ExecCallLM } from "../generated/templates/LegacyMech/AgentMechLM";
+import { ExecCall as ExecCallLMM } from "../generated/templates/LegacyMechMarketPlace/AgentMechLMM";
+import { Request as RequestEvent } from "../generated/templates/LegacyMech/AgentMechLM";
 import { CreateMech } from "../generated/LMFactory/Factory";
 import {
   LegacyMech,
@@ -63,8 +64,8 @@ export function handleCreateMechLMM(event: CreateMech): void {
   LegacyMechMarketPlaceTemplate.create(mechAddress);
 }
 
-// Handler for outgoing transfers (both LM and LMM)
-export function handleExec(call: ExecCall): void {
+// Handler for outgoing transfers for LMs
+export function handleExecLM(call: ExecCallLM): void {
   const destination = call.inputs.to;
   const amount = call.inputs.value;
 
@@ -74,20 +75,34 @@ export function handleExec(call: ExecCall): void {
 
   const mechAddress = call.to;
 
-  // Check if it's an LM or LMM and update accordingly
   const lm = LegacyMech.load(mechAddress);
-  if (lm != null) {
-    lm.totalFeesOut = lm.totalFeesOut.plus(amount);
-    lm.save();
-    updateGlobalFeesOutLegacyMech(amount);
-  } else {
-    const lmm = LegacyMechMarketPlace.load(mechAddress);
-    if (lmm != null) {
-      lmm.totalFeesOut = lmm.totalFeesOut.plus(amount);
-      lmm.save();
-      updateGlobalFeesOutLegacyMechMarketPlace(amount);
-    }
+  if (lm == null) {
+    return;
   }
+
+  lm.totalFeesOut = lm.totalFeesOut.plus(amount);
+  lm.save();
+  updateGlobalFeesOutLegacyMech(amount);
+}
+
+// Handler for outgoing transfers for LMMs
+export function handleExecLMM(call: ExecCallLMM): void {
+  const destination = call.inputs.to;
+  const amount = call.inputs.value;
+
+  if (destination.equals(BURNER_ADDRESS) || amount.equals(BigInt.fromI32(0))) {
+    return;
+  }
+
+  const mechAddress = call.to;
+  const lmm = LegacyMechMarketPlace.load(mechAddress);
+  if (lmm == null) {
+    return;
+  }
+
+  lmm.totalFeesOut = lmm.totalFeesOut.plus(amount);
+  lmm.save();
+  updateGlobalFeesOutLegacyMechMarketPlace(amount);
 }
 
 // Event handler for direct requests to standard LMs
