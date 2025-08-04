@@ -37,8 +37,7 @@ export function handleFixedProductMarketMakerCreation(
       // Log question so we can get the final answer later
       let question = Question.load(condition.questionId.toHexString());
       if (question != null) {
-        question.fixedProductMarketMaker = address;
-
+        // Get question title and outcomes
         let fields = question.question.split("\u241f", 4);
 
         if (fields.length >= 1) {
@@ -56,6 +55,10 @@ export function handleFixedProductMarketMakerCreation(
             entity.outcomes = outcomes;
           }
         }
+
+        // Connect question with fpmm
+        question.fixedProductMarketMaker = address;
+        question.save()
       }
     }
 

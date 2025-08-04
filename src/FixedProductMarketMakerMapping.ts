@@ -47,7 +47,7 @@ export function handleSell(event: FPMMSellEvent): void {
 
     bet.bettor = event.params.seller;
     bet.outcomeIndex = event.params.outcomeIndex;
-    bet.amount = BigInt.fromI32(0).minus(event.params.returnAmount);
+    bet.amount = BigInt.zero().minus(event.params.returnAmount);
     bet.feeAmount = event.params.feeAmount;
     bet.timestamp = event.block.timestamp;
     bet.fixedProductMarketMaker = event.address;

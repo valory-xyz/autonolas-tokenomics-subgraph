@@ -13,6 +13,7 @@ import {
   LogNotifyOfArbitrationRequest,
 } from "../generated/schema";
 import { CREATOR_ADDRESSES, INVALID_ANSWER_HEX } from "./constants";
+import { getGlobal } from "./utils";
 
 export function handleLogNewQuestion(event: LogNewQuestionEvent): void {
   // only safe questions for our creators
@@ -70,6 +71,11 @@ export function handleLogNewAnswer(event: LogNewAnswerEvent): void {
             agent.save();
             bet.countedInTotal = true;
             bet.save();
+
+            let global = getGlobal();
+            global.totalTraded = global.totalTraded.plus(bet.amount);
+            global.totalFees = global.totalFees.plus(bet.feeAmount);
+            global.save();
           }
         }
       }
