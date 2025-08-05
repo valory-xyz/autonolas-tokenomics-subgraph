@@ -21,10 +21,9 @@ import {
   updateGlobalFeesOutLegacyMech,
   updateGlobalFeesOutLegacyMechMarketPlace,
 } from "./utils";
+import { BURN_ADDRESS_MECH_FEES_GNOSIS } from "../../../shared/constants";
 
-const BURNER_ADDRESS = Address.fromString(
-  "0x153196110040a0c729227c603db3a6c6d91851b2"
-);
+const BURNER_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
 
 // Handler for standard Legacy Mechs
 export function handleCreateMechLM(event: CreateMech): void {
