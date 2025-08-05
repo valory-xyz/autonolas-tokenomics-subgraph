@@ -23,9 +23,9 @@ dataSources:
         - VerifierUpdated
       abis:
         - name: StakingFactory
-          file: ./abis/StakingFactory.json
+          file: ../../abis/StakingFactory.json
         - name: StakingProxy
-          file: ./abis/StakingProxy.json
+          file: ../../abis/StakingProxy.json
       eventHandlers:
         - event: InstanceCreated(indexed address,indexed address,indexed address)
           handler: handleInstanceCreated
@@ -60,7 +60,7 @@ templates:
         - Withdraw
       abis:
         - name: StakingProxy
-          file: ./abis/StakingProxy.json
+          file: ../../abis/StakingProxy.json
       eventHandlers:
         - event: Checkpoint(indexed uint256,uint256,uint256[],uint256[],uint256)
           handler: handleCheckpoint
