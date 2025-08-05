@@ -109,6 +109,17 @@ const networkTypes = {
       }
     }
   },
+  '5': {
+    name: 'Governance',
+    description: 'Olas Governance Subgraph',
+    buildCommand: 'yarn build-governance',
+    networks: {
+      'mainnet': {
+        path: 'subgraphs/predict/governance.yaml',
+        description: 'Ethereum Mainnet'
+      }
+    }
+  },
 };
 
 function askQuestion(question) {
