@@ -103,12 +103,22 @@ const networkTypes = {
     }
   },
   '5': {
-    name: 'New Mech Fees - Gnosis',
-    description: 'New Mech Fees Subgraphs on Gnosis',
+    name: 'New Native Mech Fees - Gnosis',
+    description: 'New Native Mech Fees Subgraphs on Gnosis',
     networks: {
       'gnosis': {
-        path: 'subgraphs/new-mech-fees/new-mech-fees-gnosis/subgraph.yaml',
-        description: 'New Mech Fees on Gnosis'
+        path: 'subgraphs/new-mech-fees/new-native-mech-fees-gnosis/subgraph.yaml',
+        description: 'New Native Mech Fees on Gnosis'
+      }
+    }
+  },
+  '6': {
+    name: 'New Native Mech Fees - Base',
+    description: 'New Native Mech Fees Subgraphs on Base',
+    networks: {
+      'base': {
+        path: 'subgraphs/new-mech-fees/new-native-mech-fees-base/subgraph.yaml',
+        description: 'New Native Mech Fees on Base'
       }
     }
   }
@@ -146,7 +156,7 @@ async function main() {
     let networkConfig;
     
     // If L1 (mainnet) or Legacy Mech Fees, auto-select
-    if (networkTypeKey === '1' || networkTypeKey === '4' || networkTypeKey === '5') {
+    if (networkTypeKey === '1' || networkTypeKey === '4' || networkTypeKey === '5' || networkTypeKey === '6') {
       const networkKey = Object.keys(networkType.networks)[0];
       selectedNetwork = networkKey;
       networkConfig = networkType.networks[networkKey];
@@ -213,7 +223,9 @@ async function main() {
     } else if (networkTypeKey === '4') {
       buildCommand = 'yarn build-legacy-mech-fees';
     } else if (networkTypeKey === '5') {
-      buildCommand = 'yarn build-new-mech-fees';
+      buildCommand = 'yarn build-new-native-mech-fees-gnosis';
+    } else if (networkTypeKey === '6') {
+      buildCommand = 'yarn build-new-native-mech-fees-base';
     }
 
     console.log(`🔨 Building subgraph with: ${buildCommand}`);
