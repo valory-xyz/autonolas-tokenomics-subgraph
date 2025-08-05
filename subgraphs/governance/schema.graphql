@@ -6,7 +6,7 @@ type ProposalCanceled @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type ProposalCreated @entity {
+type ProposalCreated @entity(immutable: false) {
   id: ID!
   proposalId: BigInt! # uint256
   proposer: Bytes! # address

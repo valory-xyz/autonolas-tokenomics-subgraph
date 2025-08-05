@@ -28,6 +28,8 @@
     "build-service-registry-polygon": "graph build subgraphs/service-registry/service-registry-polygon/subgraph.polygon.yaml",
     "codegen-predict": "graph codegen subgraphs/predict/subgraph.yaml",
     "build-predict": "graph build subgraphs/predict/subgraph.yaml",
+    "codegen-governance": "graph codegen subgraphs/governance/subgraph.yaml",
+    "build-governance": "graph build subgraphs/governance/subgraph.yaml",
     "deploy-studio": "node scripts/deploy-studio.js",
     "test": "graph test"
   },

@@ -30,7 +30,7 @@ dataSources:
         - VotingPeriodSet
       abis:
         - name: GovernorOLAS
-          file: ./abis/GovernorOLAS.json
+          file: ../../abis/GovernorOLAS.json
       eventHandlers: &GovernorOLASEventHandlers
         - event: ProposalCanceled(uint256)
           handler: handleProposalCanceled
@@ -70,6 +70,6 @@ dataSources:
       entities: *GovernorOLASEntities
       abis:
         - name: GovernorOLAS
-          file: ./abis/GovernorOLAS.json
+          file: ../../abis/GovernorOLAS.json
       eventHandlers: *GovernorOLASEventHandlers
       file: ./src/governor-olas.ts
