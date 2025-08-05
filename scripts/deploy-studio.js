@@ -13,6 +13,7 @@ const networkTypes = {
   '1': {
     name: 'Tokenomics L1',
     description: 'Ethereum Mainnet - Full tokenomics + OLAS holders',
+    buildCommand: 'yarn build-tokenomics-l1',
     networks: {
       'mainnet': {
         path: 'subgraphs/tokenomics/tokenomics-eth/subgraph.yaml',
@@ -23,6 +24,7 @@ const networkTypes = {
   '2': {
     name: 'Tokenomics L2',
     description: 'Layer 2 Networks - OLAS holders only',
+    buildCommand: 'yarn build-tokenomics-l2',
     networks: {
       'arbitrum': {
         path: 'subgraphs/tokenomics/tokenomics-arbitrum/subgraph.arbitrum.yaml',
@@ -57,6 +59,10 @@ const networkTypes = {
   '3': {
     name: 'Service Registry',
     description: 'Service Registry Subgraphs',
+    buildCommand: (selectedNetwork) =>
+      selectedNetwork === 'ethereum'
+        ? 'yarn build-service-registry-l1'
+        : 'yarn build-service-registry-l2',
     networks: {
       'ethereum': {
         path: 'subgraphs/service-registry/service-registry-eth/subgraph.yaml',
@@ -91,7 +97,18 @@ const networkTypes = {
         description: 'Polygon Network'
       }
     }
-  }
+  },
+  '4': {
+    name: 'Predict',
+    description: 'Olas Predict Subgraph',
+    buildCommand: 'yarn build-predict',
+    networks: {
+      'gnosis': {
+        path: 'subgraphs/predict/subgraph.yaml',
+        description: 'Gnosis Chain'
+      }
+    }
+  },
 };
 
 function askQuestion(question) {
@@ -125,27 +142,29 @@ async function main() {
     let selectedNetwork;
     let networkConfig;
     
-    // If L1 (mainnet), auto-select
-    if (networkTypeKey === '1') {
-      selectedNetwork = 'mainnet';
+    const availableNetworks = Object.keys(networkType.networks);
+
+    // Auto-select if only one network is available
+    if (availableNetworks.length === 1) {
+      selectedNetwork = availableNetworks[0];
       networkConfig = networkType.networks[selectedNetwork];
+      console.log(`✅ Only one network available. Auto-selected: ${selectedNetwork}`);
     } else {
-      // If L2 or service registry, show options
+      // Multiple networks available – show list
       console.log(`\nAvailable networks for ${networkType.name}:`);
-      const availableNetworks = Object.keys(networkType.networks);
       availableNetworks.forEach((network, index) => {
         console.log(`  ${index + 1}. ${network}: ${networkType.networks[network].description}`);
       });
       console.log('');
-      
+    
       const networkIndexStr = await askQuestion(`Enter network number (1-${availableNetworks.length}): `);
       const networkIndex = parseInt(networkIndexStr, 10) - 1;
-
+    
       if (networkIndex >= 0 && networkIndex < availableNetworks.length) {
         selectedNetwork = availableNetworks[networkIndex];
         networkConfig = networkType.networks[selectedNetwork];
       }
-      
+    
       if (!networkConfig) {
         console.error(`❌ Invalid network selection: ${networkIndexStr}`);
         process.exit(1);
@@ -178,17 +197,11 @@ async function main() {
     
     // Determine build command based on network type
     let buildCommand;
-    if (networkTypeKey === '1') {
-      buildCommand = 'yarn build-tokenomics-l1';
-    } else if (networkTypeKey === '2') {
-      buildCommand = 'yarn build-tokenomics-l2';
-    } else if (networkTypeKey === '3') {
-      // For service registry, differentiate between L1 (ethereum) and L2
-      if (selectedNetwork === 'ethereum') {
-        buildCommand = 'yarn build-service-registry-l1';
-      } else {
-        buildCommand = 'yarn build-service-registry-l2';
-      }
+
+    if (typeof networkType.buildCommand === 'function') {
+      buildCommand = networkType.buildCommand(selectedNetwork);
+    } else {
+      buildCommand = networkType.buildCommand;
     }
 
     console.log(`🔨 Building subgraph with: ${buildCommand}`);
