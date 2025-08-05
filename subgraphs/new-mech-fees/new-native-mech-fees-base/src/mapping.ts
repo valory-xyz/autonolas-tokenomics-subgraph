@@ -1,6 +1,6 @@
 // src/mapping.ts
 
-import { Address, BigInt, log } from "@graphprotocol/graph-ts"
+import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts"
 import {
   MechBalanceAdjusted,
   Withdraw
@@ -44,8 +44,8 @@ export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): 
   let mech = Mech.load(mechId);
   if (mech == null) {
     mech = new Mech(mechId);
-    mech.totalFeesIn = BigInt.fromI32(0);
-    mech.totalFeesOut = BigInt.fromI32(0);
+    mech.totalFeesIn = BigDecimal.fromString("0");
+    mech.totalFeesOut = BigDecimal.fromString("0");
   }
   mech.totalFeesIn = mech.totalFeesIn.plus(deliveryRateUsd);
   mech.save();
