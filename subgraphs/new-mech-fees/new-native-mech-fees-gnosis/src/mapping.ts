@@ -1,6 +1,6 @@
 // src/mapping.ts
 
-import { Address, BigInt } from "@graphprotocol/graph-ts"
+import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts"
 import {
   MechBalanceAdjusted,
   Withdraw
@@ -11,9 +11,9 @@ import { updateTotalFeesIn, updateTotalFeesOut } from "./utils"
 
 const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
 
-function convertWeiToUsd(amountInWei: BigInt): BigInt {
+function convertWeiToUsd(amountInWei: BigInt): BigDecimal {
   const ethDivisor = BigInt.fromI32(10).pow(ETH_DECIMALS as u8);
-  return amountInWei.div(ethDivisor);
+  return amountInWei.toBigDecimal().div(ethDivisor.toBigDecimal());
 }
 
 export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): void {
@@ -27,8 +27,8 @@ export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): 
   let mech = Mech.load(mechId);
   if (mech == null) {
     mech = new Mech(mechId);
-    mech.totalFeesIn = BigInt.fromI32(0);
-    mech.totalFeesOut = BigInt.fromI32(0);
+    mech.totalFeesIn = BigDecimal.fromString("0");
+    mech.totalFeesOut = BigDecimal.fromString("0");
   }
   mech.totalFeesIn = mech.totalFeesIn.plus(earningsAmountUsd);
   mech.save();
