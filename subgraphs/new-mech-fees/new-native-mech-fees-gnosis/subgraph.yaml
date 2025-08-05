@@ -6,7 +6,7 @@ schema:
 dataSources:
   - kind: ethereum
     name: BalanceTrackerFixedPriceNative
-    network: gnosis
+    network: xdai
     source:
       address: "0x21cE6799A22A3Da84B7c44a814a9c79ab1d2A50D" 
       abi: BalanceTrackerFixedPriceNative
