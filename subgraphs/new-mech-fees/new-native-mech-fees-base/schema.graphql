@@ -1,0 +1,11 @@
+type Global @entity(immutable: false) {
+  id: ID!
+  totalFeesIn: BigInt!
+  totalFeesOut: BigInt!
+}
+
+type Mech @entity(immutable: false) {
+  id: ID!
+  totalFeesIn: BigInt!
+  totalFeesOut: BigInt!
+}
