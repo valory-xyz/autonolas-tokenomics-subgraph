@@ -28,6 +28,8 @@
     "build-service-registry-polygon": "graph build subgraphs/service-registry/service-registry-polygon/subgraph.polygon.yaml",
     "codegen-legacy-mech-fees": "graph codegen subgraphs/legacy-mech-fees-gnosis/subgraph.yaml -o subgraphs/legacy-mech-fees-gnosis/generated",
     "build-legacy-mech-fees": "yarn codegen-legacy-mech-fees && graph build subgraphs/legacy-mech-fees-gnosis/subgraph.yaml",
+    "codegen-new-mech-fees": "graph codegen subgraphs/new-mech-fees/new-mech-fees-gnosis/subgraph.yaml -o subgraphs/new-mech-fees/new-mech-fees-gnosis/generated",
+    "build-new-mech-fees": "yarn codegen-new-mech-fees && graph build subgraphs/new-mech-fees/new-mech-fees-gnosis/subgraph.yaml",
     "deploy-studio": "node scripts/deploy-studio.js",
     "test": "graph test"
   },

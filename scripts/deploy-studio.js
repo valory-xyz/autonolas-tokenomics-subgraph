@@ -101,6 +101,16 @@ const networkTypes = {
         description: 'Gnosis Chain'
       }
     }
+  },
+  '5': {
+    name: 'New Mech Fees - Gnosis',
+    description: 'New Mech Fees Subgraphs on Gnosis',
+    networks: {
+      'gnosis': {
+        path: 'subgraphs/new-mech-fees/new-mech-fees-gnosis/subgraph.yaml',
+        description: 'New Mech Fees on Gnosis'
+      }
+    }
   }
 };
 
@@ -136,7 +146,7 @@ async function main() {
     let networkConfig;
     
     // If L1 (mainnet) or Legacy Mech Fees, auto-select
-    if (networkTypeKey === '1' || networkTypeKey === '4') {
+    if (networkTypeKey === '1' || networkTypeKey === '4' || networkTypeKey === '5') {
       const networkKey = Object.keys(networkType.networks)[0];
       selectedNetwork = networkKey;
       networkConfig = networkType.networks[networkKey];
@@ -202,6 +212,8 @@ async function main() {
       }
     } else if (networkTypeKey === '4') {
       buildCommand = 'yarn build-legacy-mech-fees';
+    } else if (networkTypeKey === '5') {
+      buildCommand = 'yarn build-new-mech-fees';
     }
 
     console.log(`🔨 Building subgraph with: ${buildCommand}`);
