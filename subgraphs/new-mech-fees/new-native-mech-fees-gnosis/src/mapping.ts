@@ -7,7 +7,13 @@ import {
 } from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceNative/BalanceTrackerFixedPriceNative"
 import { Mech } from "../../../../shared/new-mech-fees/generated/schema"
 import { BURN_ADDRESS_MECH_FEES_GNOSIS } from "../../../../shared/constants"
-import { updateTotalFeesIn, updateTotalFeesOut, convertGnosisNativeWeiToUsd } from "../../../../shared/new-mech-fees/utils"
+import { 
+  updateTotalFeesIn, 
+  updateTotalFeesOut, 
+  convertGnosisNativeWeiToUsd,
+  updateMechFeesIn,
+  updateMechFeesOut
+} from "../../../../shared/new-mech-fees/utils"
 
 const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
 
@@ -18,18 +24,7 @@ export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): 
   const earningsAmountUsd = convertGnosisNativeWeiToUsd(earningsAmountWei);
 
   updateTotalFeesIn(earningsAmountUsd);
-
-  let mech = Mech.load(mechId);
-  if (mech == null) {
-    mech = new Mech(mechId);
-    mech.totalFeesInUSD = BigDecimal.fromString("0");
-    mech.totalFeesOutUSD = BigDecimal.fromString("0");
-    mech.totalFeesInRaw = BigDecimal.fromString("0");
-    mech.totalFeesOutRaw = BigDecimal.fromString("0");
-  }
-  mech.totalFeesInUSD = mech.totalFeesInUSD.plus(earningsAmountUsd);
-  mech.totalFeesInRaw = mech.totalFeesInRaw.plus(earningsAmountWei.toBigDecimal());
-  mech.save();
+  updateMechFeesIn(mechId, earningsAmountUsd, earningsAmountWei.toBigDecimal());
 }
 
 export function handleWithdrawForNative(event: Withdraw): void {
@@ -44,13 +39,5 @@ export function handleWithdrawForNative(event: Withdraw): void {
   const withdrawalAmountUsd = convertGnosisNativeWeiToUsd(withdrawalAmountWei);
 
   updateTotalFeesOut(withdrawalAmountUsd);
-
-  const mech = Mech.load(mechId);
-  if (mech != null) {
-    mech.totalFeesOutUSD = mech.totalFeesOutUSD.plus(withdrawalAmountUsd);
-    mech.totalFeesOutRaw = mech.totalFeesOutRaw.plus(
-      withdrawalAmountWei.toBigDecimal()
-    );
-    mech.save();
-  }
+  updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalAmountWei.toBigDecimal());
 }

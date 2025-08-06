@@ -14,7 +14,9 @@ import {
 import {
   updateTotalFeesIn,
   updateTotalFeesOut,
-  calculateOlasInUsd
+  calculateOlasInUsd,
+  updateMechFeesIn,
+  updateMechFeesOut
 } from "../../../../shared/new-mech-fees/utils"
 import { BalancerV2WeightedPool } from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceToken/BalancerV2WeightedPool";
 
@@ -52,18 +54,7 @@ export function handleMechBalanceAdjustedForToken(event: MechBalanceAdjusted): v
   );
 
   updateTotalFeesIn(deliveryRateUsd);
-
-  let mech = Mech.load(mechId);
-  if (mech == null) {
-    mech = new Mech(mechId);
-    mech.totalFeesInUSD = BigDecimal.fromString("0");
-    mech.totalFeesOutUSD = BigDecimal.fromString("0");
-    mech.totalFeesInRaw = BigDecimal.fromString("0");
-    mech.totalFeesOutRaw = BigDecimal.fromString("0");
-  }
-  mech.totalFeesInUSD = mech.totalFeesInUSD.plus(deliveryRateUsd);
-  mech.totalFeesInRaw = mech.totalFeesInRaw.plus(deliveryRateOlas.toBigDecimal());
-  mech.save();
+  updateMechFeesIn(mechId, deliveryRateUsd, deliveryRateOlas.toBigDecimal());
 }
 
 export function handleWithdrawForToken(event: Withdraw): void {
@@ -87,13 +78,5 @@ export function handleWithdrawForToken(event: Withdraw): void {
   );
 
   updateTotalFeesOut(withdrawalAmountUsd);
-
-  const mech = Mech.load(mechId);
-  if (mech != null) {
-    mech.totalFeesOutUSD = mech.totalFeesOutUSD.plus(withdrawalAmountUsd);
-    mech.totalFeesOutRaw = mech.totalFeesOutRaw.plus(
-      withdrawalAmountOlas.toBigDecimal()
-    );
-    mech.save();
-  }
+  updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalAmountOlas.toBigDecimal());
 } 
