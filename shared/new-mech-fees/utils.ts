@@ -6,8 +6,15 @@ import {
   TOKEN_RATIO_BASE,
   TOKEN_DECIMALS_BASE,
   CHAINLINK_PRICE_FEED_DECIMALS,
-  ETH_DECIMALS
+  ETH_DECIMALS,
+  BALANCER_VAULT_ADDRESS_GNOSIS,
+  OLAS_WXDAI_POOL_ADDRESS_GNOSIS,
+  OLAS_ADDRESS_GNOSIS,
+  WXDAI_ADDRESS_GNOSIS
 } from "../constants";
+import { Address, Bytes } from "@graphprotocol/graph-ts";
+import { BalancerV2Vault } from "./generated/BalanceTrackerFixedPriceToken/BalancerV2Vault";
+import { log } from "@graphprotocol/graph-ts";
 
 const GLOBAL_ID = "1";
 
@@ -96,4 +103,64 @@ export function calculateBaseNvmFeesInUsd(
 export function convertBaseUsdcToUsd(amountInUsdc: BigInt): BigDecimal {
   const usdcDivisor = BigInt.fromI32(10).pow(6).toBigDecimal(); // USDC has 6 decimals
   return amountInUsdc.toBigDecimal().div(usdcDivisor);
+}
+
+// For OLAS fees on Gnosis - working version
+export function getOlasInUsd(
+  vaultAddress: Address,
+  poolId: Bytes,
+  olasAddress: Address,
+  wxdaiAddress: Address,
+  olasAmount: BigInt
+): BigDecimal {
+  // Skip actual pool lookup if poolId is zero (our placeholder)
+  if (poolId.equals(Bytes.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000"))) {
+    const fixedOlasPrice = BigDecimal.fromString("0.01");
+    const olasDecimals = BigInt.fromI32(10).pow(18).toBigDecimal();
+    return olasAmount.toBigDecimal().div(olasDecimals).times(fixedOlasPrice);
+  }
+
+  const vault = BalancerV2Vault.bind(vaultAddress);
+  const poolTokensResult = vault.try_getPoolTokens(poolId);
+
+  if (poolTokensResult.reverted) {
+    log.warning("Could not get pool tokens for pool {}, using fallback price", [poolId.toHexString()]);
+    const fallbackPrice = BigDecimal.fromString("0.01");
+    const olasDecimals = BigInt.fromI32(10).pow(18).toBigDecimal();
+    return olasAmount.toBigDecimal().div(olasDecimals).times(fallbackPrice);
+  }
+
+  const tokens = poolTokensResult.value.getTokens();
+  const balances = poolTokensResult.value.getBalances();
+
+  let olasBalance = BigInt.zero();
+  let wxdaiBalance = BigInt.zero();
+
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i].equals(olasAddress)) {
+      olasBalance = balances[i];
+    } else if (tokens[i].equals(wxdaiAddress)) {
+      wxdaiBalance = balances[i];
+    }
+  }
+
+  if (olasBalance.isZero()) {
+    log.warning("OLAS balance is zero in pool {}, using fallback price", [poolId.toHexString()]);
+    const fallbackPrice = BigDecimal.fromString("0.01");
+    const olasDecimals = BigInt.fromI32(10).pow(18).toBigDecimal();
+    return olasAmount.toBigDecimal().div(olasDecimals).times(fallbackPrice);
+  }
+
+  // Calculate price: (wxdaiBalance / olasBalance) * (olasAmount / 10^18)
+  const olasDecimals = BigInt.fromI32(10).pow(18);
+  const wxdaiDecimals = BigInt.fromI32(10).pow(18);
+  
+  // Convert to proper decimal values
+  const olasAmountDecimal = olasAmount.toBigDecimal().div(olasDecimals.toBigDecimal());
+  const olasBalanceDecimal = olasBalance.toBigDecimal().div(olasDecimals.toBigDecimal());
+  const wxdaiBalanceDecimal = wxdaiBalance.toBigDecimal().div(wxdaiDecimals.toBigDecimal());
+  
+  const pricePerOlas = wxdaiBalanceDecimal.div(olasBalanceDecimal);
+  
+  return olasAmountDecimal.times(pricePerOlas);
 } 
