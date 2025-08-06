@@ -15,6 +15,7 @@ import {
 import { Address, Bytes } from "@graphprotocol/graph-ts";
 import { BalancerV2Vault } from "./generated/BalanceTrackerFixedPriceToken/BalancerV2Vault";
 import { log } from "@graphprotocol/graph-ts";
+import { Mech } from "./generated/schema";
 
 const GLOBAL_ID = "1";
 
@@ -105,34 +106,52 @@ export function convertBaseUsdcToUsd(amountInUsdc: BigInt): BigDecimal {
   return amountInUsdc.toBigDecimal().div(usdcDivisor);
 }
 
-// Common function for OLAS fees
-export function calculateOlasInUsd(
-  vaultAddress: Address,
+// Helper function to get or initialize a mech entity
+export function getOrInitializeMech(mechId: string): Mech {
+  let mech = Mech.load(mechId);
+  if (mech == null) {
+    mech = new Mech(mechId);
+    mech.totalFeesInUSD = BigDecimal.fromString("0");
+    mech.totalFeesOutUSD = BigDecimal.fromString("0");
+    mech.totalFeesInRaw = BigDecimal.fromString("0");
+    mech.totalFeesOutRaw = BigDecimal.fromString("0");
+  }
+  return mech;
+}
+
+// Helper function to update mech fees in
+export function updateMechFeesIn(mechId: string, amountUsd: BigDecimal, amountRaw: BigDecimal): void {
+  const mech = getOrInitializeMech(mechId);
+  mech.totalFeesInUSD = mech.totalFeesInUSD.plus(amountUsd);
+  mech.totalFeesInRaw = mech.totalFeesInRaw.plus(amountRaw);
+  mech.save();
+}
+
+// Helper function to update mech fees out
+export function updateMechFeesOut(mechId: string, amountUsd: BigDecimal, amountRaw: BigDecimal): void {
+  const mech = getOrInitializeMech(mechId);
+  mech.totalFeesOutUSD = mech.totalFeesOutUSD.plus(amountUsd);
+  mech.totalFeesOutRaw = mech.totalFeesOutRaw.plus(amountRaw);
+  mech.save();
+}
+
+// Helper function to get token balances from Balancer pool
+function getPoolTokenBalances(
+  vault: BalancerV2Vault,
   poolId: Bytes,
   olasAddress: Address,
-  stablecoinAddress: Address,
-  stablecoinDecimals: i32,
-  olasAmount: BigInt
-): BigDecimal {
-  if (poolId.equals(Bytes.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000"))) {
-    const fixedOlasPrice = BigDecimal.fromString("0.01");
-    const olasDecimals = BigInt.fromI32(10).pow(18).toBigDecimal();
-    return olasAmount.toBigDecimal().div(olasDecimals).times(fixedOlasPrice);
-  }
-
-  const vault = BalancerV2Vault.bind(vaultAddress);
+  stablecoinAddress: Address
+): Array<BigInt> {
   const poolTokensResult = vault.try_getPoolTokens(poolId);
-
+  
   if (poolTokensResult.reverted) {
-    log.warning("Could not get pool tokens for pool {}, using fallback price", [poolId.toHexString()]);
-    const fallbackPrice = BigDecimal.fromString("0.01");
-    const olasDecimals = BigInt.fromI32(10).pow(18).toBigDecimal();
-    return olasAmount.toBigDecimal().div(olasDecimals).times(fallbackPrice);
+    log.error("Could not get pool tokens for pool {}", [poolId.toHexString()]);
+    return [BigInt.zero(), BigInt.zero()];
   }
 
   const tokens = poolTokensResult.value.getTokens();
   const balances = poolTokensResult.value.getBalances();
-
+  
   let olasBalance = BigInt.zero();
   let stablecoinBalance = BigInt.zero();
 
@@ -143,14 +162,17 @@ export function calculateOlasInUsd(
       stablecoinBalance = balances[i];
     }
   }
+  
+  return [olasBalance, stablecoinBalance];
+}
 
-  if (olasBalance.isZero()) {
-    log.warning("OLAS balance is zero in pool {}, using fallback price", [poolId.toHexString()]);
-    const fallbackPrice = BigDecimal.fromString("0.01");
-    const olasDecimals = BigInt.fromI32(10).pow(18).toBigDecimal();
-    return olasAmount.toBigDecimal().div(olasDecimals).times(fallbackPrice);
-  }
-
+// Helper function to calculate OLAS price from pool balances
+function calculateOlasPriceFromPool(
+  olasAmount: BigInt,
+  olasBalance: BigInt,
+  stablecoinBalance: BigInt,
+  stablecoinDecimals: i32
+): BigDecimal {
   const olasDecimalsBigInt = BigInt.fromI32(10).pow(18);
   const stablecoinDecimalsBigInt = BigInt.fromI32(10).pow(stablecoinDecimals as u8);
   
@@ -159,6 +181,34 @@ export function calculateOlasInUsd(
   const stablecoinBalanceDecimal = stablecoinBalance.toBigDecimal().div(stablecoinDecimalsBigInt.toBigDecimal());
   
   const pricePerOlas = stablecoinBalanceDecimal.div(olasBalanceDecimal);
-  
   return olasAmountDecimal.times(pricePerOlas);
+}
+
+// Common function for OLAS fees
+export function calculateOlasInUsd(
+  vaultAddress: Address,
+  poolId: Bytes,
+  olasAddress: Address,
+  stablecoinAddress: Address,
+  stablecoinDecimals: i32,
+  olasAmount: BigInt
+): BigDecimal {
+  // Check for zero pool ID - return zero instead of fallback
+  if (poolId.equals(Bytes.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000"))) {
+    log.warning("Zero pool ID provided for OLAS price calculation", []);
+    return BigDecimal.fromString("0");
+  }
+
+  const vault = BalancerV2Vault.bind(vaultAddress);
+  const balances = getPoolTokenBalances(vault, poolId, olasAddress, stablecoinAddress);
+  const olasBalance = balances[0];
+  const stablecoinBalance = balances[1];
+
+  // Return zero if we can't get valid balances
+  if (olasBalance.isZero() || stablecoinBalance.isZero()) {
+    log.warning("Invalid pool balances for pool {}", [poolId.toHexString()]);
+    return BigDecimal.fromString("0");
+  }
+
+  return calculateOlasPriceFromPool(olasAmount, olasBalance, stablecoinBalance, stablecoinDecimals);
 } 
