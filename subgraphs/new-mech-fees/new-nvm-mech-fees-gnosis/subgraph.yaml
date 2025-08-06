@@ -1,16 +1,14 @@
-# subgraph.yaml
-
 specVersion: 0.0.5
 schema:
   file: ../../../shared/new-mech-fees/schema.graphql
 dataSources:
   - kind: ethereum
-    name: BalanceTrackerFixedPriceNative
+    name: BalanceTrackerNvmSubscriptionNative
     network: xdai
     source:
-      address: "0x21cE6799A22A3Da84B7c44a814a9c79ab1d2A50D" 
-      abi: BalanceTrackerFixedPriceNative
-      startBlock: 38662107
+      address: "0x7D686bD1fD3CFF6E45a40165154D61043af7D67c"
+      abi: BalanceTrackerNvmSubscriptionNative
+      startBlock: 38662005
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -19,11 +17,11 @@ dataSources:
         - Mech
         - Global
       abis:
-        - name: BalanceTrackerFixedPriceNative
-          file: ../../../abis/BalanceTrackerFixedPriceNative.json
+        - name: BalanceTrackerNvmSubscriptionNative
+          file: ../../../abis/BalanceTrackerNvmSubscriptionNative.json
       eventHandlers:
         - event: MechBalanceAdjusted(indexed address,uint256,uint256,uint256)
-          handler: handleMechBalanceAdjustedForNative
+          handler: handleMechBalanceAdjusted
         - event: Withdraw(indexed address,indexed address,uint256)
-          handler: handleWithdrawForNative
+          handler: handleWithdraw
       file: ./src/mapping.ts

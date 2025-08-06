@@ -4,20 +4,19 @@ import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts"
 import {
   MechBalanceAdjusted,
   Withdraw
-} from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceNative/BalanceTrackerFixedPriceNative"
+} from "../../../../shared/new-mech-fees/generated/BalanceTrackerNvmSubscriptionNative/BalanceTrackerNvmSubscriptionNative"
 import { Mech } from "../../../../shared/new-mech-fees/generated/schema"
 import { 
-  BURN_ADDRESS_MECH_FEES_GNOSIS,
+  BURN_ADDRESS_MECH_FEES_BASE,
   CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD
 } from "../../../../shared/constants"
-import { updateTotalFeesIn, updateTotalFeesOut, convertBaseNativeWeiToUsd } from "../../../../shared/new-mech-fees/utils"
-import { AggregatorV3Interface } from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceNative/AggregatorV3Interface"
+import { updateTotalFeesIn, updateTotalFeesOut, calculateBaseNvmFeesInUsd, convertBaseUsdcToUsd } from "../../../../shared/new-mech-fees/utils"
+import { AggregatorV3Interface } from "../../../../shared/new-mech-fees/generated/BalanceTrackerNvmSubscriptionNative/AggregatorV3Interface"
 
-const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
+const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
 const PRICE_FEED_ADDRESS = Address.fromString(CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD);
 
-
-export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): void {
+export function handleMechBalanceAdjusted(event: MechBalanceAdjusted): void {
   const deliveryRateEth = event.params.deliveryRate;
   const mechId = event.params.mech.toHex();
 
@@ -29,7 +28,7 @@ export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): 
     return;
   }
   
-  const deliveryRateUsd = convertBaseNativeWeiToUsd(
+  const deliveryRateUsd = calculateBaseNvmFeesInUsd(
     deliveryRateEth,
     latestRoundData.value.value1
   );
@@ -46,27 +45,16 @@ export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): 
   mech.save();
 }
 
-export function handleWithdrawForNative(event: Withdraw): void {
+export function handleWithdraw(event: Withdraw): void {
   const recipientAddress = event.params.account;
-  const withdrawalAmountWei = event.params.amount;
+  const withdrawalAmountUsdc = event.params.amount;
   const mechId = recipientAddress.toHex();
 
   if (recipientAddress.equals(BURN_ADDRESS)) {
     return;
   }
 
-  const priceFeed = AggregatorV3Interface.bind(PRICE_FEED_ADDRESS);
-  const latestRoundData = priceFeed.try_latestRoundData();
-
-  if (latestRoundData.reverted) {
-    log.error("Could not get price from Chainlink for tx: {}", [event.transaction.hash.toHex()]);
-    return;
-  }
-
-  const withdrawalAmountUsd = convertBaseNativeWeiToUsd(
-    withdrawalAmountWei,
-    latestRoundData.value.value1
-  );
+  const withdrawalAmountUsd = convertBaseUsdcToUsd(withdrawalAmountUsdc);
 
   updateTotalFeesOut(withdrawalAmountUsd);
 
@@ -75,4 +63,4 @@ export function handleWithdrawForNative(event: Withdraw): void {
     mech.totalFeesOut = mech.totalFeesOut.plus(withdrawalAmountUsd);
     mech.save();
   }
-}
+} 

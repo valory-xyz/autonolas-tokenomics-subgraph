@@ -1,21 +1,21 @@
 // src/mapping.ts
 
-import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts"
+import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import {
   MechBalanceAdjusted,
   Withdraw
-} from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceNative/BalanceTrackerFixedPriceNative"
+} from "../../../../shared/new-mech-fees/generated/BalanceTrackerNvmSubscriptionNative/BalanceTrackerNvmSubscriptionNative"
 import { Mech } from "../../../../shared/new-mech-fees/generated/schema"
 import { BURN_ADDRESS_MECH_FEES_GNOSIS } from "../../../../shared/constants"
-import { updateTotalFeesIn, updateTotalFeesOut, convertGnosisNativeWeiToUsd } from "../../../../shared/new-mech-fees/utils"
+import { updateTotalFeesIn, updateTotalFeesOut, calculateGnosisNvmFeesIn, convertGnosisNativeWeiToUsd } from "../../../../shared/new-mech-fees/utils"
 
 const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
 
-export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): void {
+export function handleMechBalanceAdjusted(event: MechBalanceAdjusted): void {
   const earningsAmountWei = event.params.deliveryRate;
   const mechId = event.params.mech.toHex();
 
-  const earningsAmountUsd = convertGnosisNativeWeiToUsd(earningsAmountWei);
+  const earningsAmountUsd = calculateGnosisNvmFeesIn(earningsAmountWei);
 
   updateTotalFeesIn(earningsAmountUsd);
 
@@ -29,7 +29,7 @@ export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): 
   mech.save();
 }
 
-export function handleWithdrawForNative(event: Withdraw): void {
+export function handleWithdraw(event: Withdraw): void {
   const recipientAddress = event.params.account;
   const withdrawalAmountWei = event.params.amount;
   const mechId = recipientAddress.toHex();
@@ -47,4 +47,4 @@ export function handleWithdrawForNative(event: Withdraw): void {
     mech.totalFeesOut = mech.totalFeesOut.plus(withdrawalAmountUsd);
     mech.save();
   }
-}
+} 
