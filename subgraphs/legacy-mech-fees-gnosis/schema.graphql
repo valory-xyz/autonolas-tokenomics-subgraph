@@ -1,4 +1,4 @@
-type LegacyMech @entity {
+type LegacyMech @entity(immutable: false) {
   id: Bytes!
   agentId: Int!
   price: BigInt!
@@ -6,7 +6,7 @@ type LegacyMech @entity {
   totalFeesOut: BigInt!
 }
 
-type LegacyMechMarketPlace @entity {
+type LegacyMechMarketPlace @entity(immutable: false) {
   id: Bytes!
   agentId: Int!
   price: BigInt!
@@ -14,7 +14,7 @@ type LegacyMechMarketPlace @entity {
   totalFeesOut: BigInt!
 }
 
-type Global @entity {
+type Global @entity(immutable: false) {
   id: ID!
   totalFeesIn: BigInt!
   totalFeesOut: BigInt!
