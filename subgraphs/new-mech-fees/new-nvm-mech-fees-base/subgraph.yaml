@@ -23,7 +23,7 @@ dataSources:
           file: ../../../abis/AggregatorV3Interface.json
       eventHandlers:
         - event: MechBalanceAdjusted(indexed address,uint256,uint256,uint256)
-          handler: handleMechBalanceAdjusted
+          handler: handleMechBalanceAdjustedForNvm
         - event: Withdraw(indexed address,indexed address,uint256)
-          handler: handleWithdraw
+          handler: handleWithdrawForNvm
       file: ./src/mapping.ts 
