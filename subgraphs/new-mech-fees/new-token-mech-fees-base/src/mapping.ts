@@ -5,29 +5,26 @@ import {
 } from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceToken/BalanceTrackerFixedPriceToken"
 import { Mech } from "../../../../shared/new-mech-fees/generated/schema"
 import {
-  BURN_ADDRESS_MECH_FEES_GNOSIS,
-  BALANCER_VAULT_ADDRESS_GNOSIS,
-  OLAS_WXDAI_POOL_ADDRESS_GNOSIS,
-  OLAS_ADDRESS_GNOSIS,
-  WXDAI_ADDRESS_GNOSIS
+  BURN_ADDRESS_MECH_FEES_BASE,
+  BALANCER_VAULT_ADDRESS_BASE,
+  OLAS_USDC_POOL_ADDRESS_BASE,
+  OLAS_ADDRESS_BASE,
+  USDC_ADDRESS_BASE
 } from "../../../../shared/constants"
 import {
   updateTotalFeesIn,
   updateTotalFeesOut,
   calculateOlasInUsd
 } from "../../../../shared/new-mech-fees/utils"
-import { BalancerV2Vault } from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceToken/BalancerV2Vault";
 import { BalancerV2WeightedPool } from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceToken/BalancerV2WeightedPool";
 
-const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
-const VAULT_ADDRESS = Address.fromString(BALANCER_VAULT_ADDRESS_GNOSIS);
-const POOL_ADDRESS = Address.fromString(OLAS_WXDAI_POOL_ADDRESS_GNOSIS);
-const OLAS_ADDRESS = Address.fromString(OLAS_ADDRESS_GNOSIS);
-const WXDAI_ADDRESS = Address.fromString(WXDAI_ADDRESS_GNOSIS);
+const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
+const VAULT_ADDRESS = Address.fromString(BALANCER_VAULT_ADDRESS_BASE);
+const POOL_ADDRESS = Address.fromString(OLAS_USDC_POOL_ADDRESS_BASE);
+const OLAS_ADDRESS = Address.fromString(OLAS_ADDRESS_BASE);
+const USDC_ADDRESS = Address.fromString(USDC_ADDRESS_BASE);
 
 function getPoolIdSafe(poolAddress: Address): Bytes {
-  // For Balancer V2, the pool ID is typically the pool address + some additional data
-  // We'll try to get it from the pool contract directly instead of through the vault
   const pool = BalancerV2WeightedPool.bind(poolAddress);
   const poolIdResult = pool.try_getPoolId();
   
@@ -43,15 +40,14 @@ export function handleMechBalanceAdjustedForToken(event: MechBalanceAdjusted): v
   const deliveryRateOlas = event.params.deliveryRate;
   const mechId = event.params.mech.toHex();
 
-  // Get pool ID safely
   const poolId = getPoolIdSafe(POOL_ADDRESS);
   
   const deliveryRateUsd = calculateOlasInUsd(
     VAULT_ADDRESS,
     poolId,
     OLAS_ADDRESS,
-    WXDAI_ADDRESS,
-    18,
+    USDC_ADDRESS,
+    6,
     deliveryRateOlas
   );
 
@@ -79,15 +75,14 @@ export function handleWithdrawForToken(event: Withdraw): void {
     return;
   }
 
-  // Get pool ID safely
   const poolId = getPoolIdSafe(POOL_ADDRESS);
 
   const withdrawalAmountUsd = calculateOlasInUsd(
     VAULT_ADDRESS,
     poolId,
     OLAS_ADDRESS,
-    WXDAI_ADDRESS,
-    18,
+    USDC_ADDRESS,
+    6,
     withdrawalAmountOlas
   );
 

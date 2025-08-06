@@ -105,15 +105,15 @@ export function convertBaseUsdcToUsd(amountInUsdc: BigInt): BigDecimal {
   return amountInUsdc.toBigDecimal().div(usdcDivisor);
 }
 
-// For OLAS fees on Gnosis - working version
-export function getOlasInUsd(
+// Common function for OLAS fees
+export function calculateOlasInUsd(
   vaultAddress: Address,
   poolId: Bytes,
   olasAddress: Address,
-  wxdaiAddress: Address,
+  stablecoinAddress: Address,
+  stablecoinDecimals: i32,
   olasAmount: BigInt
 ): BigDecimal {
-  // Skip actual pool lookup if poolId is zero (our placeholder)
   if (poolId.equals(Bytes.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000"))) {
     const fixedOlasPrice = BigDecimal.fromString("0.01");
     const olasDecimals = BigInt.fromI32(10).pow(18).toBigDecimal();
@@ -134,13 +134,13 @@ export function getOlasInUsd(
   const balances = poolTokensResult.value.getBalances();
 
   let olasBalance = BigInt.zero();
-  let wxdaiBalance = BigInt.zero();
+  let stablecoinBalance = BigInt.zero();
 
   for (let i = 0; i < tokens.length; i++) {
     if (tokens[i].equals(olasAddress)) {
       olasBalance = balances[i];
-    } else if (tokens[i].equals(wxdaiAddress)) {
-      wxdaiBalance = balances[i];
+    } else if (tokens[i].equals(stablecoinAddress)) {
+      stablecoinBalance = balances[i];
     }
   }
 
@@ -151,16 +151,14 @@ export function getOlasInUsd(
     return olasAmount.toBigDecimal().div(olasDecimals).times(fallbackPrice);
   }
 
-  // Calculate price: (wxdaiBalance / olasBalance) * (olasAmount / 10^18)
-  const olasDecimals = BigInt.fromI32(10).pow(18);
-  const wxdaiDecimals = BigInt.fromI32(10).pow(18);
+  const olasDecimalsBigInt = BigInt.fromI32(10).pow(18);
+  const stablecoinDecimalsBigInt = BigInt.fromI32(10).pow(stablecoinDecimals as u8);
   
-  // Convert to proper decimal values
-  const olasAmountDecimal = olasAmount.toBigDecimal().div(olasDecimals.toBigDecimal());
-  const olasBalanceDecimal = olasBalance.toBigDecimal().div(olasDecimals.toBigDecimal());
-  const wxdaiBalanceDecimal = wxdaiBalance.toBigDecimal().div(wxdaiDecimals.toBigDecimal());
+  const olasAmountDecimal = olasAmount.toBigDecimal().div(olasDecimalsBigInt.toBigDecimal());
+  const olasBalanceDecimal = olasBalance.toBigDecimal().div(olasDecimalsBigInt.toBigDecimal());
+  const stablecoinBalanceDecimal = stablecoinBalance.toBigDecimal().div(stablecoinDecimalsBigInt.toBigDecimal());
   
-  const pricePerOlas = wxdaiBalanceDecimal.div(olasBalanceDecimal);
+  const pricePerOlas = stablecoinBalanceDecimal.div(olasBalanceDecimal);
   
   return olasAmountDecimal.times(pricePerOlas);
 } 
