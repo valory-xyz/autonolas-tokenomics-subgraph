@@ -29,7 +29,7 @@ export function handleMechBalanceAdjusted(event: MechBalanceAdjusted): void {
   }
   mech.totalFeesInUSD = mech.totalFeesInUSD.plus(earningsAmountUsd);
   mech.totalFeesInRaw = mech.totalFeesInRaw.plus(
-    calculateGnosisNvmFeesIn(earningsAmountWei) // Storing the calculated fee as raw
+    earningsAmountWei.toBigDecimal()
   );
   mech.save();
 }
