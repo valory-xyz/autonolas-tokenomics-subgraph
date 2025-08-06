@@ -1,4 +1,13 @@
+import { BigDecimal } from "@graphprotocol/graph-ts";
+
+export const TOKEN_RATIO_GNOSIS = BigDecimal.fromString("990000000000000000000000000000");
+export const TOKEN_DECIMALS_GNOSIS = 18;
+
+export const TOKEN_RATIO_BASE = BigDecimal.fromString("990000000000000000");
+export const TOKEN_DECIMALS_BASE = 6;
+
 export const BURN_ADDRESS_MECH_FEES_GNOSIS = "0x153196110040a0c729227c603db3a6c6d91851b2";
+export const BURN_ADDRESS_MECH_FEES_BASE = "0x3FD8C757dE190bcc82cF69Df3Cd9Ab15bCec1426";
 export const CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD = "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70";
 export const CHAINLINK_PRICE_FEED_DECIMALS = 8;
 export const ETH_DECIMALS = 18;
