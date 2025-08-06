@@ -10,7 +10,13 @@ import {
   BURN_ADDRESS_MECH_FEES_BASE,
   CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD
 } from "../../../../shared/constants"
-import { updateTotalFeesIn, updateTotalFeesOut, calculateBaseNvmFeesInUsd, convertBaseUsdcToUsd } from "../../../../shared/new-mech-fees/utils"
+import {
+  updateTotalFeesIn,
+  updateTotalFeesOut,
+  calculateBaseNvmFeesInUsd,
+  convertBaseUsdcToUsd,
+  calculateBaseNvmFeesIn
+} from "../../../../shared/new-mech-fees/utils";
 import { AggregatorV3Interface } from "../../../../shared/new-mech-fees/generated/BalanceTrackerNvmSubscriptionNative/AggregatorV3Interface"
 
 const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
@@ -33,15 +39,20 @@ export function handleMechBalanceAdjusted(event: MechBalanceAdjusted): void {
     latestRoundData.value.value1
   );
 
+  const deliveryRateRaw = calculateBaseNvmFeesIn(deliveryRateEth);
+
   updateTotalFeesIn(deliveryRateUsd);
 
   let mech = Mech.load(mechId);
   if (mech == null) {
     mech = new Mech(mechId);
-    mech.totalFeesIn = BigDecimal.fromString("0");
-    mech.totalFeesOut = BigDecimal.fromString("0");
+    mech.totalFeesInUSD = BigDecimal.fromString("0");
+    mech.totalFeesOutUSD = BigDecimal.fromString("0");
+    mech.totalFeesInRaw = BigDecimal.fromString("0");
+    mech.totalFeesOutRaw = BigDecimal.fromString("0");
   }
-  mech.totalFeesIn = mech.totalFeesIn.plus(deliveryRateUsd);
+  mech.totalFeesInUSD = mech.totalFeesInUSD.plus(deliveryRateUsd);
+  mech.totalFeesInRaw = mech.totalFeesInRaw.plus(deliveryRateRaw);
   mech.save();
 }
 
@@ -60,7 +71,10 @@ export function handleWithdraw(event: Withdraw): void {
 
   const mech = Mech.load(mechId);
   if (mech != null) {
-    mech.totalFeesOut = mech.totalFeesOut.plus(withdrawalAmountUsd);
+    mech.totalFeesOutUSD = mech.totalFeesOutUSD.plus(withdrawalAmountUsd);
+    mech.totalFeesOutRaw = mech.totalFeesOutRaw.plus(
+      withdrawalAmountUsdc.toBigDecimal()
+    );
     mech.save();
   }
 } 

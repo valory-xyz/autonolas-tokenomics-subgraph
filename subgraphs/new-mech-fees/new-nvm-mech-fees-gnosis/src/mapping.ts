@@ -22,10 +22,15 @@ export function handleMechBalanceAdjusted(event: MechBalanceAdjusted): void {
   let mech = Mech.load(mechId);
   if (mech == null) {
     mech = new Mech(mechId);
-    mech.totalFeesIn = BigDecimal.fromString("0");
-    mech.totalFeesOut = BigDecimal.fromString("0");
+    mech.totalFeesInUSD = BigDecimal.fromString("0");
+    mech.totalFeesOutUSD = BigDecimal.fromString("0");
+    mech.totalFeesInRaw = BigDecimal.fromString("0");
+    mech.totalFeesOutRaw = BigDecimal.fromString("0");
   }
-  mech.totalFeesIn = mech.totalFeesIn.plus(earningsAmountUsd);
+  mech.totalFeesInUSD = mech.totalFeesInUSD.plus(earningsAmountUsd);
+  mech.totalFeesInRaw = mech.totalFeesInRaw.plus(
+    calculateGnosisNvmFeesIn(earningsAmountWei) // Storing the calculated fee as raw
+  );
   mech.save();
 }
 
@@ -44,7 +49,10 @@ export function handleWithdraw(event: Withdraw): void {
 
   const mech = Mech.load(mechId);
   if (mech != null) {
-    mech.totalFeesOut = mech.totalFeesOut.plus(withdrawalAmountUsd);
+    mech.totalFeesOutUSD = mech.totalFeesOutUSD.plus(withdrawalAmountUsd);
+    mech.totalFeesOutRaw = mech.totalFeesOutRaw.plus(
+      withdrawalAmountWei.toBigDecimal()
+    );
     mech.save();
   }
 } 
