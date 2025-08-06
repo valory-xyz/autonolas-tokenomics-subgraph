@@ -38,6 +38,8 @@
     "build-new-nvm-mech-fees-base": "yarn codegen-new-nvm-mech-fees-base && graph build subgraphs/new-mech-fees/new-nvm-mech-fees-base/subgraph.yaml",
     "codegen-new-token-mech-fees-gnosis": "graph codegen subgraphs/new-mech-fees/new-token-mech-fees-gnosis/subgraph.yaml -o shared/new-mech-fees/generated",
     "build-new-token-mech-fees-gnosis": "yarn codegen-new-token-mech-fees-gnosis && graph build subgraphs/new-mech-fees/new-token-mech-fees-gnosis/subgraph.yaml",
+    "codegen-new-token-mech-fees-base": "graph codegen subgraphs/new-mech-fees/new-token-mech-fees-base/subgraph.yaml -o shared/new-mech-fees/generated",
+    "build-new-token-mech-fees-base": "yarn codegen-new-token-mech-fees-base && graph build subgraphs/new-mech-fees/new-token-mech-fees-base/subgraph.yaml",
     "deploy-studio": "node scripts/deploy-studio.js",
     "test": "graph test"
   },
