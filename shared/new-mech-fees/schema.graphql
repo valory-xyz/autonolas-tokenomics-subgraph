@@ -6,17 +6,9 @@ type Global @entity(immutable: false) {
 
 type Mech @entity(immutable: false) {
   id: ID!
-
-  "Total fees accrued, in USD"
   totalFeesInUSD: BigDecimal!
-
-  "Total fees withdrawn, in USD"
   totalFeesOutUSD: BigDecimal!
-
-  "Raw total fees accrued, in native token (wei/usdc units)"
   totalFeesInRaw: BigDecimal!
-
-  "Raw total fees withdrawn, in native token (wei/usdc units)"
   totalFeesOutRaw: BigDecimal!
 }
 
