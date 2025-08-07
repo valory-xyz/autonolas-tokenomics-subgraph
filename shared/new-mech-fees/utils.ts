@@ -1,5 +1,5 @@
-import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { Global } from "./generated/schema";
+import { BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
+import { Global, MechTransaction } from "./generated/schema";
 import { 
   TOKEN_RATIO_GNOSIS,
   TOKEN_DECIMALS_GNOSIS,
@@ -18,6 +18,8 @@ import { log } from "@graphprotocol/graph-ts";
 import { Mech } from "./generated/schema";
 
 const GLOBAL_ID = "1";
+const FEE_IN = "FEE_IN";
+const FEE_OUT = "FEE_OUT";
 
 export function getOrInitialiseGlobal(): Global {
   let global = Global.load(GLOBAL_ID);
@@ -27,6 +29,50 @@ export function getOrInitialiseGlobal(): Global {
     global.totalFeesOutUSD = BigDecimal.fromString("0");
   }
   return global;
+}
+
+export function createMechTransactionForAccrued(
+  mech: Mech,
+  amountRaw: BigDecimal,
+  amountUSD: BigDecimal,
+  event: ethereum.Event,
+  deliveryRate: BigInt,
+  balance: BigInt,
+  rateDiff: BigInt
+): void {
+  const transaction = new MechTransaction(
+    event.transaction.hash.toHexString() + "-" + event.logIndex.toString()
+  );
+  transaction.mech = mech.id;
+  transaction.type = FEE_IN;
+  transaction.amountRaw = amountRaw;
+  transaction.amountUSD = amountUSD;
+  transaction.timestamp = event.block.timestamp;
+  transaction.blockNumber = event.block.number;
+  transaction.txHash = event.transaction.hash;
+  transaction.deliveryRate = deliveryRate;
+  transaction.balance = balance;
+  transaction.rateDiff = rateDiff;
+  transaction.save();
+}
+
+export function createMechTransactionForCollected(
+  mech: Mech,
+  amountRaw: BigDecimal,
+  amountUSD: BigDecimal,
+  event: ethereum.Event
+): void {
+  const transaction = new MechTransaction(
+    event.transaction.hash.toHexString() + "-" + event.logIndex.toString()
+  );
+  transaction.mech = mech.id;
+  transaction.type = FEE_OUT;
+  transaction.amountRaw = amountRaw;
+  transaction.amountUSD = amountUSD;
+  transaction.timestamp = event.block.timestamp;
+  transaction.blockNumber = event.block.number;
+  transaction.txHash = event.transaction.hash;
+  transaction.save();
 }
 
 export function updateTotalFeesIn(amount: BigDecimal): void {
