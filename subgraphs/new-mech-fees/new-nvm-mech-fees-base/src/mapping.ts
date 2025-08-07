@@ -17,7 +17,9 @@ import {
   convertBaseUsdcToUsd,
   calculateBaseNvmFeesIn,
   updateMechFeesIn,
-  updateMechFeesOut
+  updateMechFeesOut,
+  createMechTransactionForAccrued,
+  createMechTransactionForCollected
 } from "../../../../shared/new-mech-fees/utils";
 import { AggregatorV3Interface } from "../../../../shared/new-mech-fees/generated/BalanceTrackerNvmSubscriptionNative/AggregatorV3Interface"
 
@@ -45,6 +47,20 @@ export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): voi
 
   updateTotalFeesIn(deliveryRateUsd);
   updateMechFeesIn(mechId, deliveryRateUsd, deliveryRateRaw);
+
+  // Create MechTransaction for the accrued fees
+  const mech = Mech.load(mechId);
+  if (mech != null) {
+    createMechTransactionForAccrued(
+      mech,
+      deliveryRateRaw,
+      deliveryRateUsd,
+      event,
+      event.params.deliveryRate,
+      event.params.balance,
+      event.params.rateDiff
+    );
+  }
 }
 
 export function handleWithdrawForNvm(event: Withdraw): void {
@@ -60,4 +76,15 @@ export function handleWithdrawForNvm(event: Withdraw): void {
 
   updateTotalFeesOut(withdrawalAmountUsd);
   updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalAmountUsdc.toBigDecimal());
+
+  // Create MechTransaction for the collected fees
+  const mech = Mech.load(mechId);
+  if (mech != null) {
+    createMechTransactionForCollected(
+      mech,
+      withdrawalAmountUsdc.toBigDecimal(),
+      withdrawalAmountUsd,
+      event
+    );
+  }
 } 

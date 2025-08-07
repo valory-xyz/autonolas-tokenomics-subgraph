@@ -12,7 +12,9 @@ import {
   updateTotalFeesOut, 
   convertGnosisNativeWeiToUsd,
   updateMechFeesIn,
-  updateMechFeesOut
+  updateMechFeesOut,
+  createMechTransactionForAccrued,
+  createMechTransactionForCollected
 } from "../../../../shared/new-mech-fees/utils"
 
 const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
@@ -25,6 +27,20 @@ export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): 
 
   updateTotalFeesIn(earningsAmountUsd);
   updateMechFeesIn(mechId, earningsAmountUsd, earningsAmountWei.toBigDecimal());
+
+  // Create MechTransaction for the accrued fees
+  const mech = Mech.load(mechId);
+  if (mech != null) {
+    createMechTransactionForAccrued(
+      mech,
+      earningsAmountWei.toBigDecimal(),
+      earningsAmountUsd,
+      event,
+      event.params.deliveryRate,
+      event.params.balance,
+      event.params.rateDiff
+    );
+  }
 }
 
 export function handleWithdrawForNative(event: Withdraw): void {
@@ -40,4 +56,15 @@ export function handleWithdrawForNative(event: Withdraw): void {
 
   updateTotalFeesOut(withdrawalAmountUsd);
   updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalAmountWei.toBigDecimal());
+
+  // Create MechTransaction for the collected fees
+  const mech = Mech.load(mechId);
+  if (mech != null) {
+    createMechTransactionForCollected(
+      mech,
+      withdrawalAmountWei.toBigDecimal(),
+      withdrawalAmountUsd,
+      event
+    );
+  }
 }
