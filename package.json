@@ -30,6 +30,9 @@
     "build-predict": "graph build subgraphs/predict/subgraph.yaml",
     "codegen-governance": "graph codegen subgraphs/governance/subgraph.yaml",
     "build-governance": "graph build subgraphs/governance/subgraph.yaml",
+    "codegen-babydegen": "graph codegen subgraphs/babydegen/babydegen-optimism/subgraph.optimism.yaml -o shared/babydegen/generated",
+    "build-babydegen": "yarn codegen-babydegen && yarn build-babydegen-optimism",
+    "build-babydegen-optimism": "graph build subgraphs/babydegen/babydegen-optimism/subgraph.optimism.yaml",
     "deploy-studio": "node scripts/deploy-studio.js",
     "test": "graph test"
   },

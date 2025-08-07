@@ -120,6 +120,17 @@ const networkTypes = {
       }
     }
   },
+  '6': {
+    name: 'Babydegen',
+    description: 'Agent funding and portfolio tracking',
+    buildCommand: 'yarn build-babydegen',
+    networks: {
+      'optimism': {
+        path: 'subgraphs/babydegen/babydegen-optimism/subgraph.optimism.yaml',
+        description: 'Optimism Network'
+      }
+    }
+  },
 };
 
 function askQuestion(question) {
@@ -285,4 +296,4 @@ async function main() {
   }
 }
 
-main(); 
+main();
