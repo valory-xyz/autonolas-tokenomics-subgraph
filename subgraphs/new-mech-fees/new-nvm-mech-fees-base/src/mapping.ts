@@ -9,12 +9,14 @@ import { Mech } from "../../../../shared/new-mech-fees/generated/schema"
 import { 
   BURN_ADDRESS_MECH_FEES_BASE,
   TOKEN_RATIO_BASE,
+  TOKEN_DECIMALS_BASE,
   ETH_DECIMALS
 } from "../../../../shared/constants"
 import {
   updateTotalFeesIn,
   updateTotalFeesOut,
   convertBaseUsdcToUsd,
+  calculateBaseNvmFeesIn,
   updateMechFeesIn,
   updateMechFeesOut,
   createMechTransactionForAccrued,
@@ -27,17 +29,8 @@ export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): voi
   const deliveryRateCredits = event.params.deliveryRate;
   const mechId = event.params.mech.toHex();
 
-  // Convert delivery rate (credits) to USDC minor units for USD calculation
-  const ethDivisor = BigInt.fromI32(10).pow(ETH_DECIMALS).toBigDecimal();
-  const deliveryRateUsdc = deliveryRateCredits.toBigDecimal()
-    .times(TOKEN_RATIO_BASE)
-    .div(ethDivisor);
-
-  // Convert to BigInt for USD calculation
-  const deliveryRateUsdcRaw = BigInt.fromString(deliveryRateUsdc.toString().split('.')[0]);
-
-  // Convert raw USDC to USD value (assuming 1:1)
-  const deliveryRateUsd = convertBaseUsdcToUsd(deliveryRateUsdcRaw);
+  // Convert credits to USD using the correct formula from utils
+  const deliveryRateUsd = calculateBaseNvmFeesIn(deliveryRateCredits);
 
   // Update global and mech-specific totals
   updateTotalFeesIn(deliveryRateUsd);
