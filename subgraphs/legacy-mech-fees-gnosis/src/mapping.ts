@@ -1,27 +1,24 @@
-import { BigInt, Address } from "@graphprotocol/graph-ts";
-import { ExecCall as ExecCallLM } from "../generated/templates/LegacyMech/AgentMechLM";
-import { ExecCall as ExecCallLMM } from "../generated/templates/LegacyMechMarketPlace/AgentMechLMM";
-import { Request as RequestEvent } from "../generated/templates/LegacyMech/AgentMechLM";
-import { PriceUpdated as PriceUpdatedLMEvent } from "../generated/templates/LegacyMech/AgentMechLM";
-import { PriceUpdated as PriceUpdatedLMMEvent } from "../generated/templates/LegacyMechMarketPlace/AgentMechLMM";
-import { CreateMech } from "../generated/LMFactory/Factory";
-import {
-  LegacyMech,
-  Global,
-  LegacyMechMarketPlace,
-} from "../generated/schema";
+import { BigInt, Address } from '@graphprotocol/graph-ts';
+import { ExecCall as ExecCallLM } from '../generated/templates/LegacyMech/AgentMechLM';
+import { ExecCall as ExecCallLMM } from '../generated/templates/LegacyMechMarketPlace/AgentMechLMM';
+import { Request as RequestEvent } from '../generated/templates/LegacyMech/AgentMechLM';
+import { PriceUpdated as PriceUpdatedLMEvent } from '../generated/templates/LegacyMech/AgentMechLM';
+import { PriceUpdated as PriceUpdatedLMMEvent } from '../generated/templates/LegacyMechMarketPlace/AgentMechLMM';
+import { CreateMech } from '../generated/LMFactory/Factory';
+import { LegacyMech, Global, LegacyMechMarketPlace } from '../generated/schema';
 import {
   LegacyMech as LegacyMechTemplate,
   LegacyMechMarketPlace as LegacyMechMarketPlaceTemplate,
-} from "../generated/templates";
-import { RequestCall as MarketPlaceRequestCall } from "../generated/LegacyMarketPlace/LegacyMarketPlace";
+} from '../generated/templates';
+import { RequestCall as MarketPlaceRequestCall } from '../generated/LegacyMarketPlace/LegacyMarketPlace';
 import {
   updateGlobalFeesInLegacyMech,
   updateGlobalFeesInLegacyMechMarketPlace,
   updateGlobalFeesOutLegacyMech,
   updateGlobalFeesOutLegacyMechMarketPlace,
-} from "./utils";
-import { BURN_ADDRESS_MECH_FEES_GNOSIS } from "../../../shared/constants";
+  getOrCreateDailyFees,
+} from './utils';
+import { BURN_ADDRESS_MECH_FEES_GNOSIS } from '../../../shared/constants';
 
 const BURNER_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
 
@@ -84,6 +81,12 @@ export function handleExecLM(call: ExecCallLM): void {
   lm.totalFeesOut = lm.totalFeesOut.plus(amount);
   lm.save();
   updateGlobalFeesOutLegacyMech(amount);
+
+  // Update daily fees
+  const dailyFees = getOrCreateDailyFees(call.block.timestamp);
+  dailyFees.totalFeesOutLegacyMech =
+    dailyFees.totalFeesOutLegacyMech.plus(amount);
+  dailyFees.save();
 }
 
 // Handler for price updates for LMs
@@ -116,6 +119,12 @@ export function handleExecLMM(call: ExecCallLMM): void {
   lmm.totalFeesOut = lmm.totalFeesOut.plus(amount);
   lmm.save();
   updateGlobalFeesOutLegacyMechMarketPlace(amount);
+
+  // Update daily fees
+  const dailyFees = getOrCreateDailyFees(call.block.timestamp);
+  dailyFees.totalFeesOutLegacyMechMarketPlace =
+    dailyFees.totalFeesOutLegacyMechMarketPlace.plus(amount);
+  dailyFees.save();
 }
 
 // Handler for price updates for LMMs
@@ -143,10 +152,17 @@ export function handleRequest(event: RequestEvent): void {
   mech.save();
 
   updateGlobalFeesInLegacyMech(fee);
+
+  // Update daily fees
+  const dailyFees = getOrCreateDailyFees(event.block.timestamp);
+  dailyFees.totalFeesInLegacyMech = dailyFees.totalFeesInLegacyMech.plus(fee);
+  dailyFees.save();
 }
 
 // Call handler for requests routed through the marketplace to LMMs
-export function handleRequestFromMarketPlace(call: MarketPlaceRequestCall): void {
+export function handleRequestFromMarketPlace(
+  call: MarketPlaceRequestCall
+): void {
   const mechAddress = call.inputs.priorityMech;
   const mech = LegacyMechMarketPlace.load(mechAddress);
   if (mech == null) {
@@ -159,4 +175,10 @@ export function handleRequestFromMarketPlace(call: MarketPlaceRequestCall): void
   mech.save();
 
   updateGlobalFeesInLegacyMechMarketPlace(fee);
+
+  // Update daily fees
+  const dailyFees = getOrCreateDailyFees(call.block.timestamp);
+  dailyFees.totalFeesInLegacyMechMarketPlace =
+    dailyFees.totalFeesInLegacyMechMarketPlace.plus(fee);
+  dailyFees.save();
 }

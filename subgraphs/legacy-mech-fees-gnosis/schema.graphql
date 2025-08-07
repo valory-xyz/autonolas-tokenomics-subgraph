@@ -23,3 +23,12 @@ type Global @entity(immutable: false) {
   totalFeesOutLegacyMech: BigInt!
   totalFeesOutLegacyMechMarketPlace: BigInt!
 }
+
+type DailyFees @entity(immutable: false) {
+  id: ID!
+  date: Int!
+  totalFeesInLegacyMech: BigInt!
+  totalFeesInLegacyMechMarketPlace: BigInt!
+  totalFeesOutLegacyMech: BigInt!
+  totalFeesOutLegacyMechMarketPlace: BigInt!
+}
