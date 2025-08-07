@@ -115,8 +115,47 @@ const networkTypes = {
     buildCommand: 'yarn build-governance',
     networks: {
       'mainnet': {
-        path: 'subgraphs/predict/governance.yaml',
+        path: 'subgraphs/governance/subgraph.yaml',
         description: 'Ethereum Mainnet'
+      }
+    }
+  },
+  '6': {
+    name: 'Staking',
+    description: 'Staking Contracts Subgraph',
+    buildCommand: 'yarn build-staking',
+    networks: {
+     'ethereum': {
+        path: 'subgraphs/staking/subgraph.mainnet.yaml',
+        description: 'Ethereum Mainnet'
+      },
+      'optimism': {
+        path: 'subgraphs/staking/subgraph.optimism.yaml',
+        description: 'Optimism Network'
+      },
+      'base': {
+        path: 'subgraphs/staking/subgraph.base.yaml',
+        description: 'Base Network'
+      },
+      'gnosis': {
+        path: 'subgraphs/staking/subgraph.gnosis.yaml',
+        description: 'Gnosis Chain'
+      },
+      'arbitrum': {
+        path: 'subgraphs/staking/subgraph.arbitrum-one.yaml',
+        description: 'Arbitrum Network'
+      },
+      'celo': {
+        path: 'subgraphs/staking/subgraph.celo.yaml',
+        description: 'Celo Network'
+      },
+      'mode': {
+        path: 'subgraphs/staking/subgraph.mode-mainnet.yaml',
+        description: 'Mode Network'
+      },
+      'polygon': {
+        path: 'subgraphs/staking/subgraph.matic.yaml',
+        description: 'Polygon Network'
       }
     }
   },
