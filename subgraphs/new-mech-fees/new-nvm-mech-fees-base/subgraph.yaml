@@ -3,11 +3,11 @@ schema:
   file: ../../../shared/new-mech-fees/schema.graphql
 dataSources:
   - kind: ethereum
-    name: BalanceTrackerNvmSubscriptionNative
+    name: BalanceTrackerNvmSubscriptionToken
     network: base
     source:
       address: "0xaafbeef195bdab1bb6f3dc9ceba875cd72499230"
-      abi: BalanceTrackerNvmSubscriptionNative
+      abi: BalanceTrackerNvmSubscriptionToken
       startBlock: 27585236
     mapping:
       kind: ethereum/events
@@ -17,8 +17,8 @@ dataSources:
         - Mech
         - Global
       abis:
-        - name: BalanceTrackerNvmSubscriptionNative
-          file: ../../../abis/BalanceTrackerNvmSubscriptionNative.json
+        - name: BalanceTrackerNvmSubscriptionToken
+          file: ../../../abis/BalanceTrackerNvmSubscriptionToken.json
         - name: AggregatorV3Interface
           file: ../../../abis/AggregatorV3Interface.json
       eventHandlers:

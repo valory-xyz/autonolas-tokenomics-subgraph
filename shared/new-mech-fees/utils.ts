@@ -7,10 +7,6 @@ import {
   TOKEN_DECIMALS_BASE,
   CHAINLINK_PRICE_FEED_DECIMALS,
   ETH_DECIMALS,
-  BALANCER_VAULT_ADDRESS_GNOSIS,
-  OLAS_WXDAI_POOL_ADDRESS_GNOSIS,
-  OLAS_ADDRESS_GNOSIS,
-  WXDAI_ADDRESS_GNOSIS
 } from "../constants";
 import { Address, Bytes } from "@graphprotocol/graph-ts";
 import { BalancerV2Vault } from "./generated/BalanceTrackerFixedPriceToken/BalancerV2Vault";
