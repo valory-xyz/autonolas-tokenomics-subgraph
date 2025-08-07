@@ -13,7 +13,7 @@ The system is split into six subgraphs, one for each combination of payment mode
 | Payment Model | Network | Balance Tracker Contract |
 | :--- | :--- | :--- |
 | **Native** | Gnosis (xdai) | `0x21cE6799A22A3Da84B7c44a814a9c79ab1d2A50D` |
-| **Native** | Base | `0xB3921F8D8215603f0Bd521341Ac45eA8f2d274c1` |
+| **Native** | Base (ETH) | `0xB3921F8D8215603f0Bd521341Ac45eA8f2d274c1` |
 | **NVM** | Gnosis (xdai) | `0x7D686bD1fD3CFF6E45a40165154D61043af7D67c` |
 | **NVM** | Base | `0xaafbeef195bdab1bb6f3dc9ceba875cd72499230` |
 | **Token (OLAS)** | Gnosis (xdai) | `0x53Bd432516707a5212A70216284a99A563aAC1D1` |
