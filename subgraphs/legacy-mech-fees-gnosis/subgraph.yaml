@@ -116,7 +116,7 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
-      entities: [LegacyMechMarketPlace]
+      entities: [LegacyMechMarketPlace, DailyFees]
       abis:
         - name: LegacyMarketPlace
           file: ../../abis/LegacyMarketPlace.json
@@ -136,7 +136,7 @@ templates:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       file: ./src/mapping.ts
-      entities: [LegacyMech, Global]
+      entities: [LegacyMech, Global, DailyFees]
       abis:
         - name: AgentMechLM
           file: ../../abis/AgentMech-LM.json
@@ -159,7 +159,7 @@ templates:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       file: ./src/mapping.ts
-      entities: [LegacyMechMarketPlace, Global]
+      entities: [LegacyMechMarketPlace, Global, DailyFees]
       abis:
         - name: AgentMechLMM
           file: ../../abis/AgentMech-LMM.json
