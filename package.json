@@ -57,6 +57,9 @@
     "codegen-liquidity-eth": "graph codegen subgraphs/liquidity/liquidity-eth/subgraph.yaml",
     "build-liquidity-eth": "graph build subgraphs/liquidity/liquidity-eth/subgraph.yaml",
     "build-liquidity": "yarn codegen-liquidity-eth && yarn build-liquidity-eth",
+    "codegen-babydegen": "graph codegen subgraphs/babydegen/babydegen-optimism/subgraph.yaml",
+    "build-babydegen": "yarn codegen-babydegen && yarn build-babydegen-optimism",
+    "build-babydegen-optimism": "graph build subgraphs/babydegen/babydegen-optimism/subgraph.yaml",
     "deploy-studio": "node scripts/deploy-studio.js",
     "test": "graph test"
   },

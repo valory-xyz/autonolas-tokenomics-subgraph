@@ -198,52 +198,13 @@ const networkTypes = {
     }
   },
   '13': {
-    name: 'Staking',
-    description: 'Olas Staking Subgraph',
-    buildCommand: 'yarn build-staking',
+    name: 'Babydegen',
+    description: 'Agent funding and portfolio tracking',
+    buildCommand: 'yarn build-babydegen',
     networks: {
-      'mainnet': {
-        path: 'subgraphs/staking/subgraph.mainnet.yaml',
-        description: 'Ethereum Mainnet'
-      },
-      'gnosis': {
-        path: 'subgraphs/staking/subgraph.gnosis.yaml',
-        description: 'Gnosis Chain'
-      },
-      'arbitrum': {
-        path: 'subgraphs/staking/subgraph.arbitrum-one.yaml',
-        description: 'Arbitrum One'
-      },
-      'polygon': {
-        path: 'subgraphs/staking/subgraph.matic.yaml',
-        description: 'Polygon'
-      },
       'optimism': {
-        path: 'subgraphs/staking/subgraph.optimism.yaml',
-        description: 'Optimism'
-      },
-      'base': {
-        path: 'subgraphs/staking/subgraph.base.yaml',
-        description: 'Base'
-      },
-      'celo': {
-        path: 'subgraphs/staking/subgraph.celo.yaml',
-        description: 'Celo'
-      },
-      'mode': {
-        path: 'subgraphs/staking/subgraph.mode-mainnet.yaml',
-        description: 'Mode'
-      }
-    }
-  },
-  '14': {
-    name: 'Liquidity',
-    description: 'Liquidity Pool Tracking Subgraphs',
-    buildCommand: 'yarn build-liquidity',
-    networks: {
-      'ethereum': {
-        path: 'subgraphs/liquidity/liquidity-eth/subgraph.yaml',
-        description: 'Ethereum Mainnet - OLAS/ETH LP tracking'
+        path: 'subgraphs/babydegen/babydegen-optimism/subgraph.yaml',
+        description: 'Optimism Network'
       }
     }
   }
@@ -412,4 +373,4 @@ async function main() {
   }
 }
 
-main(); 
+main();
