@@ -64,8 +64,8 @@ export function handleWithdrawForNvm(event: Withdraw): void {
 
   // Convert xDAI wei back to credits for raw storage
   // Formula: credits = (xdai_wei * 1e18 * 1e18) / (TOKEN_RATIO_GNOSIS)
-  const ethDivisor = BigInt.fromI32(10).pow(ETH_DECIMALS).toBigDecimal();
-  const tokenDivisor = BigInt.fromI32(10).pow(TOKEN_DECIMALS_GNOSIS).toBigDecimal();
+  const ethDivisor = BigInt.fromI32(10).pow(ETH_DECIMALS as u8).toBigDecimal();
+  const tokenDivisor = BigInt.fromI32(10).pow(TOKEN_DECIMALS_GNOSIS as u8).toBigDecimal();
   
   const withdrawalCredits = withdrawalAmountWei.toBigDecimal()
     .times(ethDivisor)
