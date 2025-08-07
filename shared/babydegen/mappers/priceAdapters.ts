@@ -1,6 +1,6 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts"
 import { VelodromeCLPool } from "../generated/VeloNFTManager/VelodromeCLPool"
-import { AggregatorV3Interface } from "../generated/Safe/AggregatorV3Interface"
+import { AggregatorV3Interface } from "../generated/templates/Safe/AggregatorV3Interface"
 import { getTokenConfig } from "./tokenConfig"
 
 // Chainlink price adapter with validation

@@ -1,5 +1,5 @@
 import { Address, BigDecimal, ethereum, log } from "@graphprotocol/graph-ts"
-import { AggregatorV3Interface } from "../generated/Safe/AggregatorV3Interface"
+import { AggregatorV3Interface } from "../generated/templates/Safe/AggregatorV3Interface"
 import { AddressType, Service } from "../generated/schema"
 import { 
   USDC_NATIVE,
