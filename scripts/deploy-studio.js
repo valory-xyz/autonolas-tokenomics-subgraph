@@ -13,6 +13,7 @@ const networkTypes = {
   '1': {
     name: 'Tokenomics L1',
     description: 'Ethereum Mainnet - Full tokenomics + OLAS holders',
+    buildCommand: 'yarn build-tokenomics-l1',
     networks: {
       'mainnet': {
         path: 'subgraphs/tokenomics/tokenomics-eth/subgraph.yaml',
@@ -23,6 +24,7 @@ const networkTypes = {
   '2': {
     name: 'Tokenomics L2',
     description: 'Layer 2 Networks - OLAS holders only',
+    buildCommand: 'yarn build-tokenomics-l2',
     networks: {
       'arbitrum': {
         path: 'subgraphs/tokenomics/tokenomics-arbitrum/subgraph.arbitrum.yaml',
@@ -57,6 +59,10 @@ const networkTypes = {
   '3': {
     name: 'Service Registry',
     description: 'Service Registry Subgraphs',
+    buildCommand: (selectedNetwork) =>
+      selectedNetwork === 'ethereum'
+        ? 'yarn build-service-registry-l1'
+        : 'yarn build-service-registry-l2',
     networks: {
       'ethereum': {
         path: 'subgraphs/service-registry/service-registry-eth/subgraph.yaml',
@@ -95,6 +101,7 @@ const networkTypes = {
   '4': {
     name: 'Legacy Mech Fees',
     description: 'Legacy Mech Fees Subgraphs',
+    buildCommand: 'yarn build-legacy-mech-fees',
     networks: {
       'gnosis': {
         path: 'subgraphs/legacy-mech-fees-gnosis/subgraph.yaml',
@@ -105,6 +112,7 @@ const networkTypes = {
   '5': {
     name: 'New Native Mech Fees - Gnosis',
     description: 'New Native Mech Fees Subgraphs on Gnosis',
+    buildCommand: 'yarn build-new-native-mech-fees-gnosis',
     networks: {
       'gnosis': {
         path: 'subgraphs/new-mech-fees/new-native-mech-fees-gnosis/subgraph.yaml',
@@ -115,6 +123,7 @@ const networkTypes = {
   '6': {
     name: 'New Native Mech Fees - Base',
     description: 'New Native Mech Fees Subgraphs on Base',
+    buildCommand: 'yarn build-new-native-mech-fees-base',
     networks: {
       'base': {
         path: 'subgraphs/new-mech-fees/new-native-mech-fees-base/subgraph.yaml',
@@ -125,6 +134,7 @@ const networkTypes = {
   '7': {
     name: 'New NVM Mech Fees - Gnosis',
     description: 'New NVM Mech Fees Subgraphs on Gnosis',
+    buildCommand: 'yarn build-new-nvm-mech-fees-gnosis',
     networks: {
       'gnosis': {
         path: 'subgraphs/new-mech-fees/new-nvm-mech-fees-gnosis/subgraph.yaml',
@@ -135,6 +145,7 @@ const networkTypes = {
   '8': {
     name: 'New NVM Mech Fees - Base',
     description: 'New NVM Mech Fees Subgraphs on Base',
+    buildCommand: 'yarn build-new-nvm-mech-fees-base',
     networks: {
       'base': {
         path: 'subgraphs/new-mech-fees/new-nvm-mech-fees-base/subgraph.yaml',
@@ -145,6 +156,7 @@ const networkTypes = {
   '9': {
     name: 'New Token Mech Fees - Gnosis',
     description: 'New Token-based Mech Fees Subgraphs on Gnosis',
+    buildCommand: 'yarn build-new-token-mech-fees-gnosis',
     networks: {
       'gnosis': {
         path: 'subgraphs/new-mech-fees/new-token-mech-fees-gnosis/subgraph.yaml',
@@ -155,10 +167,33 @@ const networkTypes = {
   '10': {
     name: 'New Token Mech Fees - Base',
     description: 'New Token-based Mech Fees Subgraphs on Base',
+    buildCommand: 'yarn build-new-token-mech-fees-base',
     networks: {
       'base': {
         path: 'subgraphs/new-mech-fees/new-token-mech-fees-base/subgraph.yaml',
         description: 'New Token Mech Fees on Base'
+      }
+    }
+  },
+  '11': {
+    name: 'Predict',
+    description: 'Olas Predict Subgraph',
+    buildCommand: 'yarn build-predict',
+    networks: {
+      'gnosis': {
+        path: 'subgraphs/predict/subgraph.yaml',
+        description: 'Gnosis Chain'
+      }
+    }
+  },
+  '12': {
+    name: 'Governance',
+    description: 'Olas Governance Subgraph',
+    buildCommand: 'yarn build-governance',
+    networks: {
+      'mainnet': {
+        path: 'subgraphs/governance/subgraph.yaml',
+        description: 'Ethereum Mainnet'
       }
     }
   }
@@ -195,28 +230,29 @@ async function main() {
     let selectedNetwork;
     let networkConfig;
     
-    // If L1 (mainnet) or Legacy Mech Fees, auto-select
-    if (networkTypeKey === '1' || networkTypeKey === '4' || networkTypeKey === '5' || networkTypeKey === '6' || networkTypeKey === '7' || networkTypeKey === '8' || networkTypeKey === '9' || networkTypeKey === '10') {
-      const networkKey = Object.keys(networkType.networks)[0];
-      selectedNetwork = networkKey;
-      networkConfig = networkType.networks[networkKey];
+    const availableNetworks = Object.keys(networkType.networks);
+
+    // Auto-select if only one network is available
+    if (availableNetworks.length === 1) {
+      selectedNetwork = availableNetworks[0];
+      networkConfig = networkType.networks[selectedNetwork];
+      console.log(`✅ Only one network available. Auto-selected: ${selectedNetwork}`);
     } else {
-      // If L2 or service registry, show options
+      // Multiple networks available – show list
       console.log(`\nAvailable networks for ${networkType.name}:`);
-      const availableNetworks = Object.keys(networkType.networks);
       availableNetworks.forEach((network, index) => {
         console.log(`  ${index + 1}. ${network}: ${networkType.networks[network].description}`);
       });
       console.log('');
-      
+    
       const networkIndexStr = await askQuestion(`Enter network number (1-${availableNetworks.length}): `);
       const networkIndex = parseInt(networkIndexStr, 10) - 1;
-
+    
       if (networkIndex >= 0 && networkIndex < availableNetworks.length) {
         selectedNetwork = availableNetworks[networkIndex];
         networkConfig = networkType.networks[selectedNetwork];
       }
-      
+    
       if (!networkConfig) {
         console.error(`❌ Invalid network selection: ${networkIndexStr}`);
         process.exit(1);
@@ -249,31 +285,11 @@ async function main() {
     
     // Determine build command based on network type
     let buildCommand;
-    if (networkTypeKey === '1') {
-      buildCommand = 'yarn build-tokenomics-l1';
-    } else if (networkTypeKey === '2') {
-      buildCommand = 'yarn build-tokenomics-l2';
-    } else if (networkTypeKey === '3') {
-      // For service registry, differentiate between L1 (ethereum) and L2
-      if (selectedNetwork === 'ethereum') {
-        buildCommand = 'yarn build-service-registry-l1';
-      } else {
-        buildCommand = 'yarn build-service-registry-l2';
-      }
-    } else if (networkTypeKey === '4') {
-      buildCommand = 'yarn build-legacy-mech-fees';
-    } else if (networkTypeKey === '5') {
-      buildCommand = 'yarn build-new-native-mech-fees-gnosis';
-    } else if (networkTypeKey === '6') {
-      buildCommand = 'yarn build-new-native-mech-fees-base';
-    } else if (networkTypeKey === '7') {
-      buildCommand = 'yarn build-new-nvm-mech-fees-gnosis';
-    } else if (networkTypeKey === '8') {
-      buildCommand = 'yarn build-new-nvm-mech-fees-base';
-    } else if (networkTypeKey === '9') {
-      buildCommand = 'yarn build-new-token-mech-fees-gnosis';
-    } else if (networkTypeKey === '10') {
-      buildCommand = 'yarn build-new-token-mech-fees-base';
+
+    if (typeof networkType.buildCommand === 'function') {
+      buildCommand = networkType.buildCommand(selectedNetwork);
+    } else {
+      buildCommand = networkType.buildCommand;
     }
 
     console.log(`🔨 Building subgraph with: ${buildCommand}`);
