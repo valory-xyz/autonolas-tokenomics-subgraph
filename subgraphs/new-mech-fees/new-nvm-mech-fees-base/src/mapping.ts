@@ -64,10 +64,12 @@ export function handleWithdrawForNvm(event: Withdraw): void {
   const withdrawalAmountUsd = convertBaseUsdcToUsd(withdrawalAmountUsdc);
 
   // Convert USDC back to credits for raw storage
-  // Formula: credits = (usdc_amount * 1e18) / TOKEN_RATIO_BASE
-  const ethDivisor = BigInt.fromI32(10).pow(ETH_DECIMALS).toBigDecimal();
+  // Formula: credits = (usdc_amount × 1e18 × 1e6) ÷ TOKEN_RATIO_BASE
+  const ethDivisor = BigInt.fromI32(10).pow(ETH_DECIMALS as u8).toBigDecimal();
+  const tokenDivisor = BigInt.fromI32(10).pow(TOKEN_DECIMALS_BASE as u8).toBigDecimal();
   const withdrawalCredits = withdrawalAmountUsdc.toBigDecimal()
     .times(ethDivisor)
+    .times(tokenDivisor)
     .div(TOKEN_RATIO_BASE);
 
   updateTotalFeesOut(withdrawalAmountUsd);
