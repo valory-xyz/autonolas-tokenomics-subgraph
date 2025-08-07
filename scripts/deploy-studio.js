@@ -196,6 +196,45 @@ const networkTypes = {
         description: 'Ethereum Mainnet'
       }
     }
+  },
+  '13': {
+    name: 'Staking',
+    description: 'Olas Staking Subgraph',
+    buildCommand: 'yarn build-staking',
+    networks: {
+      'mainnet': {
+        path: 'subgraphs/staking/subgraph.mainnet.yaml',
+        description: 'Ethereum Mainnet'
+      },
+      'gnosis': {
+        path: 'subgraphs/staking/subgraph.gnosis.yaml',
+        description: 'Gnosis Chain'
+      },
+      'arbitrum': {
+        path: 'subgraphs/staking/subgraph.arbitrum-one.yaml',
+        description: 'Arbitrum One'
+      },
+      'polygon': {
+        path: 'subgraphs/staking/subgraph.matic.yaml',
+        description: 'Polygon'
+      },
+      'optimism': {
+        path: 'subgraphs/staking/subgraph.optimism.yaml',
+        description: 'Optimism'
+      },
+      'base': {
+        path: 'subgraphs/staking/subgraph.base.yaml',
+        description: 'Base'
+      },
+      'celo': {
+        path: 'subgraphs/staking/subgraph.celo.yaml',
+        description: 'Celo'
+      },
+      'mode': {
+        path: 'subgraphs/staking/subgraph.mode-mainnet.yaml',
+        description: 'Mode'
+      }
+    }
   }
 };
 
