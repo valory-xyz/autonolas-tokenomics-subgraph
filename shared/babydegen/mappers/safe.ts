@@ -3,7 +3,7 @@ import {
   Safe,
   SafeReceived as SafeReceivedEvent,
   ExecutionSuccess as ExecutionSuccessEvent
-} from "../generated/Safe/Safe"
+} from "../generated/templates/Safe/Safe"
 import { isFundingSource, getEthUsd } from "./common"
 import { getServiceByAgent } from "./config"
 import { updateFunding } from "./helpers"

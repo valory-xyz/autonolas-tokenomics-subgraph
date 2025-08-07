@@ -1,5 +1,5 @@
 import { BigDecimal, BigInt, Address, log } from "@graphprotocol/graph-ts"
-import { AggregatorV3Interface } from "../generated/Safe/AggregatorV3Interface"
+import { AggregatorV3Interface } from "../generated/templates/Safe/AggregatorV3Interface"
 import { ETH_USD_FEED } from "./config"
 
 // OLAS/ETH ratio from Ethereum mainnet data
