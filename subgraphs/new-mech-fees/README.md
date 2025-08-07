@@ -27,17 +27,33 @@ The system is split into six subgraphs, one for each combination of payment mode
 
 ## Fee Units (`amountRaw`)
 
-The `amountRaw` field in the `MechTransaction` entity represents the transaction amount in its native token unit. The table below specifies the units for each subgraph.
+The `amountRaw` field in the `MechTransaction` entity represents the transaction amount in its native unit. The table below specifies the units for each subgraph.
 
 | Subgraph | Transaction Type | `amountRaw` Unit |
 | :--- | :--- | :--- |
 | **Native - Gnosis** | `FEE_IN` / `FEE_OUT` | xDAI (in wei, 10^18) |
 | **Native - Base** | `FEE_IN` / `FEE_OUT` | ETH (in wei, 10^18) |
 | **Token - Gnosis/Base**| `FEE_IN` / `FEE_OUT` | OLAS (in wei, 10^18) |
-| **NVM - Gnosis** | `FEE_IN` / `FEE_OUT` | xDAI (in wei, 10^18) |
-| **NVM - Base** | `FEE_IN` | ETH (in wei, 10^18) |
-| | `FEE_OUT` | USDC (in minor units, 10^6) |
+| **NVM - Gnosis** | `FEE_IN` / `FEE_OUT` | Credits (abstract units) |
+| **NVM - Base** | `FEE_IN` / `FEE_OUT` | Credits (abstract units) |
 
+### NVM Subgraphs Note
+
+For NVM (subscription-based) subgraphs, both use a consistent credits-based approach:
+
+**NVM - Gnosis:**
+- **`FEE_IN`**: Stores credits directly from `MechBalanceAdjusted` events
+- **`FEE_OUT`**: Converts xDAI withdrawals back to equivalent credits for consistency
+
+**NVM - Base:**
+- **`FEE_IN`**: Stores credits directly from `MechBalanceAdjusted` events  
+- **`FEE_OUT`**: Converts USDC withdrawals back to equivalent credits for consistency
+
+Both approaches ensure that `totalFeesInRaw` and `totalFeesOutRaw` are in the same units (credits) and can be meaningfully compared or aggregated.
+
+To convert credits to tokens, use the `tokenCreditRatio` from the contract:
+- **Gnosis**: `xdai_amount = (credits * 990000000000000000000000000000) / (1e18 * 1e18)`
+- **Base**: `usdc_amount = (credits * 990000000000000000) / 1e18`
 
 ## Sample Queries
 
