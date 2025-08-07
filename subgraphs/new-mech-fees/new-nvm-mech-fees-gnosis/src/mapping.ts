@@ -6,7 +6,12 @@ import {
   Withdraw
 } from "../../../../shared/new-mech-fees/generated/BalanceTrackerNvmSubscriptionNative/BalanceTrackerNvmSubscriptionNative"
 import { Mech } from "../../../../shared/new-mech-fees/generated/schema"
-import { BURN_ADDRESS_MECH_FEES_GNOSIS } from "../../../../shared/constants"
+import { 
+  BURN_ADDRESS_MECH_FEES_GNOSIS,
+  TOKEN_RATIO_GNOSIS,
+  TOKEN_DECIMALS_GNOSIS,
+  ETH_DECIMALS
+} from "../../../../shared/constants"
 import { 
   updateTotalFeesIn, 
   updateTotalFeesOut, 
@@ -21,20 +26,22 @@ import {
 const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
 
 export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): void {
-  const earningsAmountWei = event.params.deliveryRate;
+  const deliveryRateCredits = event.params.deliveryRate;
   const mechId = event.params.mech.toHex();
 
-  const earningsAmountUsd = calculateGnosisNvmFeesIn(earningsAmountWei);
+  // Convert credits to USD using the existing function
+  const earningsAmountUsd = calculateGnosisNvmFeesIn(deliveryRateCredits);
 
   updateTotalFeesIn(earningsAmountUsd);
-  updateMechFeesIn(mechId, earningsAmountUsd, earningsAmountWei.toBigDecimal());
+  // Store credits as raw value (not converted to xDAI wei)
+  updateMechFeesIn(mechId, earningsAmountUsd, deliveryRateCredits.toBigDecimal());
 
   // Create MechTransaction for the accrued fees
   const mech = Mech.load(mechId);
   if (mech != null) {
     createMechTransactionForAccrued(
       mech,
-      earningsAmountWei.toBigDecimal(),
+      deliveryRateCredits.toBigDecimal(), // Store credits as raw amount
       earningsAmountUsd,
       event,
       event.params.deliveryRate,
@@ -55,15 +62,26 @@ export function handleWithdrawForNvm(event: Withdraw): void {
 
   const withdrawalAmountUsd = convertGnosisNativeWeiToUsd(withdrawalAmountWei);
 
+  // Convert xDAI wei back to credits for raw storage
+  // Formula: credits = (xdai_wei * 1e18 * 1e18) / (TOKEN_RATIO_GNOSIS)
+  const ethDivisor = BigInt.fromI32(10).pow(ETH_DECIMALS).toBigDecimal();
+  const tokenDivisor = BigInt.fromI32(10).pow(TOKEN_DECIMALS_GNOSIS).toBigDecimal();
+  
+  const withdrawalCredits = withdrawalAmountWei.toBigDecimal()
+    .times(ethDivisor)
+    .times(tokenDivisor)
+    .div(TOKEN_RATIO_GNOSIS);
+
   updateTotalFeesOut(withdrawalAmountUsd);
-  updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalAmountWei.toBigDecimal());
+  // Store credits as raw value (converted from xDAI wei)
+  updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalCredits);
 
   // Create MechTransaction for the collected fees
   const mech = Mech.load(mechId);
   if (mech != null) {
     createMechTransactionForCollected(
       mech,
-      withdrawalAmountWei.toBigDecimal(),
+      withdrawalCredits, // Store credits as raw amount
       withdrawalAmountUsd,
       event
     );

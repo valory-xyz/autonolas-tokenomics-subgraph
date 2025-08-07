@@ -27,14 +27,13 @@ export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): voi
   const deliveryRateCredits = event.params.deliveryRate;
   const mechId = event.params.mech.toHex();
 
-  // Convert delivery rate (credits) to USDC minor units using the formula:
-  // usdc_amount = (deliveryRate * TOKEN_RATIO_BASE) / 1e18
+  // Convert delivery rate (credits) to USDC minor units for USD calculation
   const ethDivisor = BigInt.fromI32(10).pow(ETH_DECIMALS).toBigDecimal();
   const deliveryRateUsdc = deliveryRateCredits.toBigDecimal()
     .times(TOKEN_RATIO_BASE)
     .div(ethDivisor);
 
-  // Convert to BigInt for storage as raw amount
+  // Convert to BigInt for USD calculation
   const deliveryRateUsdcRaw = BigInt.fromString(deliveryRateUsdc.toString().split('.')[0]);
 
   // Convert raw USDC to USD value (assuming 1:1)
@@ -42,14 +41,15 @@ export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): voi
 
   // Update global and mech-specific totals
   updateTotalFeesIn(deliveryRateUsd);
-  updateMechFeesIn(mechId, deliveryRateUsd, deliveryRateUsdcRaw.toBigDecimal());
+  // Store credits as raw value (not converted to USDC)
+  updateMechFeesIn(mechId, deliveryRateUsd, deliveryRateCredits.toBigDecimal());
 
   // Create the transaction record
   const mech = Mech.load(mechId);
   if (mech != null) {
     createMechTransactionForAccrued(
       mech,
-      deliveryRateUsdcRaw.toBigDecimal(),
+      deliveryRateCredits.toBigDecimal(), // Store credits as raw amount
       deliveryRateUsd,
       event,
       event.params.deliveryRate,
@@ -70,15 +70,23 @@ export function handleWithdrawForNvm(event: Withdraw): void {
 
   const withdrawalAmountUsd = convertBaseUsdcToUsd(withdrawalAmountUsdc);
 
+  // Convert USDC back to credits for raw storage
+  // Formula: credits = (usdc_amount * 1e18) / TOKEN_RATIO_BASE
+  const ethDivisor = BigInt.fromI32(10).pow(ETH_DECIMALS).toBigDecimal();
+  const withdrawalCredits = withdrawalAmountUsdc.toBigDecimal()
+    .times(ethDivisor)
+    .div(TOKEN_RATIO_BASE);
+
   updateTotalFeesOut(withdrawalAmountUsd);
-  updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalAmountUsdc.toBigDecimal());
+  // Store credits as raw value (converted from USDC)
+  updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalCredits);
 
   // Create MechTransaction for the collected fees
   const mech = Mech.load(mechId);
   if (mech != null) {
     createMechTransactionForCollected(
       mech,
-      withdrawalAmountUsdc.toBigDecimal(),
+      withdrawalCredits, // Store credits as raw amount
       withdrawalAmountUsd,
       event
     );
