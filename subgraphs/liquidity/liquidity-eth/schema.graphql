@@ -1,0 +1,48 @@
+type LiquidityTransfer @entity(immutable: true) {
+  id: Bytes!
+  from: Bytes! # address
+  to: Bytes! # address
+  value: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  dayTimestamp: BigInt! # day truncated timestamp for aggregation
+}
+
+type DailyLiquidityChange @entity(immutable: false) {
+  id: ID! # dayTimestamp as string
+  dayTimestamp: BigInt!
+  amountIn: BigInt! # LP tokens minted (from zero address)
+  amountOut: BigInt! # LP tokens burned (to zero address)
+  netChange: BigInt! # amountIn - amountOut
+  transferCount: Int! # number of transfers for this day
+  transfers: [LiquidityTransfer!] @derivedFrom(field: "dayTimestamp")
+}
+
+type LiquidityPool @entity(immutable: false) {
+  id: Bytes! # contract address
+  totalSupply: BigInt! # current total supply
+  totalMinted: BigInt! # cumulative minted amount
+  totalBurned: BigInt! # cumulative burned amount
+  holderCount: Int! # number of current holders
+  transferCount: Int! # total number of transfers
+  firstTransferTimestamp: BigInt! # timestamp of first transfer
+  lastTransferTimestamp: BigInt! # timestamp of last transfer
+}
+
+type LiquidityHolder @entity(immutable: false) {
+  id: ID! # pool_address + holder_address
+  pool: LiquidityPool!
+  holder: Bytes! # address
+  balance: BigInt! # current balance
+  firstTransferTimestamp: BigInt! # when they first received tokens
+  lastTransferTimestamp: BigInt! # when they last interacted
+}
+
+type GlobalLiquidityMetrics @entity(immutable: false) {
+  id: ID! # "global"
+  totalPools: Int! # number of pools tracked
+  totalSupplyAcrossPools: BigInt! # sum of all pool supplies
+  totalHolders: Int! # unique holders across all pools
+  lastUpdated: BigInt! # last update timestamp
+}

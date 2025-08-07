@@ -120,6 +120,16 @@ const networkTypes = {
       }
     }
   },
+  '6': {
+    name: 'Liquidity',
+    description: 'Liquidity Pool Tracking Subgraphs',
+    networks: {
+      'ethereum': {
+        path: 'subgraphs/liquidity/liquidity-eth/subgraph.yaml',
+        description: 'Ethereum Mainnet - OLAS/ETH LP tracking'
+      }
+    }
+  }
 };
 
 function askQuestion(question) {
