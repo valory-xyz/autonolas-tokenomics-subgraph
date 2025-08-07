@@ -16,7 +16,7 @@ The system is split into six subgraphs, one for each combination of payment mode
 | **Native** | Base (ETH) | `0xB3921F8D8215603f0Bd521341Ac45eA8f2d274c1` |
 | **NVM** | Gnosis (xdai) | `0x7D686bD1fD3CFF6E45a40165154D61043af7D67c` |
 | **NVM** | Base | `0xaafbeef195bdab1bb6f3dc9ceba875cd72499230` |
-| **Token (OLAS)** | Gnosis (xdai) | `0x53Bd432516707a5212A70216284a99A563aAC1D1` |
+| **Token (OLAS)** | Gnosis | `0x53Bd432516707a5212A70216284a99A563aAC1D1` |
 | **Token (OLAS)** | Base | `0x43fB32f25dce34EB76c78C7A42C8F40F84BCD237` |
 
 ## Core Entities
