@@ -19,3 +19,17 @@ type Mech @entity(immutable: false) {
   "Raw total fees withdrawn, in native token (wei/usdc units)"
   totalFeesOutRaw: BigDecimal!
 }
+
+type MechTransaction @entity(immutable: true) {
+  id: ID!
+  mech: Mech!
+  type: String!
+  amountRaw: BigDecimal!
+  amountUSD: BigDecimal!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  txHash: Bytes!
+  deliveryRate: BigInt
+  balance: BigInt
+  rateDiff: BigInt
+}
