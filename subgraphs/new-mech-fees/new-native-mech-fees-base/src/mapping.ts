@@ -11,8 +11,8 @@ import {
   CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD
 } from "../../../../shared/constants"
 import { 
-  updateTotalFeesIn,
-  updateTotalFeesOut,
+  updateTotalFeesIn, 
+  updateTotalFeesOut, 
   convertBaseNativeWeiToUsd,
   updateMechFeesIn,
   updateMechFeesOut,
