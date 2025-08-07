@@ -25,35 +25,104 @@ The system is split into six subgraphs, one for each combination of payment mode
 - **`Global`**: A singleton entity that aggregates total fees in and out in USD across all mechs for a given subgraph.
 - **`MechTransaction`**: A detailed record of every individual fee event (`MechBalanceAdjusted` or `Withdraw`). This is the core entity for time-based analysis. Each transaction is immutable.
 
-## Fee Units (`amountRaw`)
+## Raw Units (`amountRaw` and `totalFeesInRaw`/`totalFeesOutRaw`)
 
-The `amountRaw` field in the `MechTransaction` entity represents the transaction amount in its native unit. The table below specifies the units for each subgraph.
+The raw fields in both `MechTransaction` and `Mech` entities represent amounts in their payment-model-specific native units. **Important: Raw units are NOT comparable across different payment models** - use USD fields for cross-model analysis.
 
-| Subgraph | Transaction Type | `amountRaw` Unit |
-| :--- | :--- | :--- |
-| **Native - Gnosis** | `FEE_IN` / `FEE_OUT` | xDAI (in wei, 10^18) |
-| **Native - Base** | `FEE_IN` / `FEE_OUT` | ETH (in wei, 10^18) |
-| **Token - Gnosis/Base**| `FEE_IN` / `FEE_OUT` | OLAS (in wei, 10^18) |
-| **NVM - Gnosis** | `FEE_IN` / `FEE_OUT` | Credits (abstract units) |
-| **NVM - Base** | `FEE_IN` / `FEE_OUT` | Credits (abstract units) |
+| Payment Model | Network | Raw Unit | Description |
+| :--- | :--- | :--- | :--- |
+| **Native** | Gnosis | xDAI wei | Native token in wei (10^18) |
+| **Native** | Base | ETH wei | Native token in wei (10^18) |
+| **Token** | Gnosis | OLAS wei | OLAS token in wei (10^18) |
+| **Token** | Base | OLAS wei | OLAS token in wei (10^18) |
+| **NVM** | Gnosis | Credits | Abstract credit units from `deliveryRate` |
+| **NVM** | Base | Credits | Abstract credit units from `deliveryRate` |
 
-### NVM Subgraphs Note
+### Raw Unit Consistency Rules
 
-For NVM (subscription-based) subgraphs, both use a consistent credits-based approach:
+✅ **Within Payment Model**: Raw units are consistent and comparable
+```graphql
+# ✅ GOOD: Compare NVM mechs across networks
+{
+  gnosis_mech: mech(id: "0x...") { totalFeesInRaw }  # Credits
+  base_mech: mech(id: "0x...") { totalFeesInRaw }    # Credits  
+}
+```
 
-**NVM - Gnosis:**
-- **`FEE_IN`**: Stores credits directly from `MechBalanceAdjusted` events
-- **`FEE_OUT`**: Converts xDAI withdrawals back to equivalent credits for consistency
+❌ **Across Payment Models**: Raw units are incompatible
+```graphql
+# ❌ AVOID: Mixing payment models in raw comparisons
+{
+  nvm_mech: mech(id: "0x...") { totalFeesInRaw }     # Credits
+  native_mech: mech(id: "0x...") { totalFeesInRaw }  # Wei
+}
+```
 
-**NVM - Base:**
-- **`FEE_IN`**: Stores credits directly from `MechBalanceAdjusted` events  
-- **`FEE_OUT`**: Converts USDC withdrawals back to equivalent credits for consistency
+✅ **Cross-Model Analysis**: Use USD fields instead
+```graphql
+# ✅ GOOD: Use USD for cross-payment-model analysis
+{
+  mechs {
+    totalFeesInUSD   # Always comparable
+    totalFeesOutUSD  # Always comparable
+  }
+}
+```
 
-Both approaches ensure that `totalFeesInRaw` and `totalFeesOutRaw` are in the same units (credits) and can be meaningfully compared or aggregated.
+### NVM Subgraphs - Credit Consistency
 
-To convert credits to tokens, use the `tokenCreditRatio` from the contract:
-- **Gnosis**: `xdai_amount = (credits * 990000000000000000000000000000) / (1e18 * 1e18)`
-- **Base**: `usdc_amount = (credits * 990000000000000000) / 1e18`
+NVM subgraphs maintain **perfect credit consistency** across fee-in and fee-out operations:
+
+**Implementation Logic:**
+- **`FEE_IN`**: Stores credits directly from `deliveryRate` parameter
+- **`FEE_OUT`**: Converts token withdrawals back to equivalent credits
+
+**Formula Compliance (Documentation: `deliveryRate × tokenRatio ÷ (1e18 × 10^tokenDecimals)`):**
+
+| Network | Token Ratio | Token Decimals | Formula |
+|---------|-------------|----------------|---------|
+| **Gnosis** | `990000000000000000000000000000` | 18 | `credits × 990...000 ÷ (1e18 × 1e18)` |
+| **Base** | `990000000000000000` | 6 | `credits × 990...000 ÷ (1e18 × 1e6)` |
+
+**Credit → Token Conversion:**
+```typescript
+// Gnosis: Credits → xDAI
+xdai_amount = (credits * 990000000000000000000000000000) / (1e18 * 1e18)
+
+// Base: Credits → USDC  
+usdc_amount = (credits * 990000000000000000) / (1e18 * 1e6)
+```
+
+**Benefits:**
+- ✅ `totalFeesInRaw - totalFeesOutRaw` gives meaningful net credit balance
+- ✅ Perfect consistency between Gnosis and Base NVM implementations
+- ✅ Cross-network credit comparisons are mathematically valid
+
+## Data Validation & USD Conversion
+
+### Raw → USD Conversion
+All raw values can be converted back to USD using the same formulas used during indexing:
+
+| Payment Model | Network | Conversion Function |
+|---------------|---------|-------------------|
+| **NVM** | Gnosis | `raw_credits × 990000000000000000000000000000 ÷ (1e18 × 1e18)` |
+| **NVM** | Base | `raw_credits × 990000000000000000 ÷ (1e18 × 1e6)` |
+| **Native** | Gnosis | `raw_wei ÷ 1e18` (xDAI ≈ USD) |
+| **Native** | Base | `(raw_wei ÷ 1e18) × current_eth_price` |
+| **Token** | Both | Use Balancer pool data with `calculateOlasInUsd()` |
+
+### Validation with Dune Analytics
+The subgraph data can be validated against Dune Analytics queries that implement identical formulas:
+
+**NVM Models:** Both Gnosis and Base have corresponding Dune queries with credit-consistent units
+- Raw credits from subgraph should match `fees_in_raw_credits`/`fees_out_raw_credits` from Dune
+- USD values should match exactly due to identical mathematical formulas
+
+**Key Validation Points:**
+- ✅ **Mathematical Consistency**: Same formulas = identical results
+- ✅ **Unit Alignment**: Credits-to-credits, USD-to-USD comparisons  
+- ✅ **Cross-Chain Validation**: Credit totals comparable between networks
+- ✅ **Precision**: No rounding differences due to deterministic calculations
 
 ## Sample Queries
 
