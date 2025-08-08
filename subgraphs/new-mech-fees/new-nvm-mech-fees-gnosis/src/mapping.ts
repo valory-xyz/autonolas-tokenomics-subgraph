@@ -11,7 +11,7 @@ import {
   TOKEN_RATIO_GNOSIS,
   TOKEN_DECIMALS_GNOSIS,
   ETH_DECIMALS
-} from "../../../../shared/constants"
+} from "../../common/constants"
 import { 
   updateTotalFeesIn, 
   updateTotalFeesOut, 

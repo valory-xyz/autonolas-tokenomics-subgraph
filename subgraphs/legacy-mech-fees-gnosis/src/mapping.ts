@@ -18,7 +18,7 @@ import {
   updateGlobalFeesOutLegacyMechMarketPlace,
   getOrCreateDailyFees,
 } from './utils';
-import { BURN_ADDRESS_MECH_FEES_GNOSIS } from '../../../shared/constants';
+import { BURN_ADDRESS_MECH_FEES_GNOSIS } from './constants';
 
 const BURNER_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
 

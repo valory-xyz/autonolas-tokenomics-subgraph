@@ -11,7 +11,7 @@ import {
   TOKEN_RATIO_BASE,
   TOKEN_DECIMALS_BASE,
   ETH_DECIMALS
-} from "../../../../shared/constants"
+} from "../../common/constants"
 import {
   updateTotalFeesIn,
   updateTotalFeesOut,

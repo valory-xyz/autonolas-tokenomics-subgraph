@@ -6,7 +6,7 @@ import {
   Withdraw
 } from "../../common/generated/BalanceTrackerFixedPriceNative/BalanceTrackerFixedPriceNative"
 import { Mech } from "../../common/generated/schema"
-import { BURN_ADDRESS_MECH_FEES_GNOSIS } from "../../../../shared/constants"
+import { BURN_ADDRESS_MECH_FEES_GNOSIS } from "../../common/constants"
 import { 
   updateTotalFeesIn, 
   updateTotalFeesOut, 

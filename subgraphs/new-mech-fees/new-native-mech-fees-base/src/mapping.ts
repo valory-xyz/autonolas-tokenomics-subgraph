@@ -9,7 +9,7 @@ import { Mech } from "../../common/generated/schema"
 import { 
   BURN_ADDRESS_MECH_FEES_BASE,
   CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD
-} from "../../../../shared/constants"
+} from "../../common/constants"
 import { 
   updateTotalFeesIn, 
   updateTotalFeesOut, 

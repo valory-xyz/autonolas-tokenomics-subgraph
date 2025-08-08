@@ -10,7 +10,7 @@ import {
   OLAS_USDC_POOL_ADDRESS_BASE,
   OLAS_ADDRESS_BASE,
   USDC_ADDRESS_BASE
-} from "../../../../shared/constants"
+} from "../../common/constants"
 import {
   updateTotalFeesIn,
   updateTotalFeesOut,

@@ -7,7 +7,7 @@ import {
   TOKEN_DECIMALS_BASE,
   CHAINLINK_PRICE_FEED_DECIMALS,
   ETH_DECIMALS,
-} from "../../../shared/constants";
+} from "./constants";
 import { Address, Bytes, log } from "@graphprotocol/graph-ts";
 import { BalancerV2Vault } from "./generated/BalanceTrackerFixedPriceToken/BalancerV2Vault";
 

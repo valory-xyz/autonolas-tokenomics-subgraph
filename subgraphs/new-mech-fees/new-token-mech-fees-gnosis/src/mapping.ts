@@ -10,7 +10,7 @@ import {
   OLAS_WXDAI_POOL_ADDRESS_GNOSIS,
   OLAS_ADDRESS_GNOSIS,
   WXDAI_ADDRESS_GNOSIS
-} from "../../../../shared/constants"
+} from "../../common/constants"
 import {
   updateTotalFeesIn,
   updateTotalFeesOut,
