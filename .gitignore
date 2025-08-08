@@ -5,3 +5,4 @@ generated/
 generated-l2/
 
 .env
+/temp-garbage

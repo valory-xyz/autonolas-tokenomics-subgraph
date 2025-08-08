@@ -99,6 +99,83 @@ const networkTypes = {
     }
   },
   '4': {
+    name: 'Legacy Mech Fees',
+    description: 'Legacy Mech Fees Subgraphs',
+    buildCommand: 'yarn build-legacy-mech-fees',
+    networks: {
+      'gnosis': {
+        path: 'subgraphs/legacy-mech-fees-gnosis/subgraph.yaml',
+        description: 'Gnosis Chain'
+      }
+    }
+  },
+  '5': {
+    name: 'New Native Mech Fees - Gnosis',
+    description: 'New Native Mech Fees Subgraphs on Gnosis',
+    buildCommand: 'yarn build-new-native-mech-fees-gnosis',
+    networks: {
+      'gnosis': {
+        path: 'subgraphs/new-mech-fees/new-native-mech-fees-gnosis/subgraph.yaml',
+        description: 'New Native Mech Fees on Gnosis'
+      }
+    }
+  },
+  '6': {
+    name: 'New Native Mech Fees - Base',
+    description: 'New Native Mech Fees Subgraphs on Base',
+    buildCommand: 'yarn build-new-native-mech-fees-base',
+    networks: {
+      'base': {
+        path: 'subgraphs/new-mech-fees/new-native-mech-fees-base/subgraph.yaml',
+        description: 'New Native Mech Fees on Base'
+      }
+    }
+  },
+  '7': {
+    name: 'New NVM Mech Fees - Gnosis',
+    description: 'New NVM Mech Fees Subgraphs on Gnosis',
+    buildCommand: 'yarn build-new-nvm-mech-fees-gnosis',
+    networks: {
+      'gnosis': {
+        path: 'subgraphs/new-mech-fees/new-nvm-mech-fees-gnosis/subgraph.yaml',
+        description: 'New NVM Mech Fees on Gnosis'
+      }
+    }
+  },
+  '8': {
+    name: 'New NVM Mech Fees - Base',
+    description: 'New NVM Mech Fees Subgraphs on Base',
+    buildCommand: 'yarn build-new-nvm-mech-fees-base',
+    networks: {
+      'base': {
+        path: 'subgraphs/new-mech-fees/new-nvm-mech-fees-base/subgraph.yaml',
+        description: 'New NVM Mech Fees on Base'
+      }
+    }
+  },
+  '9': {
+    name: 'New Token Mech Fees - Gnosis',
+    description: 'New Token-based Mech Fees Subgraphs on Gnosis',
+    buildCommand: 'yarn build-new-token-mech-fees-gnosis',
+    networks: {
+      'gnosis': {
+        path: 'subgraphs/new-mech-fees/new-token-mech-fees-gnosis/subgraph.yaml',
+        description: 'New Token Mech Fees on Gnosis'
+      }
+    }
+  },
+  '10': {
+    name: 'New Token Mech Fees - Base',
+    description: 'New Token-based Mech Fees Subgraphs on Base',
+    buildCommand: 'yarn build-new-token-mech-fees-base',
+    networks: {
+      'base': {
+        path: 'subgraphs/new-mech-fees/new-token-mech-fees-base/subgraph.yaml',
+        description: 'New Token Mech Fees on Base'
+      }
+    }
+  },
+  '11': {
     name: 'Predict',
     description: 'Olas Predict Subgraph',
     buildCommand: 'yarn build-predict',
@@ -109,7 +186,7 @@ const networkTypes = {
       }
     }
   },
-  '5': {
+  '12': {
     name: 'Governance',
     description: 'Olas Governance Subgraph',
     buildCommand: 'yarn build-governance',
@@ -120,22 +197,14 @@ const networkTypes = {
       }
     }
   },
-  '6': {
+  '13': {
     name: 'Staking',
-    description: 'Staking Contracts Subgraph',
+    description: 'Olas Staking Subgraph',
     buildCommand: 'yarn build-staking',
     networks: {
-     'ethereum': {
+      'mainnet': {
         path: 'subgraphs/staking/subgraph.mainnet.yaml',
         description: 'Ethereum Mainnet'
-      },
-      'optimism': {
-        path: 'subgraphs/staking/subgraph.optimism.yaml',
-        description: 'Optimism Network'
-      },
-      'base': {
-        path: 'subgraphs/staking/subgraph.base.yaml',
-        description: 'Base Network'
       },
       'gnosis': {
         path: 'subgraphs/staking/subgraph.gnosis.yaml',
@@ -143,22 +212,30 @@ const networkTypes = {
       },
       'arbitrum': {
         path: 'subgraphs/staking/subgraph.arbitrum-one.yaml',
-        description: 'Arbitrum Network'
-      },
-      'celo': {
-        path: 'subgraphs/staking/subgraph.celo.yaml',
-        description: 'Celo Network'
-      },
-      'mode': {
-        path: 'subgraphs/staking/subgraph.mode-mainnet.yaml',
-        description: 'Mode Network'
+        description: 'Arbitrum One'
       },
       'polygon': {
         path: 'subgraphs/staking/subgraph.matic.yaml',
-        description: 'Polygon Network'
+        description: 'Polygon'
+      },
+      'optimism': {
+        path: 'subgraphs/staking/subgraph.optimism.yaml',
+        description: 'Optimism'
+      },
+      'base': {
+        path: 'subgraphs/staking/subgraph.base.yaml',
+        description: 'Base'
+      },
+      'celo': {
+        path: 'subgraphs/staking/subgraph.celo.yaml',
+        description: 'Celo'
+      },
+      'mode': {
+        path: 'subgraphs/staking/subgraph.mode-mainnet.yaml',
+        description: 'Mode'
       }
     }
-  },
+  }
 };
 
 function askQuestion(question) {

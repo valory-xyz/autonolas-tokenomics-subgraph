@@ -1,0 +1,27 @@
+type Global @entity(immutable: false) {
+  id: ID!
+  totalFeesInUSD: BigDecimal!
+  totalFeesOutUSD: BigDecimal!
+}
+
+type Mech @entity(immutable: false) {
+  id: ID!
+  totalFeesInUSD: BigDecimal!
+  totalFeesOutUSD: BigDecimal!
+  totalFeesInRaw: BigDecimal!
+  totalFeesOutRaw: BigDecimal!
+}
+
+type MechTransaction @entity(immutable: true) {
+  id: ID!
+  mech: Mech!
+  type: String!
+  amountRaw: BigDecimal!
+  amountUSD: BigDecimal!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  txHash: Bytes!
+  deliveryRate: BigInt
+  balance: BigInt
+  rateDiff: BigInt
+}
