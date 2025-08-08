@@ -4,8 +4,8 @@ import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts"
 import {
   MechBalanceAdjusted,
   Withdraw
-} from "../../../../shared/new-mech-fees/generated/BalanceTrackerNvmSubscriptionToken/BalanceTrackerNvmSubscriptionToken"
-import { Mech } from "../../../../shared/new-mech-fees/generated/schema"
+} from "../../common/generated/BalanceTrackerNvmSubscriptionToken/BalanceTrackerNvmSubscriptionToken"
+import { Mech } from "../../common/generated/schema"
 import { 
   BURN_ADDRESS_MECH_FEES_BASE,
   TOKEN_RATIO_BASE,
@@ -21,7 +21,7 @@ import {
   updateMechFeesOut,
   createMechTransactionForAccrued,
   createMechTransactionForCollected
-} from "../../../../shared/new-mech-fees/utils";
+} from "../../common/utils";
 
 const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
 

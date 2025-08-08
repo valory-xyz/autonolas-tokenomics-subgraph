@@ -4,8 +4,8 @@ import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts"
 import {
   MechBalanceAdjusted,
   Withdraw
-} from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceNative/BalanceTrackerFixedPriceNative"
-import { Mech } from "../../../../shared/new-mech-fees/generated/schema"
+} from "../../common/generated/BalanceTrackerFixedPriceNative/BalanceTrackerFixedPriceNative"
+import { Mech } from "../../common/generated/schema"
 import { 
   BURN_ADDRESS_MECH_FEES_BASE,
   CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD
@@ -18,8 +18,8 @@ import {
   updateMechFeesOut,
   createMechTransactionForAccrued,
   createMechTransactionForCollected
-} from "../../../../shared/new-mech-fees/utils"
-import { AggregatorV3Interface } from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceNative/AggregatorV3Interface"
+} from "../../common/utils"
+import { AggregatorV3Interface } from "../../common/generated/BalanceTrackerFixedPriceNative/AggregatorV3Interface"
 
 const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
 const PRICE_FEED_ADDRESS = Address.fromString(CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD);
