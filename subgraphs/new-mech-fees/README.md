@@ -25,6 +25,9 @@ The system is split into six subgraphs, one for each combination of payment mode
 - **`Global`**: A singleton entity that aggregates total fees in and out in USD across all mechs for a given subgraph.
 - **`MechTransaction`**: A detailed record of every individual fee event (`MechBalanceAdjusted` or `Withdraw`). This is the core entity for time-based analysis. Each transaction is immutable.
 
+### Note  
+`Withdraw` event gives information about mech claimed payments. Since currently Protocol fees is off, mech claimed payments coincide with realised mech earnings.  
+
 ## Raw Units (`amountRaw` and `totalFeesInRaw`/`totalFeesOutRaw`)
 
 The raw fields in both `MechTransaction` and `Mech` entities represent amounts in their payment-model-specific native units. **Important: Raw units are NOT comparable across different payment models** - use USD fields for cross-model analysis.
