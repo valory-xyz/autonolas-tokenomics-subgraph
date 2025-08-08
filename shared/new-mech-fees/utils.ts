@@ -23,8 +23,6 @@ export function getOrInitialiseGlobal(): Global {
     global = new Global(GLOBAL_ID);
     global.totalFeesInUSD = BigDecimal.fromString("0");
     global.totalFeesOutUSD = BigDecimal.fromString("0");
-    global.totalFeesInRaw = BigDecimal.fromString("0");
-    global.totalFeesOutRaw = BigDecimal.fromString("0");
  }
   return global;
 }
