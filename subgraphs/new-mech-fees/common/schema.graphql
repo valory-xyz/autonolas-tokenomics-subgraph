@@ -24,4 +24,4 @@ type MechTransaction @entity(immutable: true) {
   deliveryRate: BigInt
   balance: BigInt
   rateDiff: BigInt
-}
+} 

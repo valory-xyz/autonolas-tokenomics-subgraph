@@ -1,5 +1,5 @@
 import { BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { Global, MechTransaction } from "./generated/schema";
+import { Global, MechTransaction, Mech } from "./generated/schema";
 import { 
   TOKEN_RATIO_GNOSIS,
   TOKEN_DECIMALS_GNOSIS,
@@ -7,11 +7,9 @@ import {
   TOKEN_DECIMALS_BASE,
   CHAINLINK_PRICE_FEED_DECIMALS,
   ETH_DECIMALS,
-} from "../constants";
-import { Address, Bytes } from "@graphprotocol/graph-ts";
+} from "./constants";
+import { Address, Bytes, log } from "@graphprotocol/graph-ts";
 import { BalancerV2Vault } from "./generated/BalanceTrackerFixedPriceToken/BalancerV2Vault";
-import { log } from "@graphprotocol/graph-ts";
-import { Mech } from "./generated/schema";
 
 const GLOBAL_ID = "1";
 const FEE_IN = "FEE_IN";

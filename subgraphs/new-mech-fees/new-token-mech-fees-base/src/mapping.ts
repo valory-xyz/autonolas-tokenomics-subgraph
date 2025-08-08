@@ -2,15 +2,15 @@ import { Address, BigDecimal, Bytes, log } from "@graphprotocol/graph-ts"
 import {
   MechBalanceAdjusted,
   Withdraw
-} from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceToken/BalanceTrackerFixedPriceToken"
-import { Mech } from "../../../../shared/new-mech-fees/generated/schema"
+} from "../../common/generated/BalanceTrackerFixedPriceToken/BalanceTrackerFixedPriceToken"
+import { Mech } from "../../common/generated/schema"
 import {
   BURN_ADDRESS_MECH_FEES_BASE,
   BALANCER_VAULT_ADDRESS_BASE,
   OLAS_USDC_POOL_ADDRESS_BASE,
   OLAS_ADDRESS_BASE,
   USDC_ADDRESS_BASE
-} from "../../../../shared/constants"
+} from "../../common/constants"
 import {
   updateTotalFeesIn,
   updateTotalFeesOut,
@@ -19,8 +19,8 @@ import {
   updateMechFeesOut,
   createMechTransactionForAccrued,
   createMechTransactionForCollected
-} from "../../../../shared/new-mech-fees/utils"
-import { BalancerV2WeightedPool } from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceToken/BalancerV2WeightedPool";
+} from "../../common/utils"
+import { BalancerV2WeightedPool } from "../../common/generated/BalanceTrackerFixedPriceToken/BalancerV2WeightedPool";
 
 const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
 const VAULT_ADDRESS = Address.fromString(BALANCER_VAULT_ADDRESS_BASE);

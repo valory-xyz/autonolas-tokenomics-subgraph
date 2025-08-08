@@ -2,15 +2,15 @@ import { Address, BigDecimal, Bytes, log } from "@graphprotocol/graph-ts"
 import {
   MechBalanceAdjusted,
   Withdraw
-} from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceToken/BalanceTrackerFixedPriceToken"
-import { Mech } from "../../../../shared/new-mech-fees/generated/schema"
+} from "../../common/generated/BalanceTrackerFixedPriceToken/BalanceTrackerFixedPriceToken"
+import { Mech } from "../../common/generated/schema"
 import {
   BURN_ADDRESS_MECH_FEES_GNOSIS,
   BALANCER_VAULT_ADDRESS_GNOSIS,
   OLAS_WXDAI_POOL_ADDRESS_GNOSIS,
   OLAS_ADDRESS_GNOSIS,
   WXDAI_ADDRESS_GNOSIS
-} from "../../../../shared/constants"
+} from "../../common/constants"
 import {
   updateTotalFeesIn,
   updateTotalFeesOut,
@@ -19,9 +19,9 @@ import {
   updateMechFeesOut,
   createMechTransactionForAccrued,
   createMechTransactionForCollected
-} from "../../../../shared/new-mech-fees/utils"
-import { BalancerV2Vault } from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceToken/BalancerV2Vault";
-import { BalancerV2WeightedPool } from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceToken/BalancerV2WeightedPool";
+} from "../../common/utils"
+import { BalancerV2Vault } from "../../common/generated/BalanceTrackerFixedPriceToken/BalancerV2Vault";
+import { BalancerV2WeightedPool } from "../../common/generated/BalanceTrackerFixedPriceToken/BalancerV2WeightedPool";
 
 const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
 const VAULT_ADDRESS = Address.fromString(BALANCER_VAULT_ADDRESS_GNOSIS);

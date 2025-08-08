@@ -1,6 +1,6 @@
 specVersion: 0.0.5
 schema:
-  file: ../../../shared/new-mech-fees/schema.graphql
+  file: ../common/schema.graphql
 dataSources:
   - kind: ethereum
     name: BalanceTrackerNvmSubscriptionToken
