@@ -176,3 +176,89 @@ This query returns the total fees processed by the subgraph across all mechs.
   }
 }
 ``` 
+
+### Daily Aggregation (New)
+
+- **Entities**
+  - `MechDaily`: per‑mech, per‑day totals (USD + raw)
+  - `DailyTotals`: global per‑day totals (USD)
+- **IDs**
+  - `DailyTotals.id`: unix start-of-day (UTC) as string, e.g. `"1710460800"`
+  - `MechDaily.id`: `${mech}-${dayStart}`, e.g. `"0xabc...-1710460800"`
+- **When updated**
+  - On `MechBalanceAdjusted` (fee-in) and `Withdraw` (fee-out) across all payment models
+- **Units**
+  - USD fields are cross-model comparable; raw fields are model-specific (same rules as above)
+
+### Sample Queries — Daily
+
+```graphql
+# Per‑mech daily totals for a date range
+{
+  mechDailies(
+    where: {
+      mech: "0xMECH_ADDRESS",
+      date_gte: 1710460800,
+      date_lt: 1711065600
+    },
+    orderBy: date,
+    orderDirection: asc
+  ) {
+    id
+    date
+    feesInUSD
+    feesOutUSD
+    feesInRaw
+    feesOutRaw
+  }
+}
+```
+
+```graphql
+# Single day per‑mech by composite id
+{
+  mechDaily(id: "0xMECH_ADDRESS-1710460800") {
+    id
+    date
+    mech { id }
+    feesInUSD
+    feesOutUSD
+    feesInRaw
+    feesOutRaw
+  }
+}
+```
+
+```graphql
+# Global daily totals in a range
+# Note: list field is dailyTotals_collection
+{
+  dailyTotals_collection(
+    where: { date_gte: 1710460800, date_lt: 1711065600 },
+    orderBy: date,
+    orderDirection: asc
+  ) {
+    id
+    date
+    totalFeesInUSD
+    totalFeesOutUSD
+  }
+}
+```
+
+```graphql
+# Top mechs by fees on a specific day
+{
+  mechDailies(
+    where: { date: 1710460800 },
+    orderBy: feesInUSD,
+    orderDirection: desc,
+    first: 20
+  ) {
+    mech { id }
+    date
+    feesInUSD
+    feesOutUSD
+  }
+}
+``` 
