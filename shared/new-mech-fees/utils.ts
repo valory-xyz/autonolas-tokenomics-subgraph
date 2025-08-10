@@ -12,6 +12,7 @@ import { Address, Bytes } from "@graphprotocol/graph-ts";
 import { BalancerV2Vault } from "./generated/BalanceTrackerFixedPriceToken/BalancerV2Vault";
 import { log } from "@graphprotocol/graph-ts";
 import { Mech } from "./generated/schema";
+import { MechDaily, DailyTotals } from "./generated/schema";
 
 const GLOBAL_ID = "1";
 const FEE_IN = "FEE_IN";
@@ -253,4 +254,79 @@ export function calculateOlasInUsd(
   }
 
   return calculateOlasPriceFromPool(olasAmount, olasBalance, stablecoinBalance, stablecoinDecimals);
+} 
+
+function dayStart(timestamp: BigInt): i32 {
+  return (timestamp.toI32() / 86400) * 86400;
+}
+
+function dayId(timestamp: BigInt): string {
+  return dayStart(timestamp).toString();
+}
+
+function getOrInitDailyTotals(timestamp: BigInt): DailyTotals {
+  const id = dayId(timestamp);
+  let d = DailyTotals.load(id);
+  if (d == null) {
+    d = new DailyTotals(id);
+    d.date = dayStart(timestamp);
+    d.totalFeesInUSD = BigDecimal.fromString("0");
+    d.totalFeesOutUSD = BigDecimal.fromString("0");
+  }
+  return d as DailyTotals;
+}
+
+function getOrInitMechDaily(mechId: string, timestamp: BigInt): MechDaily {
+  const id = mechId + "-" + dayId(timestamp);
+  let md = MechDaily.load(id);
+  if (md == null) {
+    md = new MechDaily(id);
+    md.mech = mechId;
+    md.date = dayStart(timestamp);
+    md.feesInUSD = BigDecimal.fromString("0");
+    md.feesOutUSD = BigDecimal.fromString("0");
+    md.feesInRaw = BigDecimal.fromString("0");
+    md.feesOutRaw = BigDecimal.fromString("0");
+  }
+  return md as MechDaily;
+}
+
+export function updateDailyTotalsIn(amountUsd: BigDecimal, timestamp: BigInt): void {
+  if (amountUsd.le(BigDecimal.fromString("0"))) return;
+  const d = getOrInitDailyTotals(timestamp);
+  d.totalFeesInUSD = d.totalFeesInUSD.plus(amountUsd);
+  d.save();
+}
+
+export function updateDailyTotalsOut(amountUsd: BigDecimal, timestamp: BigInt): void {
+  if (amountUsd.le(BigDecimal.fromString("0"))) return;
+  const d = getOrInitDailyTotals(timestamp);
+  d.totalFeesOutUSD = d.totalFeesOutUSD.plus(amountUsd);
+  d.save();
+}
+
+export function updateMechDailyIn(
+  mechId: string,
+  amountUsd: BigDecimal,
+  amountRaw: BigDecimal,
+  timestamp: BigInt
+): void {
+  if (amountUsd.le(BigDecimal.fromString("0")) && amountRaw.le(BigDecimal.fromString("0"))) return;
+  const md = getOrInitMechDaily(mechId, timestamp);
+  md.feesInUSD = md.feesInUSD.plus(amountUsd);
+  md.feesInRaw = md.feesInRaw.plus(amountRaw);
+  md.save();
+}
+
+export function updateMechDailyOut(
+  mechId: string,
+  amountUsd: BigDecimal,
+  amountRaw: BigDecimal,
+  timestamp: BigInt
+): void {
+  if (amountUsd.le(BigDecimal.fromString("0")) && amountRaw.le(BigDecimal.fromString("0"))) return;
+  const md = getOrInitMechDaily(mechId, timestamp);
+  md.feesOutUSD = md.feesOutUSD.plus(amountUsd);
+  md.feesOutRaw = md.feesOutRaw.plus(amountRaw);
+  md.save();
 } 
