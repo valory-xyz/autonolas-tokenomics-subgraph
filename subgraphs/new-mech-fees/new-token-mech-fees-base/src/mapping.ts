@@ -18,7 +18,11 @@ import {
   updateMechFeesIn,
   updateMechFeesOut,
   createMechTransactionForAccrued,
-  createMechTransactionForCollected
+  createMechTransactionForCollected,
+  updateDailyTotalsIn,
+  updateDailyTotalsOut,
+  updateMechDailyIn,
+  updateMechDailyOut
 } from "../../../../shared/new-mech-fees/utils"
 import { BalancerV2WeightedPool } from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceToken/BalancerV2WeightedPool";
 
@@ -57,6 +61,8 @@ export function handleMechBalanceAdjustedForToken(event: MechBalanceAdjusted): v
 
   updateTotalFeesIn(deliveryRateUsd);
   updateMechFeesIn(mechId, deliveryRateUsd, deliveryRateOlas.toBigDecimal());
+  updateDailyTotalsIn(deliveryRateUsd, event.block.timestamp);
+  updateMechDailyIn(mechId, deliveryRateUsd, deliveryRateOlas.toBigDecimal(), event.block.timestamp);
 
   // Create MechTransaction for the accrued fees
   const mech = Mech.load(mechId);
@@ -95,6 +101,8 @@ export function handleWithdrawForToken(event: Withdraw): void {
 
   updateTotalFeesOut(withdrawalAmountUsd);
   updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalAmountOlas.toBigDecimal());
+  updateDailyTotalsOut(withdrawalAmountUsd, event.block.timestamp);
+  updateMechDailyOut(mechId, withdrawalAmountUsd, withdrawalAmountOlas.toBigDecimal(), event.block.timestamp);
 
   // Create MechTransaction for the collected fees
   const mech = Mech.load(mechId);
