@@ -25,3 +25,20 @@ type MechTransaction @entity(immutable: true) {
   balance: BigInt
   rateDiff: BigInt
 }
+
+type DailyTotals @entity(immutable: false) {
+  id: ID!
+  date: Int!
+  totalFeesInUSD: BigDecimal!
+  totalFeesOutUSD: BigDecimal!
+}
+
+type MechDaily @entity(immutable: false) {
+  id: ID!
+  mech: Mech!
+  date: Int!
+  feesInUSD: BigDecimal!
+  feesOutUSD: BigDecimal!
+  feesInRaw: BigDecimal!
+  feesOutRaw: BigDecimal!
+}
