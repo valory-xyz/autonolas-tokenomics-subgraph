@@ -14,7 +14,6 @@ import {
 import {
   updateTotalFeesIn,
   updateTotalFeesOut,
-  calculateOlasInUsd,
   updateMechFeesIn,
   updateMechFeesOut,
   createMechTransactionForAccrued,
@@ -24,6 +23,7 @@ import {
   updateMechDailyIn,
   updateMechDailyOut
 } from "../../../../shared/new-mech-fees/utils"
+import { calculateOlasInUsd } from "../../../../shared/new-mech-fees/token-utils"
 import { BalancerV2WeightedPool } from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceToken/BalancerV2WeightedPool";
 
 const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
