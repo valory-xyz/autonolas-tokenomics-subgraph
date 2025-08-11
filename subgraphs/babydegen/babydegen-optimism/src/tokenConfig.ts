@@ -1,4 +1,5 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts"
+import { ETH_USD_FEED, USDC_USD_FEED, USDT_USD_FEED, DAI_USD_FEED } from "./constants"
 
 // Token configurations with Chainlink-first approach
 export const TOKENS = new Map<string, TokenConfig>()
@@ -6,13 +7,13 @@ export const TOKENS = new Map<string, TokenConfig>()
 export class TokenConfig {
   address: Address
   symbol: string
-  decimals: i32
+  decimals: number
   priceSources: PriceSourceConfig[]
   
   constructor(
     address: Address,
     symbol: string,
-    decimals: i32,
+    decimals: number,
     priceSources: PriceSourceConfig[]
   ) {
     this.address = address
@@ -25,18 +26,18 @@ export class TokenConfig {
 export class PriceSourceConfig {
   address: Address
   sourceType: string
-  priority: i32
+  priority: number
   pairToken: Address | null
-  fee: i32
-  confidence: i32  // Expected confidence level (0-100)
+  fee: number
+  confidence: number  // Expected confidence level (0-100)
   
   constructor(
     address: Address,
     sourceType: string,
-    priority: i32,
-    confidence: i32 = 95,
+    priority: number,
+    confidence: number = 95,
     pairToken: Address | null = null,
-    fee: i32 = 0
+    fee: number = 0
   ) {
     this.address = address
     this.sourceType = sourceType
@@ -49,26 +50,28 @@ export class PriceSourceConfig {
 
 // Chainlink feed addresses on Optimism mainnet
 const CHAINLINK_FEEDS = new Map<string, string>()
-CHAINLINK_FEEDS.set("ETH_USD", "0x13e3Ee699D1909E989722E753853AE30b17e08c5")
-CHAINLINK_FEEDS.set("USDC_USD", "0x16a9FA2FDa030272Ce99B29CF780dFA30361E0f3")
-CHAINLINK_FEEDS.set("USDT_USD", "0xECef79E109e997bCA29c1c0897ec9d7b03647F5E")
-CHAINLINK_FEEDS.set("DAI_USD", "0x8dBa75e83DA73cc766A7e5a0ee71F656BAb470d6")
+CHAINLINK_FEEDS.set("ETH_USD", ETH_USD_FEED.toHexString())
+CHAINLINK_FEEDS.set("USDC_USD", USDC_USD_FEED.toHexString())
+CHAINLINK_FEEDS.set("USDT_USD", USDT_USD_FEED.toHexString())
+CHAINLINK_FEEDS.set("DAI_USD", DAI_USD_FEED.toHexString())
 
 export function getTokenConfig(address: Address): TokenConfig | null {
   let key = address.toHexString().toLowerCase()
   if (TOKENS.has(key)) {
-    return TOKENS.get(key)
+    let config = TOKENS.get(key)
+    return config ? config : null
   }
   return null
 }
 
 export function getChainlinkFeed(feedName: string): string | null {
-  return CHAINLINK_FEEDS.get(feedName)
+  let feed = CHAINLINK_FEEDS.get(feedName)
+  return feed ? feed : null
 }
 
 function getChainlinkFeedSafe(feedName: string): string {
   let feed = CHAINLINK_FEEDS.get(feedName)
-  if (feed === null) {
+  if (!feed) {
     // This should never happen if feeds are properly configured
     throw new Error("Chainlink feed not found: " + feedName)
   }
