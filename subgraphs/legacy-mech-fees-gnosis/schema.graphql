@@ -1,0 +1,34 @@
+type LegacyMech @entity(immutable: false) {
+  id: Bytes!
+  agentId: Int!
+  price: BigInt!
+  totalFeesIn: BigInt!
+  totalFeesOut: BigInt!
+}
+
+type LegacyMechMarketPlace @entity(immutable: false) {
+  id: Bytes!
+  agentId: Int!
+  price: BigInt!
+  totalFeesIn: BigInt!
+  totalFeesOut: BigInt!
+}
+
+type Global @entity(immutable: false) {
+  id: ID!
+  totalFeesIn: BigInt!
+  totalFeesOut: BigInt!
+  totalFeesInLegacyMech: BigInt!
+  totalFeesInLegacyMechMarketPlace: BigInt!
+  totalFeesOutLegacyMech: BigInt!
+  totalFeesOutLegacyMechMarketPlace: BigInt!
+}
+
+type DailyFees @entity(immutable: false) {
+  id: ID!
+  date: Int!
+  totalFeesInLegacyMech: BigInt!
+  totalFeesInLegacyMechMarketPlace: BigInt!
+  totalFeesOutLegacyMech: BigInt!
+  totalFeesOutLegacyMechMarketPlace: BigInt!
+}

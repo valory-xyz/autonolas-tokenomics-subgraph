@@ -1,0 +1,50 @@
+{
+  "gnosis": {
+    "StakingFactory": {
+      "address": "0xb0228CA253A88Bc8eb4ca70BCAC8f87b381f4700",
+      "startBlock": 35206806
+    }
+  },
+  "base": {
+    "StakingFactory": {
+      "address": "0x1cEe30D08943EB58EFF84DD1AB44a6ee6FEff63a",
+      "startBlock": 17310019
+    }
+  },
+  "mode-mainnet": {
+    "StakingFactory": {
+      "address": "0x75D529FAe220bC8db714F0202193726b46881B76",
+      "startBlock": 14444647
+    }
+  },
+  "optimism": {
+    "StakingFactory": {
+      "address": "0xa45E64d13A30a51b91ae0eb182e88a40e9b18eD8",
+      "startBlock": 124618633
+    }
+  },
+  "mainnet": {
+    "StakingFactory": {
+      "address": "0xEBdde456EA288b49f7D5975E7659bA1Ccf607efc",
+      "startBlock": 20409818
+    }
+  },
+  "matic": {
+    "StakingFactory": {
+      "address": "0x46C0D07F55d4F9B5Eed2Fc9680B5953e5fd7b461",
+      "startBlock": 62213142
+    }
+  },
+  "arbitrum-one": {
+    "StakingFactory": {
+      "address": "0xEB5638eefE289691EcE01943f768EDBF96258a80",
+      "startBlock": 256823487
+    }
+  },
+  "celo": {
+    "StakingFactory": {
+      "address": "0x1c2cD884127b080F940b7546c1e9aaf525b1FA55",
+      "startBlock": 27900037
+    }
+  }
+}
