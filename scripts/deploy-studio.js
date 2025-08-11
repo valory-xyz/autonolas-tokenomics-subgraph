@@ -123,6 +123,7 @@ const networkTypes = {
   '6': {
     name: 'Liquidity',
     description: 'Liquidity Pool Tracking Subgraphs',
+    buildCommand: 'yarn build-liquidity',
     networks: {
       'ethereum': {
         path: 'subgraphs/liquidity/liquidity-eth/subgraph.yaml',

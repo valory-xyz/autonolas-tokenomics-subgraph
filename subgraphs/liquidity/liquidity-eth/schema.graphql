@@ -1,48 +1,52 @@
-type LiquidityTransfer @entity(immutable: true) {
-  id: Bytes!
+type LPTransfer @entity(immutable: true) {
+  id: Bytes! # transaction hash + log index
   from: Bytes! # address
   to: Bytes! # address
-  value: BigInt! # uint256
+  value: BigInt! # LP tokens transferred (in wei)
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
-  dayTimestamp: BigInt! # day truncated timestamp for aggregation
 }
 
-type DailyLiquidityChange @entity(immutable: false) {
-  id: ID! # dayTimestamp as string
-  dayTimestamp: BigInt!
-  amountIn: BigInt! # LP tokens minted (from zero address)
-  amountOut: BigInt! # LP tokens burned (to zero address)
-  netChange: BigInt! # amountIn - amountOut
-  transferCount: Int! # number of transfers for this day
-  transfers: [LiquidityTransfer!] @derivedFrom(field: "dayTimestamp")
+type PoolReserves @entity(immutable: false) {
+  id: Bytes! # pool contract address
+  reserve0: BigInt! # OLAS reserves (in wei)
+  reserve1: BigInt! # ETH reserves (in wei)
+  lastSyncBlock: BigInt!
+  lastSyncTimestamp: BigInt!
+  lastSyncTransaction: Bytes!
 }
 
-type LiquidityPool @entity(immutable: false) {
-  id: Bytes! # contract address
-  totalSupply: BigInt! # current total supply
-  totalMinted: BigInt! # cumulative minted amount
-  totalBurned: BigInt! # cumulative burned amount
-  holderCount: Int! # number of current holders
-  transferCount: Int! # total number of transfers
-  firstTransferTimestamp: BigInt! # timestamp of first transfer
-  lastTransferTimestamp: BigInt! # timestamp of last transfer
+
+# Treasury LP token holdings tracker
+type TreasuryHoldings @entity(immutable: false) {
+  id: Bytes! # treasury address
+  currentBalance: BigInt! # current LP token balance
+  totalAcquired: BigInt! # cumulative acquired
+  totalSold: BigInt! # cumulative sold
+  firstTransactionTimestamp: BigInt!
+  lastTransactionTimestamp: BigInt!
+  transactionCount: Int!
 }
 
-type LiquidityHolder @entity(immutable: false) {
-  id: ID! # pool_address + holder_address
-  pool: LiquidityPool!
-  holder: Bytes! # address
-  balance: BigInt! # current balance
-  firstTransferTimestamp: BigInt! # when they first received tokens
-  lastTransferTimestamp: BigInt! # when they last interacted
-}
-
-type GlobalLiquidityMetrics @entity(immutable: false) {
+# Global LP token metrics
+type LPTokenMetrics @entity(immutable: false) {
   id: ID! # "global"
-  totalPools: Int! # number of pools tracked
-  totalSupplyAcrossPools: BigInt! # sum of all pool supplies
-  totalHolders: Int! # unique holders across all pools
-  lastUpdated: BigInt! # last update timestamp
+  
+  # Supply metrics
+  totalSupply: BigInt! # current total LP supply
+  totalMinted: BigInt! # cumulative minted
+  totalBurned: BigInt! # cumulative burned
+  
+  # Treasury metrics
+  treasurySupply: BigInt! # LP tokens held by treasury
+  treasuryPercentage: BigInt! # treasury % of total (in basis points, 10000 = 100%)
+  
+  # Pool metrics
+  currentReserve0: BigInt! # current OLAS reserves
+  currentReserve1: BigInt! # current ETH reserves
+  
+  # Timestamps
+  lastUpdated: BigInt!
+  firstTransferTimestamp: BigInt!
 }

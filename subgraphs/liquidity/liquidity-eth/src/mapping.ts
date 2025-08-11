@@ -1,89 +1,75 @@
 import { BigInt } from '@graphprotocol/graph-ts';
-import { Transfer } from '../generated/UniswapV2Pair/UniswapV2Pair';
-import { LiquidityTransfer } from '../generated/schema';
+
+import { Transfer } from '../generated/OLASETHLPToken/ERC20';
+import { Sync } from '../generated/OLASETHPair/UniswapV2Pair';
+
+import { LPTransfer } from '../generated/schema';
+
 import {
-  ZERO_ADDRESS,
   getDayTimestamp,
-  getOrCreateLiquidityPool,
-  getOrCreateDailyLiquidityChange,
-  getOrCreateGlobalMetrics,
-  updateHolderBalance,
+  isZeroAddress,
+  isTreasuryAddress,
+  getOrCreatePoolReserves,
+  updateTreasuryHoldings,
+  updateGlobalMetricsAfterTransfer,
+  updateGlobalMetricsAfterSync,
 } from './utils';
 
-export function handleTransfer(event: Transfer): void {
-  let contractAddress = event.address;
+/**
+ * Handle LP Token Transfer events
+ * Tracks minting, burning, and treasury movements
+ */
+export function handleLPTransfer(event: Transfer): void {
   let from = event.params.from;
   let to = event.params.to;
   let value = event.params.value;
   let timestamp = event.block.timestamp;
-  let dayTimestamp = getDayTimestamp(timestamp);
 
-  // Create transfer entity
-  let transferId = event.transaction.hash.concatI32(event.logIndex.toI32());
-  let transfer = new LiquidityTransfer(transferId);
+  const transferId = event.transaction.hash.concatI32(event.logIndex.toI32());
+  const transfer = new LPTransfer(transferId);
   transfer.from = from;
   transfer.to = to;
   transfer.value = value;
   transfer.blockNumber = event.block.number;
   transfer.blockTimestamp = timestamp;
   transfer.transactionHash = event.transaction.hash;
-  transfer.dayTimestamp = dayTimestamp;
   transfer.save();
 
-  // Get or create entities
-  let pool = getOrCreateLiquidityPool(contractAddress);
-  let dailyChange = getOrCreateDailyLiquidityChange(dayTimestamp);
-  let global = getOrCreateGlobalMetrics();
+  // Determine transfer type
+  let isMint = isZeroAddress(from);
+  let isBurn = isZeroAddress(to);
 
-  // Update pool timestamps
-  if (pool.firstTransferTimestamp.equals(BigInt.zero())) {
-    pool.firstTransferTimestamp = timestamp;
-  }
-  pool.lastTransferTimestamp = timestamp;
-  pool.transferCount = pool.transferCount + 1;
-
-  // Handle minting (from zero address)
-  if (from.equals(ZERO_ADDRESS)) {
-    pool.totalSupply = pool.totalSupply.plus(value);
-    pool.totalMinted = pool.totalMinted.plus(value);
-    dailyChange.amountIn = dailyChange.amountIn.plus(value);
-
-    // Update holder balance for recipient
-    if (!to.equals(ZERO_ADDRESS)) {
-      updateHolderBalance(contractAddress, to, value, true, timestamp);
-    }
+  // Handle treasury movements
+  if (isTreasuryAddress(to)) {
+    // Treasury acquiring LP tokens (mint to treasury OR transfer to treasury)
+    updateTreasuryHoldings(value, true, timestamp);
+  } else if (isTreasuryAddress(from)) {
+    // Treasury selling LP tokens (burn from treasury OR transfer from treasury)
+    updateTreasuryHoldings(value, false, timestamp);
   }
 
-  // Handle burning (to zero address)
-  if (to.equals(ZERO_ADDRESS)) {
-    pool.totalSupply = pool.totalSupply.minus(value);
-    pool.totalBurned = pool.totalBurned.plus(value);
-    dailyChange.amountOut = dailyChange.amountOut.plus(value);
+  updateGlobalMetricsAfterTransfer(value, isMint, isBurn, timestamp);
+}
 
-    // Update holder balance for sender
-    if (!from.equals(ZERO_ADDRESS)) {
-      updateHolderBalance(contractAddress, from, value, false, timestamp);
-    }
-  }
+/**
+ * Handle Uniswap V2 Sync events
+ * Tracks pool reserves for OLAS and ETH
+ */
+export function handleSync(event: Sync): void {
+  let poolAddress = event.address;
+  let reserve0 = event.params.reserve0; // OLAS reserves
+  let reserve1 = event.params.reserve1; // ETH reserves
+  let timestamp = event.block.timestamp;
+  let dayTimestamp = getDayTimestamp(timestamp);
 
-  // Handle regular transfers (neither from nor to zero address)
-  if (!from.equals(ZERO_ADDRESS) && !to.equals(ZERO_ADDRESS)) {
-    updateHolderBalance(contractAddress, from, value, false, timestamp);
-    updateHolderBalance(contractAddress, to, value, true, timestamp);
-  }
+  // Update current pool reserves
+  let reserves = getOrCreatePoolReserves(poolAddress);
+  reserves.reserve0 = reserve0;
+  reserves.reserve1 = reserve1;
+  reserves.lastSyncBlock = event.block.number;
+  reserves.lastSyncTimestamp = timestamp;
+  reserves.lastSyncTransaction = event.transaction.hash;
+  reserves.save();
 
-  // Update daily change
-  dailyChange.netChange = dailyChange.amountIn.minus(dailyChange.amountOut);
-  dailyChange.transferCount = dailyChange.transferCount + 1;
-  dailyChange.save();
-
-  // Update global metrics
-  global.totalSupplyAcrossPools = BigInt.zero(); // Will be recalculated
-  // Note: We would need to iterate through all pools to calculate this accurately
-  // For now, we'll update it with the current pool's contribution
-  global.lastUpdated = timestamp;
-  global.save();
-
-  // Save pool
-  pool.save();
+  updateGlobalMetricsAfterSync(reserve0, reserve1, timestamp);
 }

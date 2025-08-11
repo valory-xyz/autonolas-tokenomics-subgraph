@@ -30,6 +30,9 @@
     "build-predict": "graph build subgraphs/predict/subgraph.yaml",
     "codegen-governance": "graph codegen subgraphs/governance/subgraph.yaml",
     "build-governance": "graph build subgraphs/governance/subgraph.yaml",
+    "codegen-liquidity-eth": "graph codegen subgraphs/liquidity/liquidity-eth/subgraph.yaml",
+    "build-liquidity-eth": "graph build subgraphs/liquidity/liquidity-eth/subgraph.yaml",
+    "build-liquidity": "yarn codegen-liquidity-eth && yarn build-liquidity-eth",
     "deploy-studio": "node scripts/deploy-studio.js",
     "test": "graph test"
   },

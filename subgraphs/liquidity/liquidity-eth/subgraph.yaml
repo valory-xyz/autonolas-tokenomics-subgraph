@@ -4,27 +4,53 @@ indexerHints:
 schema:
   file: ./schema.graphql
 dataSources:
+  # OLAS-ETH LP Token (ERC20 Transfer events)
   - kind: ethereum/contract
-    name: UniswapV2Pair
+    name: OLASETHLPToken
     network: mainnet
     source:
-      address: "0x09D1d767eDF8Fa23A64C51fa559E0688E526812F"  # OLAS/ETH LP token address from Dune script
-      abi: UniswapV2Pair
-      startBlock: 15050000  # Approximate block when OLAS was deployed
+      address: "0x09D1d767eDF8Fa23A64C51fa559E0688E526812F"
+      abi: ERC20
+      startBlock: 17679229
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - LiquidityTransfer
-        - DailyLiquidityChange
-        - LiquidityPool
-        - LiquidityHolder
-        - GlobalLiquidityMetrics
+        - LPTransfer
+        - DailyLPSupplyChange
+        - TreasuryHoldings
+        - LPTokenMetrics
+        - DailyMetrics
+      abis:
+        - name: ERC20
+          file: ../../../abis/ERC20Detailed.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleLPTransfer
+      file: ./src/mapping.ts
+  
+  # OLAS-ETH Uniswap V2 Pair (Sync events for reserves)
+  - kind: ethereum/contract
+    name: OLASETHPair
+    network: mainnet
+    source:
+      address: "0x09D1d767eDF8Fa23A64C51fa559E0688E526812F"  # OLAS/ETH LP token address (same as above)
+      abi: UniswapV2Pair
+      startBlock: 17679229
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - PoolReserves
+        - ReservesSnapshot
+        - LPTokenMetrics
+        - DailyMetrics
       abis:
         - name: UniswapV2Pair
           file: ../../../abis/UniswapV2Pair.json
       eventHandlers:
-        - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
+        - event: Sync(uint112,uint112)
+          handler: handleSync
       file: ./src/mapping.ts

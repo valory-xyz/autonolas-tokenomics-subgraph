@@ -1,30 +1,26 @@
-import { BigInt, Address } from '@graphprotocol/graph-ts';
+import { BigInt, Address, Bytes } from '@graphprotocol/graph-ts';
 import {
-  DailyLiquidityChange,
-  LiquidityPool,
-  LiquidityHolder,
-  GlobalLiquidityMetrics,
+  TreasuryHoldings,
+  LPTokenMetrics,
+  PoolReserves,
 } from '../generated/schema';
 
 export const ZERO_ADDRESS = Address.fromString(
   '0x0000000000000000000000000000000000000000'
 );
+export const TREASURY_ADDRESS = Address.fromString(
+  '0xa0DA53447C0f6C4987964d8463da7e6628B30f82'
+);
+
 export const SECONDS_PER_DAY = BigInt.fromI32(86400);
-export const GLOBAL_ID = '';
+export const BASIS_POINTS = BigInt.fromI32(10000); // 100% = 10000 basis points
+export const GLOBAL_ID = 'global';
 
 /**
- * Get day timestamp by truncating to start of day
+ * Get day timestamp by truncating to start of day (UTC)
  */
 export function getDayTimestamp(timestamp: BigInt): BigInt {
   return timestamp.div(SECONDS_PER_DAY).times(SECONDS_PER_DAY);
-}
-
-/**
- * Convert BigInt to decimal with 18 decimals
- */
-export function toDecimal(value: BigInt, decimals: i32 = 18): BigInt {
-  let divisor = BigInt.fromI32(10).pow(decimals as u8);
-  return value.div(divisor);
 }
 
 /**
@@ -35,119 +31,155 @@ export function isZeroAddress(address: Address): boolean {
 }
 
 /**
- * Generate unique ID for holder entity
+ * Check if an address is the treasury address
  */
-export function getHolderId(
-  poolAddress: Address,
-  holderAddress: Address
-): string {
-  return poolAddress.toHexString() + '_' + holderAddress.toHexString();
+export function isTreasuryAddress(address: Address): boolean {
+  return address.equals(TREASURY_ADDRESS);
 }
 
-// Helper function to get or create global metrics
-export function getOrCreateGlobalMetrics(): GlobalLiquidityMetrics {
-  let global = GlobalLiquidityMetrics.load(GLOBAL_ID);
-  if (global == null) {
-    global = new GlobalLiquidityMetrics(GLOBAL_ID);
-    global.totalPools = 0;
-    global.totalSupplyAcrossPools = BigInt.zero();
-    global.totalHolders = 0;
-    global.lastUpdated = BigInt.zero();
+/**
+ * Calculate percentage in basis points (10000 = 100%)
+ */
+export function calculatePercentageBasisPoints(
+  numerator: BigInt,
+  denominator: BigInt
+): BigInt {
+  if (denominator.equals(BigInt.zero())) {
+    return BigInt.zero();
   }
-  return global;
+  return numerator.times(BASIS_POINTS).div(denominator);
 }
 
-// Helper function to get or create liquidity pool
-export function getOrCreateLiquidityPool(address: Address): LiquidityPool {
-  let pool = LiquidityPool.load(address);
-  if (pool == null) {
-    pool = new LiquidityPool(address);
-    pool.totalSupply = BigInt.zero();
-    pool.totalMinted = BigInt.zero();
-    pool.totalBurned = BigInt.zero();
-    pool.holderCount = 0;
-    pool.transferCount = 0;
-    pool.firstTransferTimestamp = BigInt.zero();
-    pool.lastTransferTimestamp = BigInt.zero();
-
-    // Update global metrics
-    let global = getOrCreateGlobalMetrics();
-    global.totalPools = global.totalPools + 1;
-    global.save();
+/**
+ * Get or create global LP token metrics
+ */
+export function getOrCreateLPTokenMetrics(): LPTokenMetrics {
+  let metrics = LPTokenMetrics.load(GLOBAL_ID);
+  if (metrics == null) {
+    metrics = new LPTokenMetrics(GLOBAL_ID);
+    metrics.totalSupply = BigInt.zero();
+    metrics.totalMinted = BigInt.zero();
+    metrics.totalBurned = BigInt.zero();
+    metrics.treasurySupply = BigInt.zero();
+    metrics.treasuryPercentage = BigInt.zero();
+    metrics.currentReserve0 = BigInt.zero();
+    metrics.currentReserve1 = BigInt.zero();
+    metrics.lastUpdated = BigInt.zero();
+    metrics.firstTransferTimestamp = BigInt.zero();
   }
-  return pool;
+  return metrics;
 }
 
-// Helper function to get or create daily liquidity change
-export function getOrCreateDailyLiquidityChange(
-  dayTimestamp: BigInt
-): DailyLiquidityChange {
-  let id = dayTimestamp.toString();
-  let dailyChange = DailyLiquidityChange.load(id);
-  if (dailyChange == null) {
-    dailyChange = new DailyLiquidityChange(id);
-    dailyChange.dayTimestamp = dayTimestamp;
-    dailyChange.amountIn = BigInt.zero();
-    dailyChange.amountOut = BigInt.zero();
-    dailyChange.netChange = BigInt.zero();
-    dailyChange.transferCount = 0;
+/**
+ * Get or create treasury holdings tracker
+ */
+export function getOrCreateTreasuryHoldings(): TreasuryHoldings {
+  let treasury = TreasuryHoldings.load(TREASURY_ADDRESS);
+  if (treasury == null) {
+    treasury = new TreasuryHoldings(TREASURY_ADDRESS);
+    treasury.currentBalance = BigInt.zero();
+    treasury.totalAcquired = BigInt.zero();
+    treasury.totalSold = BigInt.zero();
+    treasury.firstTransactionTimestamp = BigInt.zero();
+    treasury.lastTransactionTimestamp = BigInt.zero();
+    treasury.transactionCount = 0;
   }
-  return dailyChange;
+  return treasury;
 }
 
-// Helper function to get or create liquidity holder
-export function getOrCreateLiquidityHolder(
-  poolAddress: Address,
-  holderAddress: Address
-): LiquidityHolder {
-  let id = getHolderId(poolAddress, holderAddress);
-  let holder = LiquidityHolder.load(id);
-  if (holder == null) {
-    holder = new LiquidityHolder(id);
-    holder.pool = poolAddress;
-    holder.holder = holderAddress;
-    holder.balance = BigInt.zero();
-    holder.firstTransferTimestamp = BigInt.zero();
-    holder.lastTransferTimestamp = BigInt.zero();
+/**
+ * Get or create pool reserves
+ */
+export function getOrCreatePoolReserves(poolAddress: Address): PoolReserves {
+  let reserves = PoolReserves.load(poolAddress);
+  if (reserves == null) {
+    reserves = new PoolReserves(poolAddress);
+    reserves.reserve0 = BigInt.zero();
+    reserves.reserve1 = BigInt.zero();
+    reserves.lastSyncBlock = BigInt.zero();
+    reserves.lastSyncTimestamp = BigInt.zero();
+    reserves.lastSyncTransaction = Bytes.empty();
   }
-  return holder;
+  return reserves;
 }
 
-// Helper function to update holder balance
-export function updateHolderBalance(
-  poolAddress: Address,
-  holderAddress: Address,
+/**
+ * Update treasury holdings based on transfer
+ */
+export function updateTreasuryHoldings(
   amount: BigInt,
   isIncoming: boolean,
   timestamp: BigInt
 ): void {
-  let holder = getOrCreateLiquidityHolder(poolAddress, holderAddress);
-  let pool = getOrCreateLiquidityPool(poolAddress);
+  let treasury = getOrCreateTreasuryHoldings();
 
-  // Track if this is a new holder
-  let wasNewHolder = holder.balance.equals(BigInt.zero());
-
-  // Update balance
   if (isIncoming) {
-    holder.balance = holder.balance.plus(amount);
+    treasury.currentBalance = treasury.currentBalance.plus(amount);
+    treasury.totalAcquired = treasury.totalAcquired.plus(amount);
   } else {
-    holder.balance = holder.balance.minus(amount);
+    treasury.currentBalance = treasury.currentBalance.minus(amount);
+    treasury.totalSold = treasury.totalSold.plus(amount);
   }
 
-  // Update timestamps
-  if (holder.firstTransferTimestamp.equals(BigInt.zero())) {
-    holder.firstTransferTimestamp = timestamp;
+  if (treasury.firstTransactionTimestamp.equals(BigInt.zero())) {
+    treasury.firstTransactionTimestamp = timestamp;
   }
-  holder.lastTransferTimestamp = timestamp;
+  treasury.lastTransactionTimestamp = timestamp;
+  treasury.transactionCount = treasury.transactionCount + 1;
 
-  // Update holder count in pool
-  let isNowHolder = holder.balance.gt(BigInt.zero());
-  if (wasNewHolder && isNowHolder) {
-    pool.holderCount = pool.holderCount + 1;
-  } else if (!wasNewHolder && !isNowHolder) {
-    pool.holderCount = pool.holderCount - 1;
+  treasury.save();
+}
+
+/**
+ * Update global metrics after LP transfer
+ */
+export function updateGlobalMetricsAfterTransfer(
+  amount: BigInt,
+  isMint: boolean,
+  isBurn: boolean,
+  timestamp: BigInt
+): void {
+  let metrics = getOrCreateLPTokenMetrics();
+
+  if (isMint) {
+    metrics.totalSupply = metrics.totalSupply.plus(amount);
+    metrics.totalMinted = metrics.totalMinted.plus(amount);
+  } else if (isBurn) {
+    metrics.totalSupply = metrics.totalSupply.minus(amount);
+    metrics.totalBurned = metrics.totalBurned.plus(amount);
   }
 
-  holder.save();
-  pool.save();
+  // Update treasury supply from current treasury holdings
+  let treasury = getOrCreateTreasuryHoldings();
+  metrics.treasurySupply = treasury.currentBalance;
+
+  // Calculate treasury percentage
+  metrics.treasuryPercentage = calculatePercentageBasisPoints(
+    metrics.treasurySupply,
+    metrics.totalSupply
+  );
+
+  if (metrics.firstTransferTimestamp.equals(BigInt.zero())) {
+    metrics.firstTransferTimestamp = timestamp;
+  }
+  metrics.lastUpdated = timestamp;
+
+  metrics.save();
+}
+
+/**
+ * Update global metrics after reserves sync
+ */
+export function updateGlobalMetricsAfterSync(
+  reserve0: BigInt,
+  reserve1: BigInt,
+  timestamp: BigInt
+): void {
+  let metrics = getOrCreateLPTokenMetrics();
+
+  metrics.currentReserve0 = reserve0;
+  metrics.currentReserve1 = reserve1;
+  metrics.lastUpdated = timestamp;
+
+  metrics.save();
 }
