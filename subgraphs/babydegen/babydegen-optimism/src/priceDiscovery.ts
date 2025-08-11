@@ -1,6 +1,7 @@
 import { Address, BigDecimal, BigInt, log, Bytes } from "@graphprotocol/graph-ts"
 import { Token, PriceSource, PriceUpdate } from "../../../../generated/schema"
 import { getTokenConfig, TokenConfig, PriceSourceConfig } from "./tokenConfig"
+import { CRITICAL_STABLECOINS } from "./constants"
 
 // Cache duration: 5 minutes
 const PRICE_CACHE_DURATION = BigInt.fromI32(300)
@@ -73,16 +74,9 @@ export function getTokenPriceUSD(
   log.error("❌ PRICE: No reliable price found for {} (tried all sources)", [token.symbol])
 
   // For critical stablecoins, try emergency fallback to prevent total failure
-  let criticalStablecoins = [
-    "0x0b2c639c533813f4aa9d7837caf62653d097ff85", // USDC
-    "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58",  // USDT
-    "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",  // DAI
-    "0xc40f949f8a4e094d1b49a23ea9241d289b7b2819"   // LUSD
-  ]
-
   let tokenHex = token.id.toHexString().toLowerCase()
-  for (let i = 0; i < criticalStablecoins.length; i++) {
-    if (tokenHex == criticalStablecoins[i]) {
+  for (let i = 0; i < CRITICAL_STABLECOINS.length; i++) {
+    if (tokenHex == CRITICAL_STABLECOINS[i]) {
       log.warning("🚨 EMERGENCY: Using $1.00 fallback for critical stablecoin {}", [token.symbol])
       return BigDecimal.fromString("1.0") // Emergency fallback for critical stablecoins only
     }
@@ -180,7 +174,7 @@ function getPriceFromSource(
   
   if (sourceType == "chainlink") {
     let price = getChainlinkPrice(sourceConfig.address)
-    if (price.gt(BigDecimal.fromString("0")) && validatePriceResult(price, token.symbol)) {
+    if (price.gt(BigDecimal.fromString("0")) && isValidPriceResult(price, token.symbol)) {
       return new PriceResult(price, baseConfidence, "chainlink")
     }
   }
@@ -188,7 +182,7 @@ function getPriceFromSource(
   if (sourceType == "chainlink_reference") {
     // Used for tokens without direct feeds (USDC.e referencing USDC)
     let price = getChainlinkPrice(sourceConfig.address)
-    if (price.gt(BigDecimal.fromString("0")) && validatePriceResult(price, token.symbol)) {
+    if (price.gt(BigDecimal.fromString("0")) && isValidPriceResult(price, token.symbol)) {
       // Slightly lower confidence for reference prices
       return new PriceResult(price, baseConfidence.times(BigDecimal.fromString("0.9")), "chainlink_ref")
     }
@@ -196,7 +190,7 @@ function getPriceFromSource(
   
   if (sourceType == "curve_3pool") {
     let price = getCurve3PoolPrice(Address.fromBytes(token.id))
-    if (price.gt(BigDecimal.fromString("0")) && validatePriceResult(price, token.symbol)) {
+    if (price.gt(BigDecimal.fromString("0")) && isValidPriceResult(price, token.symbol)) {
       return new PriceResult(price, baseConfidence, "curve")
     }
   }
@@ -208,7 +202,7 @@ function getPriceFromSource(
       sourceConfig.pairToken!,
       sourceConfig.fee
     )
-    if (price.gt(BigDecimal.fromString("0")) && validatePriceResult(price, token.symbol)) {
+    if (price.gt(BigDecimal.fromString("0")) && isValidPriceResult(price, token.symbol)) {
       return new PriceResult(price, baseConfidence, "uniswap_v3")
     }
   }
@@ -219,7 +213,7 @@ function getPriceFromSource(
       sourceConfig.address,
       sourceConfig.pairToken!
     )
-    if (price.gt(BigDecimal.fromString("0")) && validatePriceResult(price, token.symbol)) {
+    if (price.gt(BigDecimal.fromString("0")) && isValidPriceResult(price, token.symbol)) {
       return new PriceResult(price, baseConfidence, "velodrome")
     }
   }
@@ -243,7 +237,7 @@ function createPriceUpdate(
   update.save()
 }
 
-function validatePriceResult(price: BigDecimal, tokenSymbol: string): boolean {
+function isValidPriceResult(price: BigDecimal, tokenSymbol: string): boolean {
   // Reasonable price bounds for most tokens
   let minPrice = BigDecimal.fromString("0.0001")  // $0.0001
   let maxPrice = BigDecimal.fromString("100000")   // $100,000
