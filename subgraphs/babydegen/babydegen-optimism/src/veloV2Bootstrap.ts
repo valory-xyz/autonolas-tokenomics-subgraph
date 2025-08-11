@@ -16,21 +16,11 @@ import {
   ethereum,
   log 
 } from "@graphprotocol/graph-ts"
+import { VELO_V2_SUGAR, VELO_V2_FACTORY, WHITELISTED_TOKENS } from "./constants"
 
 // Configuration
-const SUGAR_ADDRESS = Address.fromString('0xA64db2D254f07977609def75c3A7db3eDc72EE1D')
-const FACTORY_ADDRESS = Address.fromString('0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a')
-
-// Whitelisted tokens on Optimism (checksummed addresses)
-const WHITELISTED_TOKENS: string[] = [
-  '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', // USDC (Native)
-  '0xc40F949F8a4e094D1b49a23ea9241D289B7b2819', // LUSD  
-  '0x4200000000000000000000000000000000000006', // WETH
-  '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58', // TBTC
-  '0x68f180fcCe6836688e9084f035309E29Bf0A2095', // WBTC
-  '0x8c6f28f2F1A3C87F0f938b96d27520d9751ec8d9', // sUSD
-  '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1', // DAI
-]
+const SUGAR_ADDRESS = VELO_V2_SUGAR
+const FACTORY_ADDRESS = VELO_V2_FACTORY
 
 // Cache to track discovered pools
 let discoveredPools = new Map<string, boolean>()
