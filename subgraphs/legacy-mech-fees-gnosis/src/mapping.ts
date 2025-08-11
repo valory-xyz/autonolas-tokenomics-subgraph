@@ -17,6 +17,10 @@ import {
   updateGlobalFeesOutLegacyMech,
   updateGlobalFeesOutLegacyMechMarketPlace,
   getOrCreateDailyFees,
+  updateMechDailyFeesInLegacyMech,
+  updateMechDailyFeesOutLegacyMech,
+  updateMechDailyFeesInLegacyMechMarketPlace,
+  updateMechDailyFeesOutLegacyMechMarketPlace,
 } from './utils';
 import { BURN_ADDRESS_MECH_FEES_GNOSIS } from '../../../shared/constants';
 
@@ -87,6 +91,14 @@ export function handleExecLM(call: ExecCallLM): void {
   dailyFees.totalFeesOutLegacyMech =
     dailyFees.totalFeesOutLegacyMech.plus(amount);
   dailyFees.save();
+
+  // Update mech daily fees
+  updateMechDailyFeesOutLegacyMech(
+    mechAddress,
+    lm.agentId,
+    amount,
+    call.block.timestamp
+  );
 }
 
 // Handler for price updates for LMs
@@ -125,6 +137,14 @@ export function handleExecLMM(call: ExecCallLMM): void {
   dailyFees.totalFeesOutLegacyMechMarketPlace =
     dailyFees.totalFeesOutLegacyMechMarketPlace.plus(amount);
   dailyFees.save();
+
+  // Update mech daily fees
+  updateMechDailyFeesOutLegacyMechMarketPlace(
+    mechAddress,
+    lmm.agentId,
+    amount,
+    call.block.timestamp
+  );
 }
 
 // Handler for price updates for LMMs
@@ -157,6 +177,14 @@ export function handleRequest(event: RequestEvent): void {
   const dailyFees = getOrCreateDailyFees(event.block.timestamp);
   dailyFees.totalFeesInLegacyMech = dailyFees.totalFeesInLegacyMech.plus(fee);
   dailyFees.save();
+
+  // Update mech daily fees
+  updateMechDailyFeesInLegacyMech(
+    mechAddress,
+    mech.agentId,
+    fee,
+    event.block.timestamp
+  );
 }
 
 // Call handler for requests routed through the marketplace to LMMs
@@ -181,4 +209,12 @@ export function handleRequestFromMarketPlace(
   dailyFees.totalFeesInLegacyMechMarketPlace =
     dailyFees.totalFeesInLegacyMechMarketPlace.plus(fee);
   dailyFees.save();
+
+  // Update mech daily fees
+  updateMechDailyFeesInLegacyMechMarketPlace(
+    mechAddress,
+    mech.agentId,
+    fee,
+    call.block.timestamp
+  );
 }

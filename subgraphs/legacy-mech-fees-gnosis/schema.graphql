@@ -32,3 +32,14 @@ type DailyFees @entity(immutable: false) {
   totalFeesOutLegacyMech: BigInt!
   totalFeesOutLegacyMechMarketPlace: BigInt!
 }
+
+type MechDaily @entity(immutable: false) {
+  id: ID!
+  mech: Bytes!
+  agentId: Int!
+  date: Int!
+  feesInLegacyMech: BigInt!
+  feesOutLegacyMech: BigInt!
+  feesInLegacyMechMarketPlace: BigInt!
+  feesOutLegacyMechMarketPlace: BigInt!
+}

@@ -1,5 +1,5 @@
-import { BigInt } from '@graphprotocol/graph-ts';
-import { Global, DailyFees } from '../generated/schema';
+import { BigInt, Bytes } from '@graphprotocol/graph-ts';
+import { Global, DailyFees, MechDaily } from '../generated/schema';
 
 export function getOrCreateGlobal(): Global {
   let global = Global.load('global');
@@ -77,4 +77,89 @@ export function getOrCreateDailyFees(timestamp: BigInt): DailyFees {
     dailyFees.save();
   }
   return dailyFees;
+}
+
+function getMechDailyId(mechAddress: Bytes, timestamp: BigInt): string {
+  const dateId = getDateId(timestamp);
+  return mechAddress.toHexString() + '-' + dateId;
+}
+
+export function getOrCreateMechDaily(
+  mechAddress: Bytes,
+  agentId: i32,
+  timestamp: BigInt
+): MechDaily {
+  const id = getMechDailyId(mechAddress, timestamp);
+  let mechDaily = MechDaily.load(id);
+  if (mechDaily == null) {
+    const dayTimestamp = timestamp.toI32() / 86400;
+    mechDaily = new MechDaily(id);
+    mechDaily.mech = mechAddress;
+    mechDaily.agentId = agentId;
+    mechDaily.date = dayTimestamp * 86400;
+    mechDaily.feesInLegacyMech = BigInt.fromI32(0);
+    mechDaily.feesOutLegacyMech = BigInt.fromI32(0);
+    mechDaily.feesInLegacyMechMarketPlace = BigInt.fromI32(0);
+    mechDaily.feesOutLegacyMechMarketPlace = BigInt.fromI32(0);
+    mechDaily.save();
+  }
+  return mechDaily;
+}
+
+export function updateMechDailyFeesInLegacyMech(
+  mechAddress: Bytes,
+  agentId: i32,
+  amount: BigInt,
+  timestamp: BigInt
+): void {
+  if (amount.le(BigInt.fromI32(0))) {
+    return;
+  }
+  const mechDaily = getOrCreateMechDaily(mechAddress, agentId, timestamp);
+  mechDaily.feesInLegacyMech = mechDaily.feesInLegacyMech.plus(amount);
+  mechDaily.save();
+}
+
+export function updateMechDailyFeesOutLegacyMech(
+  mechAddress: Bytes,
+  agentId: i32,
+  amount: BigInt,
+  timestamp: BigInt
+): void {
+  if (amount.le(BigInt.fromI32(0))) {
+    return;
+  }
+  const mechDaily = getOrCreateMechDaily(mechAddress, agentId, timestamp);
+  mechDaily.feesOutLegacyMech = mechDaily.feesOutLegacyMech.plus(amount);
+  mechDaily.save();
+}
+
+export function updateMechDailyFeesInLegacyMechMarketPlace(
+  mechAddress: Bytes,
+  agentId: i32,
+  amount: BigInt,
+  timestamp: BigInt
+): void {
+  if (amount.le(BigInt.fromI32(0))) {
+    return;
+  }
+  const mechDaily = getOrCreateMechDaily(mechAddress, agentId, timestamp);
+  mechDaily.feesInLegacyMechMarketPlace =
+    mechDaily.feesInLegacyMechMarketPlace.plus(amount);
+  mechDaily.save();
+}
+
+export function updateMechDailyFeesOutLegacyMechMarketPlace(
+  mechAddress: Bytes,
+  agentId: i32,
+  amount: BigInt,
+  timestamp: BigInt
+): void {
+  if (amount.le(BigInt.fromI32(0))) {
+    return;
+  }
+  const mechDaily = getOrCreateMechDaily(mechAddress, agentId, timestamp);
+  mechDaily.feesOutLegacyMechMarketPlace =
+    mechDaily.feesOutLegacyMechMarketPlace.plus(amount);
+  mechDaily.save();
 }
