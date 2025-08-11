@@ -16,12 +16,6 @@ export function updateFunding(
   deposit: boolean,
   ts: BigInt
 ): void {
-  log.info("FUNDING: Updating funding for service {} - Amount: {} USD, Deposit: {}", [
-    serviceSafe.toHexString(),
-    usd.toString(),
-    deposit.toString()
-  ])
-  
   let id = serviceSafe as Bytes
   let fb = FundingBalance.load(id)
   
@@ -32,23 +26,20 @@ export function updateFunding(
     fb.totalOutUsd = BigDecimal.zero()
     fb.netUsd = BigDecimal.zero()
     fb.firstInTimestamp = ts
-    log.info("FUNDING: Created new FundingBalance for service {}", [serviceSafe.toHexString()])
   }
   
   if (deposit) {
     fb.totalInUsd = fb.totalInUsd.plus(usd)
-    log.info("FUNDING: Deposit - New totalIn: {} USD", [fb.totalInUsd.toString()])
   } else {
     fb.totalOutUsd = fb.totalOutUsd.plus(usd)
-    log.info("FUNDING: Withdrawal - New totalOut: {} USD", [fb.totalOutUsd.toString()])
   }
   
   fb.netUsd = fb.totalInUsd.minus(fb.totalOutUsd)
   fb.lastChangeTs = ts
   
-  log.info("FUNDING: Updated balance - TotalIn: {}, TotalOut: {}, Net: {} USD", [
-    fb.totalInUsd.toString(),
-    fb.totalOutUsd.toString(),
+  log.info("FUNDING: {} {} USD - Net: {} USD", [
+    deposit ? "IN" : "OUT",
+    usd.toString(),
     fb.netUsd.toString()
   ])
   
@@ -80,21 +71,11 @@ export function calculatePortfolioMetrics(
   serviceSafe: Address, 
   block: ethereum.Block
 ): void {
-  log.info("PORTFOLIO: ========== STARTING PORTFOLIO CALCULATION ==========", [])
-  log.info("PORTFOLIO: Service: {}, Block: {}, Timestamp: {}", [
-    serviceSafe.toHexString(),
-    block.number.toString(),
-    block.timestamp.toString()
-  ])
-  
   // Check if this is a valid service
   let service = getServiceByAgent(serviceSafe)
   if (service == null) {
-    log.warning("PORTFOLIO: Service not found for address: {}", [serviceSafe.toHexString()])
     return
   }
-  
-  log.info("PORTFOLIO: Valid service found - ServiceId: {}", [service.serviceId.toString()])
   
   // Load or create AgentPortfolio
   let portfolioId = serviceSafe as Bytes
@@ -111,35 +92,22 @@ export function calculatePortfolioMetrics(
   // 1. Get initial investment from FundingBalance
   let fundingBalance = FundingBalance.load(serviceSafe as Bytes)
   let initialValue = fundingBalance ? fundingBalance.netUsd : BigDecimal.zero()
-  log.info("PORTFOLIO: Initial investment value: {} USD", [initialValue.toString()])
   
   // 2. Calculate total positions value
   let positionsValue = calculatePositionsValue(serviceSafe)
-  log.info("PORTFOLIO: Total positions value: {} USD", [positionsValue.toString()])
   
   // 3. Calculate uninvested funds
   let uninvestedValue = calculateUninvestedValue(serviceSafe)
-  log.info("PORTFOLIO: Uninvested funds value: {} USD", [uninvestedValue.toString()])
   
-  // 4. NEW: Calculate OLAS rewards value
+  // 4. Calculate OLAS rewards value
   let olasRewardsValue = BigDecimal.zero()
   let olasRewards = OlasRewards.load(serviceSafe as Bytes)
   if (olasRewards !== null) {
     olasRewardsValue = olasRewards.olasRewardsEarnedUSD
-    log.info("PORTFOLIO: OLAS rewards - {} OLAS = {} USD", [
-      olasRewards.olasRewardsEarned.toString(),
-      olasRewardsValue.toString()
-    ])
   }
   
   // 5. Calculate total portfolio value INCLUDING OLAS rewards
   let finalValue = positionsValue.plus(uninvestedValue).plus(olasRewardsValue)
-  log.info("PORTFOLIO: Final portfolio value: {} USD (positions: {} + uninvested: {} + OLAS: {})", [
-    finalValue.toString(),
-    positionsValue.toString(),
-    uninvestedValue.toString(),
-    olasRewardsValue.toString()
-  ])
   
   // 5. Calculate ROI and APR
   let roi = BigDecimal.zero()
@@ -150,37 +118,17 @@ export function calculatePortfolioMetrics(
     let profit = finalValue.minus(initialValue)
     roi = profit.div(initialValue).times(BigDecimal.fromString("100"))
     
-    log.info("PORTFOLIO: ROI Calculation - Profit: {} USD, ROI: {}%", [
-      profit.toString(),
-      roi.toString()
-    ])
-    
     // APR calculation - only if we have a first trading timestamp
     if (portfolio.firstTradingTimestamp.gt(BigInt.zero())) {
       let secondsSinceStart = block.timestamp.minus(portfolio.firstTradingTimestamp)
       let daysSinceStart = secondsSinceStart.toBigDecimal().div(BigDecimal.fromString("86400"))
       
-      log.info("PORTFOLIO: APR Calculation - First trade: {}, Days since: {}", [
-        portfolio.firstTradingTimestamp.toString(),
-        daysSinceStart.toString()
-      ])
-      
       if (daysSinceStart.gt(BigDecimal.zero())) {
         // APR = roi * (365 / days_invested)
         let annualizationFactor = BigDecimal.fromString("365").div(daysSinceStart)
         apr = roi.times(annualizationFactor)
-        
-        log.info("PORTFOLIO: APR = ROI ({}) × Annualization Factor ({}) = {}%", [
-          roi.toString(),
-          annualizationFactor.toString(),
-          apr.toString()
-        ])
       }
-    } else {
-      log.info("PORTFOLIO: APR not calculated - no first trading timestamp", [])
     }
-  } else {
-    log.info("PORTFOLIO: ROI/APR not calculated - no initial investment", [])
   }
   
   // Update portfolio
@@ -188,7 +136,7 @@ export function calculatePortfolioMetrics(
   portfolio.initialValue = initialValue  
   portfolio.positionsValue = positionsValue
   portfolio.uninvestedValue = uninvestedValue
-  portfolio.olasRewardsValue = olasRewardsValue  // ADD THIS LINE
+  portfolio.olasRewardsValue = olasRewardsValue
   portfolio.roi = roi
   portfolio.apr = apr
   portfolio.lastUpdated = block.timestamp
@@ -198,22 +146,17 @@ export function calculatePortfolioMetrics(
   portfolio.totalPositions = positionCounts.active
   portfolio.totalClosedPositions = positionCounts.closed
   
-  log.info("PORTFOLIO: Position counts - Active: {}, Closed: {}", [
-    positionCounts.active.toString(),
-    positionCounts.closed.toString()
-  ])
-  
   portfolio.save()
   
   // Create snapshot
   createPortfolioSnapshot(portfolio, block)
   
-  log.info("PORTFOLIO: ========== PORTFOLIO CALCULATION COMPLETE ==========", [])
-  log.info("PORTFOLIO: Summary - Final: {} USD, Initial: {} USD, ROI: {}%, APR: {}%", [
+  log.info("PORTFOLIO: {} USD (ROI: {}%, positions: {}, uninvested: {}, OLAS: {})", [
     finalValue.toString(),
-    initialValue.toString(), 
     roi.toString(),
-    apr.toString()
+    positionsValue.toString(),
+    uninvestedValue.toString(),
+    olasRewardsValue.toString()
   ])
 }
 
@@ -224,13 +167,11 @@ function calculatePositionsValue(serviceSafe: Address): BigDecimal {
   // Get the service entity
   let service = Service.load(serviceSafe)
   if (service == null || service.positionIds == null) {
-    log.info("PORTFOLIO: No positions found for service {}", [serviceSafe.toHexString()])
     return totalValue
   }
   
   // Iterate through all position IDs
   let positionIds = service.positionIds
-  log.info("PORTFOLIO: Calculating value for {} positions", [positionIds.length.toString()])
   
   for (let i = 0; i < positionIds.length; i++) {
     // Position IDs are stored as strings, convert to Bytes
@@ -239,19 +180,6 @@ function calculatePositionsValue(serviceSafe: Address): BigDecimal {
     
     if (position != null && position.isActive) {
       totalValue = totalValue.plus(position.usdCurrent)
-      log.info("PORTFOLIO: Position {} - Protocol: {}, Value: {} USD, Active: {}", [
-        positionIds[i],
-        position.protocol,
-        position.usdCurrent.toString(),
-        position.isActive.toString()
-      ])
-    } else if (position != null) {
-      log.info("PORTFOLIO: Position {} - Protocol: {}, INACTIVE", [
-        positionIds[i],
-        position.protocol
-      ])
-    } else {
-      log.warning("PORTFOLIO: Position {} not found!", [positionIds[i]])
     }
   }
   
@@ -325,12 +253,6 @@ function createPortfolioSnapshot(portfolio: AgentPortfolio, block: ethereum.Bloc
   snapshot.totalClosedPositions = portfolio.totalClosedPositions
   
   snapshot.save()
-  
-  log.info("PORTFOLIO: Created snapshot {} at block {} with value {} USD", [
-    snapshotId,
-    block.number.toString(),
-    portfolio.finalValue.toString()
-  ])
 }
 
 // Update first trading timestamp when a position is created
@@ -339,10 +261,5 @@ export function updateFirstTradingTimestamp(serviceSafe: Address, timestamp: Big
   if (portfolio != null && portfolio.firstTradingTimestamp.equals(BigInt.zero())) {
     portfolio.firstTradingTimestamp = timestamp
     portfolio.save()
-    
-    log.info("PORTFOLIO: Set first trading timestamp for service {} to {}", [
-      serviceSafe.toHexString(),
-      timestamp.toString()
-    ])
   }
 }

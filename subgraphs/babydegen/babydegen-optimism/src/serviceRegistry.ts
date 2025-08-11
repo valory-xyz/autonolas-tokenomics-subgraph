@@ -11,49 +11,18 @@ import { Safe } from "../../../../generated/templates"
 import { BigInt, Bytes, store, log } from "@graphprotocol/graph-ts"
 import { OPTIMUS_AGENT_ID } from "./constants"
 
-// Log initialization
-log.info("SERVICE DISCOVERY: ServiceRegistry handlers initialized - Looking for OPTIMUS_AGENT_ID: {}", [
-  OPTIMUS_AGENT_ID.toString()
-])
-
 export function handleRegisterInstance(event: RegisterInstance): void {
-  log.info("=== SERVICE DISCOVERY START: RegisterInstance ===", [])
-  log.info("SERVICE DISCOVERY: Event Details - TxHash: {}, LogIndex: {}", [
-    event.transaction.hash.toHexString(),
-    event.logIndex.toString()
-  ])
-  log.info("SERVICE DISCOVERY: Event Params - AgentID: {}, ServiceID: {}, Operator: {}, AgentInstance: {}", [
-    event.params.agentId.toString(),
-    event.params.serviceId.toString(),
-    event.params.operator.toHexString(),
-    event.params.agentInstance ? event.params.agentInstance.toHexString() : "null"
-  ])
-  log.info("SERVICE DISCOVERY: Block Info - Number: {}, Timestamp: {}", [
-    event.block.number.toString(),
-    event.block.timestamp.toString()
-  ])
-  
   // Filter for Optimus agents only
   if (!event.params.agentId.equals(OPTIMUS_AGENT_ID)) {
-    log.info("SERVICE DISCOVERY: Skipping non-Optimus agent - AgentID: {} (looking for {})", [
-      event.params.agentId.toString(),
-      OPTIMUS_AGENT_ID.toString()
-    ])
     return
   }
   
-  log.info("SERVICE: ✅ New Optimus service registered - ID: {}, Operator: {}, Block: {}", [
-    event.params.serviceId.toString(),
-    event.params.operator.toHexString(),
-    event.block.number.toString()
+  log.info("SERVICE: Optimus service registered - ID: {}", [
+    event.params.serviceId.toString()
   ])
   
   let serviceId = event.params.serviceId
   let tempId = Bytes.fromUTF8(serviceId.toString())
-  
-  log.info("SERVICE DISCOVERY: Creating ServiceRegistration entity with ID: {}", [
-    tempId.toHexString()
-  ])
   
   // Always overwrite with latest registration
   let registration = new ServiceRegistration(tempId)
@@ -63,10 +32,6 @@ export function handleRegisterInstance(event: RegisterInstance): void {
   registration.registrationTimestamp = event.block.timestamp
   registration.registrationTxHash = event.transaction.hash
   registration.save()
-  
-  log.info("SERVICE DISCOVERY: ServiceRegistration saved successfully for service ID: {}", [
-    serviceId.toString()
-  ])
   
   // Update existing service if it exists
   let serviceIndex = ServiceIndex.load(tempId)
@@ -87,42 +52,18 @@ export function handleRegisterInstance(event: RegisterInstance): void {
       service.save()
     }
   }
-  
-  log.info("=== SERVICE DISCOVERY END: RegisterInstance ===", [])
 }
 
 export function handleCreateMultisigWithAgents(event: CreateMultisigWithAgents): void {
-  log.info("=== SERVICE DISCOVERY START: CreateMultisigWithAgents ===", [])
-  
   let serviceId = event.params.serviceId
   let multisig = event.params.multisig
-  
-  log.info("SERVICE DISCOVERY: Event Details - TxHash: {}, LogIndex: {}", [
-    event.transaction.hash.toHexString(),
-    event.logIndex.toString()
-  ])
-  log.info("SERVICE DISCOVERY: Event Params - ServiceID: {}, Multisig: {}", [
-    serviceId.toString(),
-    multisig.toHexString()
-  ])
-  log.info("SERVICE DISCOVERY: Block Info - Number: {}, Timestamp: {}", [
-    event.block.number.toString(),
-    event.block.timestamp.toString()
-  ])
   
   let tempId = Bytes.fromUTF8(serviceId.toString())
   
   let registration = ServiceRegistration.load(tempId)
   if (registration == null) {
-    log.info("SERVICE DISCOVERY: No registration found for service {} - skipping multisig creation", [
-      serviceId.toString()
-    ])
     return // Not an Optimus service
   }
-  
-  log.info("SERVICE DISCOVERY: Found registration for service {} - proceeding with multisig creation", [
-    serviceId.toString()
-  ])
   
   // Check if we already have a service for this serviceId
   let serviceIndex = ServiceIndex.load(tempId)
@@ -130,9 +71,6 @@ export function handleCreateMultisigWithAgents(event: CreateMultisigWithAgents):
     // Mark old service as inactive
     let oldService = Service.load(serviceIndex.currentServiceSafe)
     if (oldService != null) {
-      log.info("SERVICE: Previous service marked inactive - Safe: {}", [
-        oldService.serviceSafe.toHexString()
-      ])
       oldService.isActive = false
       
       // Ensure positionIds is initialized (for backward compatibility)
@@ -176,22 +114,11 @@ export function handleCreateMultisigWithAgents(event: CreateMultisigWithAgents):
   serviceIndex.currentServiceSafe = multisig
   serviceIndex.save()
   
-  log.info("SERVICE: ✅ Multisig created - Service ID: {}, Safe: {}, Active: {}, Operator: {}", [
+  log.info("SERVICE: Multisig created - ID: {}, Safe: {}", [
     serviceId.toString(),
-    multisig.toHexString(),
-    service.isActive.toString(),
-    service.operatorSafe.toHexString()
-  ])
-  
-  log.info("SERVICE DISCOVERY: Service entity saved successfully - can now track funding and positions for safe: {}", [
     multisig.toHexString()
   ])
   
   // Create Safe datasource instance to track ETH transfers
   Safe.create(multisig)
-  log.info("SERVICE DISCOVERY: Created Safe datasource instance for tracking ETH transfers to: {}", [
-    multisig.toHexString()
-  ])
-  
-  log.info("=== SERVICE DISCOVERY END: CreateMultisigWithAgents ===", [])
 }

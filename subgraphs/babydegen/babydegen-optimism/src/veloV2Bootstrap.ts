@@ -44,7 +44,6 @@ function createPoolTemplate(poolAddress: Address, token0: Address, token1: Addre
   
   // Check cache first
   if (discoveredPools.has(poolKey)) {
-    log.warning("VELO V2 BOOTSTRAP: Pool {} already discovered, skipping", [poolKey])
     return
   }
   
@@ -52,24 +51,12 @@ function createPoolTemplate(poolAddress: Address, token0: Address, token1: Addre
   VeloV2PoolTemplate.create(poolAddress)
   discoveredPools.set(poolKey, true)
   
-  log.warning("VELO V2 BOOTSTRAP: ✅ Created template for pool: {} ({}/{} stable:{})", [
-    poolKey,
-    token0.toHexString(),
-    token1.toHexString(),
-    stable.toString()
-  ])
+  log.info("VELO V2: Created pool template {}", [poolKey])
 }
 
 // Bootstrap handler - runs once at startup
 export function handleVeloV2Bootstrap(block: ethereum.Block): void {
-  log.warning("VELO V2 BOOTSTRAP: Starting pool discovery at block {} timestamp {}", [
-    block.number.toString(),
-    block.timestamp.toString()
-  ])
-  
-  // Track timing
-  let startTime = block.timestamp
-  let batchCount = 0
+  log.info("VELO V2: Starting pool discovery at block {}", [block.number.toString()])
   
   let sugar = Sugar.bind(SUGAR_ADDRESS)
   let totalDiscovered = 0
@@ -81,28 +68,15 @@ export function handleVeloV2Bootstrap(block: ethereum.Block): void {
   let hasMore = true
   
   while (hasMore) {
-    batchCount++
-    log.warning("VELO V2 BOOTSTRAP: Fetching batch {} - limit={}, offset={}", [
-      batchCount.toString(),
-      limit.toString(), 
-      offset.toString()
-    ])
-    
-    let batchStartTime = block.timestamp
     let poolsResult = sugar.try_all(BigInt.fromI32(limit), BigInt.fromI32(offset))
     
     if (poolsResult.reverted) {
-      log.warning("VELO V2 BOOTSTRAP: Sugar contract call reverted at offset {}", [offset.toString()])
+      log.error("VELO V2: Sugar call reverted at offset {}", [offset.toString()])
       break
     }
     
     let pools = poolsResult.value
     totalDiscovered += pools.length
-    
-    log.warning("VELO V2 BOOTSTRAP: Batch {} returned {} pools", [
-      batchCount.toString(),
-      pools.length.toString()
-    ])
     
     if (pools.length == 0) {
       hasMore = false
@@ -123,13 +97,6 @@ export function handleVeloV2Bootstrap(block: ethereum.Block): void {
         let isStable = poolData.type == -1
         createPoolTemplate(poolData.id, poolData.token0, poolData.token1, isStable)
         whitelistedFound++
-        
-        log.warning("VELO V2 BOOTSTRAP: Found relevant pool: {} ({}/{}) type: {}", [
-          poolData.id.toHexString(),
-          poolData.token0.toHexString(),
-          poolData.token1.toHexString(),
-          poolData.type.toString()
-        ])
       }
     }
     
@@ -141,48 +108,21 @@ export function handleVeloV2Bootstrap(block: ethereum.Block): void {
     }
   }
   
-  // Calculate total time (note: in a subgraph we can't get actual time, just use block timestamp)
-  let endTime = block.timestamp
-  let totalBatches = batchCount
-  
-  log.warning("VELO V2 BOOTSTRAP: Discovery complete!", [])
-  log.warning("VELO V2 BOOTSTRAP: Summary - Total pools: {}, Whitelisted pools: {}, Batches: {}", [
-    totalDiscovered.toString(),
+  log.info("VELO V2: Discovery complete - {} whitelisted pools from {} total", [
     whitelistedFound.toString(),
-    totalBatches.toString()
-  ])
-  log.warning("VELO V2 BOOTSTRAP: Timing - Start: {}, End: {}, Block: {}", [
-    startTime.toString(),
-    endTime.toString(),
-    block.number.toString()
+    totalDiscovered.toString()
   ])
 }
 
 // Factory event handler for new pools
 export function handleVeloV2PoolCreated(event: PoolCreatedEvent): void {
-  log.warning("VELO V2 FACTORY: New pool created: {} ({}/{} stable:{})", [
-    event.params.pool.toHexString(),
-    event.params.token0.toHexString(),
-    event.params.token1.toHexString(),
-    event.params.stable.toString()
-  ])
-  
   // Only create template if both tokens are whitelisted and not already discovered
   if (isPoolRelevant(event.params.token0, event.params.token1)) {
     let poolKey = event.params.pool.toHexString()
     
     if (!discoveredPools.has(poolKey)) {
       createPoolTemplate(event.params.pool, event.params.token0, event.params.token1, event.params.stable)
-      
-      log.warning("VELO V2 FACTORY: ✅ Created template for new relevant pool: {}", [
-        event.params.pool.toHexString()
-      ])
-    } else {
-      log.warning("VELO V2 FACTORY: Pool {} already exists, skipping", [poolKey])
+      log.info("VELO V2: New pool template created {}", [event.params.pool.toHexString()])
     }
-  } else {
-    log.warning("VELO V2 FACTORY: Pool {} has non-whitelisted tokens, skipping", [
-      event.params.pool.toHexString()
-    ])
   }
 }
