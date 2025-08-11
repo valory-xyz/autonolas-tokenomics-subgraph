@@ -13,6 +13,10 @@ export const LUSD = Address.fromString("0xc40F949F8a4e094D1b49a23ea9241D289B7b28
 export const WETH = Address.fromString("0x4200000000000000000000000000000000000006") // WETH
 export const WBTC = Address.fromString("0x68f180fcCe6836688e9084f035309E29Bf0A2095") // WBTC
 export const SUSD = Address.fromString("0x8c6f28f2F1A3C87F0f938b96d27520d9751ec8d9") // sUSD
+export const FRAX = Address.fromString("0x2e3d870790dc77a83dd1d18184acc7439a53f475") // FRAX
+export const DOLA = Address.fromString("0x8ae125e8653821e851f12a49f7765db9a9ce7384") // DOLA
+export const BOLD = Address.fromString("0x087c440f251ff6cfe62b86dde1be558b95b4bb9b") // BOLD
+export const SDAI = Address.fromString("0x2218a117083f5b482b0bb821d27056ba9c04b1d3") // sDAI
 
 // Chainlink price feeds (Optimism mainnet)
 export const ETH_USD_FEED = Address.fromString("0x13e3Ee699D1909E989722E753853AE30b17e08c5")

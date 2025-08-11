@@ -12,48 +12,7 @@ import { getTokenPriceUSD } from "./priceDiscovery"
 import { VELO_MANAGER, VELO_FACTORY } from "./constants"
 import { isServiceAgent, getServiceByAgent } from "./config"
 import { updateFirstTradingTimestamp } from "./helpers"
-
-// Helper function to get token decimals
-function getTokenDecimals(tokenAddress: Address): i32 {
-  const tokenHex = tokenAddress.toHexString().toLowerCase()
-  
-  // hardcode Known token decimals on Optimism
-  if (tokenHex == "0x0b2c639c533813f4aa9d7837caf62653d097ff85") return 6  // USDC 
-  if (tokenHex == "0x7f5c764cbc14f9669b88837ca1490cca17c31607") return 6  // USDC.e
-  if (tokenHex == "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58") return 6  // USDT
-  if (tokenHex == "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1") return 18 // DAI
-  if (tokenHex == "0x4200000000000000000000000000000000000006") return 18 // WETH
-  if (tokenHex == "0x2e3d870790dc77a83dd1d18184acc7439a53f475") return 18 // FRAX
-  if (tokenHex == "0xc40f949f8a4e094d1b49a23ea9241d289b7b2819") return 18 // LUSD
-  if (tokenHex == "0x8ae125e8653821e851f12a49f7765db9a9ce7384") return 18 // DOLA
-  if (tokenHex == "0x087c440f251ff6cfe62b86dde1be558b95b4bb9b") return 18 // BOLD
-  if (tokenHex == "0x2218a117083f5b482b0bb821d27056ba9c04b1d3") return 18 // sDAI
-  
-  // Default to 18 decimals for unknown tokens
-  log.warning("VELODROME: Unknown token decimals for {}, defaulting to 18", [tokenHex])
-  return 18
-}
-
-// Helper function to get token symbol
-function getTokenSymbol(tokenAddress: Address): string {
-  const tokenHex = tokenAddress.toHexString().toLowerCase()
-  
-  // hardcode Known token symbols on Optimism
-  if (tokenHex == "0x0b2c639c533813f4aa9d7837caf62653d097ff85") return "USDC"
-  if (tokenHex == "0x7f5c764cbc14f9669b88837ca1490cca17c31607") return "USDC.e"
-  if (tokenHex == "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58") return "USDT"
-  if (tokenHex == "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1") return "DAI"
-  if (tokenHex == "0x4200000000000000000000000000000000000006") return "WETH"
-  if (tokenHex == "0x2e3d870790dc77a83dd1d18184acc7439a53f475") return "FRAX"
-  if (tokenHex == "0xc40f949f8a4e094d1b49a23ea9241d289b7b2819") return "LUSD"
-  if (tokenHex == "0x8ae125e8653821e851f12a49f7765db9a9ce7384") return "DOLA"
-  if (tokenHex == "0x087c440f251ff6cfe62b86dde1be558b95b4bb9b") return "BOLD"
-  if (tokenHex == "0x2218a117083f5b482b0bb821d27056ba9c04b1d3") return "sDAI"
-  
-  // Return the address as fallback for unknown tokens
-  log.warning("VELODROME: Unknown token symbol for {}, using address", [tokenHex])
-  return tokenHex
-}
+import { getTokenDecimals, getTokenSymbol } from "./tokenUtils"
 
 // Helper function to convert token amount from wei to human readable
 function convertTokenAmount(amount: BigInt, tokenAddress: Address): BigDecimal {
