@@ -1,5 +1,5 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts"
-import { ETH_USD_FEED, USDC_USD_FEED, USDT_USD_FEED, DAI_USD_FEED } from "./constants"
+import { ETH_USD_FEED, USDC_USD_FEED, USDT_USD_FEED, DAI_USD_FEED, USDC_NATIVE, WETH, DAI, USDT, USDC_BRIDGED } from "./constants"
 
 // Token configurations with Chainlink-first approach
 export const TOKENS = new Map<string, TokenConfig>()
@@ -7,13 +7,13 @@ export const TOKENS = new Map<string, TokenConfig>()
 export class TokenConfig {
   address: Address
   symbol: string
-  decimals: number
+  decimals: i32
   priceSources: PriceSourceConfig[]
   
   constructor(
     address: Address,
     symbol: string,
-    decimals: number,
+    decimals: i32,
     priceSources: PriceSourceConfig[]
   ) {
     this.address = address
@@ -26,18 +26,18 @@ export class TokenConfig {
 export class PriceSourceConfig {
   address: Address
   sourceType: string
-  priority: number
+  priority: i32
   pairToken: Address | null
-  fee: number
-  confidence: number  // Expected confidence level (0-100)
+  fee: i32
+  confidence: i32  // Expected confidence level (0-100)
   
   constructor(
     address: Address,
     sourceType: string,
-    priority: number,
-    confidence: number = 95,
+    priority: i32,
+    confidence: i32 = 95,
     pairToken: Address | null = null,
-    fee: number = 0
+    fee: i32 = 0
   ) {
     this.address = address
     this.sourceType = sourceType
@@ -82,8 +82,8 @@ function getChainlinkFeedSafe(feedName: string): string {
 function initializeTokens(): void {
   
   // USDC - Chainlink first, then high-liquidity pools
-  TOKENS.set("0x0b2c639c533813f4aa9d7837caf62653d097ff85", new TokenConfig(
-    Address.fromString("0x0b2c639c533813f4aa9d7837caf62653d097ff85"),
+  TOKENS.set(USDC_NATIVE.toHexString().toLowerCase(), new TokenConfig(
+    USDC_NATIVE,
     "USDC",
     6,
     [
@@ -115,8 +115,8 @@ function initializeTokens(): void {
   ))
 
   // WETH - Chainlink first
-  TOKENS.set("0x4200000000000000000000000000000000000006", new TokenConfig(
-    Address.fromString("0x4200000000000000000000000000000000000006"),
+  TOKENS.set(WETH.toHexString().toLowerCase(), new TokenConfig(
+    WETH,
     "WETH",
     18,
     [

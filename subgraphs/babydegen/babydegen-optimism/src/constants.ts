@@ -25,6 +25,14 @@ export const VELO_NFT_MANAGER = Address.fromString("0x416b433906b1B72FA758e166e2
 export const VELO_V2_SUGAR = Address.fromString("0xA64db2D254f07977609def75c3A7db3eDc72EE1D")
 export const VELO_V2_FACTORY = Address.fromString("0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a")
 
+// Velodrome CL (Concentrated Liquidity) addresses
+export const VELO_MANAGER = Address.fromString("0x416b433906b1B72FA758e166e239c43d68dC6F29") // Same as VELO_NFT_MANAGER
+export const VELO_FACTORY = Address.fromString("0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a") // Same as VELO_V2_FACTORY
+
+// Uniswap V3 addresses (Optimism mainnet)
+export const UNI_V3_MANAGER = Address.fromString("0xC36442b4a4522E871399CD717aBDD847Ab11FE88") // Uniswap V3 NFT Position Manager
+export const UNI_V3_FACTORY = Address.fromString("0x1F98431c8aD98523631AE4a59f267346ea31F984") // Uniswap V3 Factory
+
 // OLAS-related addresses
 export const OLAS_TOKEN = Address.fromString("0xFC2E6e6BCbd49ccf3A5f029c79984372DcBFE527")
 export const STAKING_FACTORY = Address.fromString("0xa45E64d13A30a51b91ae0eb182e88a40e9b18eD8")
