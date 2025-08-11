@@ -29,16 +29,24 @@ export function calculateUninvestedValue(serviceSafe: Address): BigDecimal {
   let tokenKeysArray = WHITELISTED_TOKENS
   
   for (let i = 0; i < tokenKeysArray.length; i++) {
-    let tokenAddress = tokenKeysArray[i]
-    let balanceId = serviceSafe.toHexString() + "-" + tokenAddress
+    let tokenAddressString = tokenKeysArray[i]
+    // FIX: Convert string to Address and back to ensure proper formatting
+    let tokenAddress = Address.fromString(tokenAddressString)
+    let balanceId = serviceSafe.toHexString() + "-" + tokenAddress.toHexString()
     let balance = TokenBalance.load(Bytes.fromUTF8(balanceId))
     
     if (balance != null && balance.balance.gt(BigDecimal.zero())) {
       totalUSD = totalUSD.plus(balance.balanceUSD)
-      log.info("calculateUninvestedValue: {} balance {} USD for safe {}", [
+      log.info("calculateUninvestedValue: {} balance {} USD for safe {} (tokenAddr: {})", [
         balance.symbol,
         balance.balanceUSD.toString(),
-        serviceSafe.toHexString()
+        serviceSafe.toHexString(),
+        tokenAddress.toHexString()
+      ])
+    } else {
+      log.info("calculateUninvestedValue: No balance found for token {} (balanceId: {})", [
+        tokenAddressString,
+        balanceId
       ])
     }
   }
@@ -139,8 +147,8 @@ export function updateTokenBalance(
   }
   
   // Update balance
-  let divisor = BigInt.fromI32(10).pow(tokenConfig.decimals as u8)
-  let amountDecimal = amount.toBigDecimal().div(divisor.toBigDecimal())
+  let divisor = BigDecimal.fromString("1" + "0".repeat(tokenConfig.decimals))
+  let amountDecimal = amount.toBigDecimal().div(divisor)
   
   if (isIncrease) {
     balance.balance = balance.balance.plus(amountDecimal)
@@ -188,8 +196,8 @@ export function handleERC20Transfer(event: TransferEvent): void {
     // Check if it's a funding deposit
     if (isFundingSource(from, to, event.block, event.transaction.hash.toHexString())) {
       // Calculate USD value using price discovery
-      let divisor = BigInt.fromI32(10).pow(tokenConfig.decimals as u8)
-      let amountDecimal = value.toBigDecimal().div(divisor.toBigDecimal())
+      let divisor = BigDecimal.fromString("1" + "0".repeat(tokenConfig.decimals))
+      let amountDecimal = value.toBigDecimal().div(divisor)
       let tokenPrice = getTokenPriceUSD(tokenAddress, event.block.timestamp, false)
       let usdValue = amountDecimal.times(tokenPrice)
       
@@ -211,8 +219,8 @@ export function handleERC20Transfer(event: TransferEvent): void {
     updateTokenBalance(from, tokenAddress, value, false, event.block)
     
     // Calculate USD value for funding tracking
-    let divisor = BigInt.fromI32(10).pow(tokenConfig.decimals as u8)
-    let amountDecimal = value.toBigDecimal().div(divisor.toBigDecimal())
+    let divisor = BigDecimal.fromString("1" + "0".repeat(tokenConfig.decimals))
+    let amountDecimal = value.toBigDecimal().div(divisor)
     let tokenPrice = getTokenPriceUSD(tokenAddress, event.block.timestamp, false)
     let usdValue = amountDecimal.times(tokenPrice)
     
