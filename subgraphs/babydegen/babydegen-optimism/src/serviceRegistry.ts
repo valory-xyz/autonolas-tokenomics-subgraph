@@ -9,8 +9,7 @@ import {
 } from "../../../../generated/schema"
 import { Safe } from "../../../../generated/templates"
 import { BigInt, Bytes, store, log } from "@graphprotocol/graph-ts"
-
-const OPTIMUS_AGENT_ID = BigInt.fromI32(40)
+import { OPTIMUS_AGENT_ID } from "./constants"
 
 // Log initialization
 log.info("SERVICE DISCOVERY: ServiceRegistry handlers initialized - Looking for OPTIMUS_AGENT_ID: {}", [
@@ -195,21 +194,4 @@ export function handleCreateMultisigWithAgents(event: CreateMultisigWithAgents):
   ])
   
   log.info("=== SERVICE DISCOVERY END: CreateMultisigWithAgents ===", [])
-}
-
-// Helper functions for finding services
-export function findServiceByServiceId(serviceId: BigInt): Service | null {
-  let tempId = Bytes.fromUTF8(serviceId.toString())
-  let serviceIndex = ServiceIndex.load(tempId)
-  
-  if (serviceIndex == null || !serviceIndex.currentServiceSafe) {
-    return null
-  }
-  
-  return Service.load(serviceIndex.currentServiceSafe)
-}
-
-export function findActiveServiceByServiceId(serviceId: BigInt): Service | null {
-  let service = findServiceByServiceId(serviceId)
-  return (service != null && service.isActive) ? service : null
 }
