@@ -2,6 +2,7 @@ import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts"
 import { VelodromeCLPool } from "../../../../generated/VeloNFTManager/VelodromeCLPool"
 import { AggregatorV3Interface } from "../../../../generated/templates/Safe/AggregatorV3Interface"
 import { getTokenConfig } from "./tokenConfig"
+import { USDC_NATIVE, USDT, DAI, LUSD, WETH } from "./constants"
 
 // Chainlink price adapter with validation
 export function getChainlinkPrice(feedAddress: Address): BigDecimal {
@@ -52,9 +53,9 @@ export function getCurve3PoolPrice(token: Address): BigDecimal {
   // Curve 3Pool is designed for 1:1 stablecoin trading
   // These tokens should trade very close to $1.00
   let knownStablecoins = [
-    "0x0b2c639c533813f4aa9d7837caf62653d097ff85", // USDC
-    "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58",  // USDT
-    "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1"   // DAI
+    USDC_NATIVE.toHexString().toLowerCase(),
+    USDT.toHexString().toLowerCase(),
+    DAI.toHexString().toLowerCase()
   ]
   
   let tokenHex = token.toHexString().toLowerCase()
@@ -73,7 +74,7 @@ export function getUniswapV3Price(
   token: Address,
   poolAddress: Address,
   pairToken: Address,
-  fee: i32
+  fee: number
 ): BigDecimal {
   
   log.info("📊 UNISWAP: Getting {} price from V3 pool {}", [
@@ -116,8 +117,8 @@ export function getUniswapV3Price(
   }
 
   // Determine which token is token0 and token1
-  let token0Decimals: i32
-  let token1Decimals: i32
+  let token0Decimals: number
+  let token1Decimals: number
 
   log.info("📊 UNISWAP: Pool tokens - token0: {}, token1: {}", [
     token0.toHexString(),
@@ -188,10 +189,10 @@ function getPairTokenPrice(pairToken: Address): BigDecimal {
   
   // Direct stablecoin pricing - NO RECURSION
   let stablecoins = [
-    "0x0b2c639c533813f4aa9d7837caf62653d097ff85", // USDC
-    "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58",  // USDT
-    "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",  // DAI
-    "0xc40f949f8a4e094d1b49a23ea9241d289b7b2819"   // LUSD
+    USDC_NATIVE.toHexString().toLowerCase(),
+    USDT.toHexString().toLowerCase(),
+    DAI.toHexString().toLowerCase(),
+    LUSD.toHexString().toLowerCase()
   ]
   
   for (let i = 0; i < stablecoins.length; i++) {
@@ -201,7 +202,7 @@ function getPairTokenPrice(pairToken: Address): BigDecimal {
   }
   
   // WETH - direct Chainlink call (NO RECURSION)
-  if (tokenHex == "0x4200000000000000000000000000000000000006") {
+  if (tokenHex == WETH.toHexString().toLowerCase()) {
     let ethFeed = Address.fromString("0x13e3Ee699D1909E989722E753853AE30b17e08c5")
     let ethPrice = getChainlinkPrice(ethFeed)
     return ethPrice.gt(BigDecimal.fromString("0")) ? ethPrice : BigDecimal.fromString("3000.0")
@@ -214,8 +215,8 @@ function getPairTokenPrice(pairToken: Address): BigDecimal {
 
 function sqrtPriceToToken0Price(
   sqrtPriceX96: BigInt,
-  token0Decimals: i32,
-  token1Decimals: i32
+  token0Decimals: number,
+  token1Decimals: number
 ): BigDecimal {
   
   // Safety check: prevent division by zero
@@ -288,8 +289,8 @@ function sqrtPriceToToken0Price(
 
 function sqrtPriceToToken1Price(
   sqrtPriceX96: BigInt,
-  token0Decimals: i32,
-  token1Decimals: i32
+  token0Decimals: number,
+  token1Decimals: number
 ): BigDecimal {
   let token0Price = sqrtPriceToToken0Price(sqrtPriceX96, token0Decimals, token1Decimals)
   return token0Price.equals(BigDecimal.fromString("0")) 
