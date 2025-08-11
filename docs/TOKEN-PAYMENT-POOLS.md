@@ -87,7 +87,7 @@ function getPoolIdSafe(poolAddress: Address): Bytes {
 
 ### Why Balancer pools (not oracles)?
 - OLAS does not have a universal USD oracle across chains
-- Pool balances provide a live on-chain proxy price; simple, deterministic, and chain-local
+- Pool balances provide a live on-chain proxy price which may occasionally deviate from fair market value due to potential pool manipulation. However, we expect these discrepancies to self-correct over time through arbitrage activity.```
 
 ### Where this is used
 - Token model handlers for both fee-in (`MechBalanceAdjusted`) and fee-out (`Withdraw`):
