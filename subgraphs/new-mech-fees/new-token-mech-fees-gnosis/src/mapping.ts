@@ -14,13 +14,16 @@ import {
 import {
   updateTotalFeesIn,
   updateTotalFeesOut,
-  calculateOlasInUsd,
   updateMechFeesIn,
   updateMechFeesOut,
   createMechTransactionForAccrued,
-  createMechTransactionForCollected
+  createMechTransactionForCollected,
+  updateDailyTotalsIn,
+  updateDailyTotalsOut,
+  updateMechDailyIn,
+  updateMechDailyOut
 } from "../../common/utils"
-import { BalancerV2Vault } from "../../common/generated/BalanceTrackerFixedPriceToken/BalancerV2Vault";
+import { calculateOlasInUsd } from "../../common/token-utils"
 import { BalancerV2WeightedPool } from "../../common/generated/BalanceTrackerFixedPriceToken/BalancerV2WeightedPool";
 
 const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
@@ -61,6 +64,8 @@ export function handleMechBalanceAdjustedForToken(event: MechBalanceAdjusted): v
 
   updateTotalFeesIn(deliveryRateUsd);
   updateMechFeesIn(mechId, deliveryRateUsd, deliveryRateOlas.toBigDecimal());
+  updateDailyTotalsIn(deliveryRateUsd, event.block.timestamp);
+  updateMechDailyIn(mechId, deliveryRateUsd, deliveryRateOlas.toBigDecimal(), event.block.timestamp);
 
   // Create MechTransaction for the accrued fees
   const mech = Mech.load(mechId);
@@ -100,6 +105,8 @@ export function handleWithdrawForToken(event: Withdraw): void {
 
   updateTotalFeesOut(withdrawalAmountUsd);
   updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalAmountOlas.toBigDecimal());
+  updateDailyTotalsOut(withdrawalAmountUsd, event.block.timestamp);
+  updateMechDailyOut(mechId, withdrawalAmountUsd, withdrawalAmountOlas.toBigDecimal(), event.block.timestamp);
 
   // Create MechTransaction for the collected fees
   const mech = Mech.load(mechId);

@@ -1,6 +1,6 @@
 import { BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { Global, MechTransaction, Mech } from "./generated/schema";
-import { 
+import { Global, MechTransaction, Mech, MechDaily, DailyTotals } from "./generated/schema";
+import {
   TOKEN_RATIO_GNOSIS,
   TOKEN_DECIMALS_GNOSIS,
   TOKEN_RATIO_BASE,
@@ -8,8 +8,6 @@ import {
   CHAINLINK_PRICE_FEED_DECIMALS,
   ETH_DECIMALS,
 } from "./constants";
-import { Address, Bytes, log } from "@graphprotocol/graph-ts";
-import { BalancerV2Vault } from "./generated/BalanceTrackerFixedPriceToken/BalancerV2Vault";
 
 const GLOBAL_ID = "1";
 const FEE_IN = "FEE_IN";
@@ -21,7 +19,7 @@ export function getOrInitialiseGlobal(): Global {
     global = new Global(GLOBAL_ID);
     global.totalFeesInUSD = BigDecimal.fromString("0");
     global.totalFeesOutUSD = BigDecimal.fromString("0");
- }
+  }
   return global;
 }
 
@@ -99,15 +97,22 @@ export function convertBaseNativeWeiToUsd(
     .pow(ETH_DECIMALS as u8)
     .toBigDecimal();
 
-  return amountInWei.toBigDecimal().times(ethPrice.toBigDecimal()).div(priceDivisor).div(ethDivisor);
+  return amountInWei
+    .toBigDecimal()
+    .times(ethPrice.toBigDecimal())
+    .div(priceDivisor)
+    .div(ethDivisor);
 }
 
 // For NVM fees on Gnosis
 export function calculateGnosisNvmFeesIn(deliveryRate: BigInt): BigDecimal {
-  const tokenDivisor = BigInt.fromI32(10).pow(TOKEN_DECIMALS_GNOSIS as u8).toBigDecimal();
+  const tokenDivisor = BigInt.fromI32(10)
+    .pow(TOKEN_DECIMALS_GNOSIS as u8)
+    .toBigDecimal();
   const ethDivisor = BigInt.fromI32(10).pow(18).toBigDecimal();
 
-  return deliveryRate.toBigDecimal()
+  return deliveryRate
+    .toBigDecimal()
     .times(TOKEN_RATIO_GNOSIS)
     .div(ethDivisor)
     .div(tokenDivisor);
@@ -115,10 +120,13 @@ export function calculateGnosisNvmFeesIn(deliveryRate: BigInt): BigDecimal {
 
 // For NVM fees on Base
 export function calculateBaseNvmFeesIn(deliveryRate: BigInt): BigDecimal {
-  const tokenDivisor = BigInt.fromI32(10).pow(TOKEN_DECIMALS_BASE as u8).toBigDecimal();
+  const tokenDivisor = BigInt.fromI32(10)
+    .pow(TOKEN_DECIMALS_BASE as u8)
+    .toBigDecimal();
   const ethDivisor = BigInt.fromI32(10).pow(18).toBigDecimal();
 
-  return deliveryRate.toBigDecimal()
+  return deliveryRate
+    .toBigDecimal()
     .times(TOKEN_RATIO_BASE)
     .div(ethDivisor)
     .div(tokenDivisor);
@@ -129,20 +137,16 @@ export function calculateBaseNvmFeesInUsd(
   deliveryRate: BigInt,
   ethPrice: BigInt
 ): BigDecimal {
-  // First calculate the NVM fee amount in ETH
   const feeInEth = calculateBaseNvmFeesIn(deliveryRate);
-  
-  // Then convert to USD using the ETH price from Chainlink
   const priceDivisor = BigInt.fromI32(10)
     .pow(CHAINLINK_PRICE_FEED_DECIMALS as u8)
     .toBigDecimal();
-  
   return feeInEth.times(ethPrice.toBigDecimal()).div(priceDivisor);
 }
 
 // For USDC withdrawals on Base (assumes 1 USDC = 1 USD)
 export function convertBaseUsdcToUsd(amountInUsdc: BigInt): BigDecimal {
-  const usdcDivisor = BigInt.fromI32(10).pow(6).toBigDecimal(); // USDC has 6 decimals
+  const usdcDivisor = BigInt.fromI32(10).pow(6).toBigDecimal();
   return amountInUsdc.toBigDecimal().div(usdcDivisor);
 }
 
@@ -160,7 +164,11 @@ export function getOrInitializeMech(mechId: string): Mech {
 }
 
 // Helper function to update mech fees in
-export function updateMechFeesIn(mechId: string, amountUsd: BigDecimal, amountRaw: BigDecimal): void {
+export function updateMechFeesIn(
+  mechId: string,
+  amountUsd: BigDecimal,
+  amountRaw: BigDecimal
+): void {
   const mech = getOrInitializeMech(mechId);
   mech.totalFeesInUSD = mech.totalFeesInUSD.plus(amountUsd);
   mech.totalFeesInRaw = mech.totalFeesInRaw.plus(amountRaw);
@@ -168,87 +176,103 @@ export function updateMechFeesIn(mechId: string, amountUsd: BigDecimal, amountRa
 }
 
 // Helper function to update mech fees out
-export function updateMechFeesOut(mechId: string, amountUsd: BigDecimal, amountRaw: BigDecimal): void {
+export function updateMechFeesOut(
+  mechId: string,
+  amountUsd: BigDecimal,
+  amountRaw: BigDecimal
+): void {
   const mech = getOrInitializeMech(mechId);
   mech.totalFeesOutUSD = mech.totalFeesOutUSD.plus(amountUsd);
   mech.totalFeesOutRaw = mech.totalFeesOutRaw.plus(amountRaw);
   mech.save();
 }
 
-// Helper function to get token balances from Balancer pool
-function getPoolTokenBalances(
-  vault: BalancerV2Vault,
-  poolId: Bytes,
-  olasAddress: Address,
-  stablecoinAddress: Address
-): Array<BigInt> {
-  const poolTokensResult = vault.try_getPoolTokens(poolId);
-  
-  if (poolTokensResult.reverted) {
-    log.error("Could not get pool tokens for pool {}", [poolId.toHexString()]);
-    return [BigInt.zero(), BigInt.zero()];
-  }
-
-  const tokens = poolTokensResult.value.getTokens();
-  const balances = poolTokensResult.value.getBalances();
-  
-  let olasBalance = BigInt.zero();
-  let stablecoinBalance = BigInt.zero();
-
-  for (let i = 0; i < tokens.length; i++) {
-    if (tokens[i].equals(olasAddress)) {
-      olasBalance = balances[i];
-    } else if (tokens[i].equals(stablecoinAddress)) {
-      stablecoinBalance = balances[i];
-    }
-  }
-  
-  return [olasBalance, stablecoinBalance];
+// ---------------- Daily aggregation helpers ----------------
+function dayStart(timestamp: BigInt): i32 {
+  return (timestamp.toI32() / 86400) * 86400;
 }
 
-// Helper function to calculate OLAS price from pool balances
-function calculateOlasPriceFromPool(
-  olasAmount: BigInt,
-  olasBalance: BigInt,
-  stablecoinBalance: BigInt,
-  stablecoinDecimals: i32
-): BigDecimal {
-  const olasDecimalsBigInt = BigInt.fromI32(10).pow(18);
-  const stablecoinDecimalsBigInt = BigInt.fromI32(10).pow(stablecoinDecimals as u8);
-  
-  const olasAmountDecimal = olasAmount.toBigDecimal().div(olasDecimalsBigInt.toBigDecimal());
-  const olasBalanceDecimal = olasBalance.toBigDecimal().div(olasDecimalsBigInt.toBigDecimal());
-  const stablecoinBalanceDecimal = stablecoinBalance.toBigDecimal().div(stablecoinDecimalsBigInt.toBigDecimal());
-  
-  const pricePerOlas = stablecoinBalanceDecimal.div(olasBalanceDecimal);
-  return olasAmountDecimal.times(pricePerOlas);
+function dayId(timestamp: BigInt): string {
+  return dayStart(timestamp).toString();
 }
 
-// Common function for OLAS fees
-export function calculateOlasInUsd(
-  vaultAddress: Address,
-  poolId: Bytes,
-  olasAddress: Address,
-  stablecoinAddress: Address,
-  stablecoinDecimals: i32,
-  olasAmount: BigInt
-): BigDecimal {
-  // Check for zero pool ID - return zero instead of fallback
-  if (poolId.equals(Bytes.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000"))) {
-    log.warning("Zero pool ID provided for OLAS price calculation", []);
-    return BigDecimal.fromString("0");
+function getOrInitDailyTotals(timestamp: BigInt): DailyTotals {
+  const id = dayId(timestamp);
+  let d = DailyTotals.load(id);
+  if (d == null) {
+    d = new DailyTotals(id);
+    d.date = dayStart(timestamp);
+    d.totalFeesInUSD = BigDecimal.fromString("0");
+    d.totalFeesOutUSD = BigDecimal.fromString("0");
   }
+  return d as DailyTotals;
+}
 
-  const vault = BalancerV2Vault.bind(vaultAddress);
-  const balances = getPoolTokenBalances(vault, poolId, olasAddress, stablecoinAddress);
-  const olasBalance = balances[0];
-  const stablecoinBalance = balances[1];
-
-  // Return zero if we can't get valid balances
-  if (olasBalance.isZero() || stablecoinBalance.isZero()) {
-    log.warning("Invalid pool balances for pool {}", [poolId.toHexString()]);
-    return BigDecimal.fromString("0");
+function getOrInitMechDaily(mechId: string, timestamp: BigInt): MechDaily {
+  const id = mechId + "-" + dayId(timestamp);
+  let md = MechDaily.load(id);
+  if (md == null) {
+    md = new MechDaily(id);
+    md.mech = mechId;
+    md.date = dayStart(timestamp);
+    md.feesInUSD = BigDecimal.fromString("0");
+    md.feesOutUSD = BigDecimal.fromString("0");
+    md.feesInRaw = BigDecimal.fromString("0");
+    md.feesOutRaw = BigDecimal.fromString("0");
   }
+  return md as MechDaily;
+}
 
-  return calculateOlasPriceFromPool(olasAmount, olasBalance, stablecoinBalance, stablecoinDecimals);
+export function updateDailyTotalsIn(
+  amountUsd: BigDecimal,
+  timestamp: BigInt
+): void {
+  if (amountUsd.le(BigDecimal.fromString("0"))) return;
+  const d = getOrInitDailyTotals(timestamp);
+  d.totalFeesInUSD = d.totalFeesInUSD.plus(amountUsd);
+  d.save();
+}
+
+export function updateDailyTotalsOut(
+  amountUsd: BigDecimal,
+  timestamp: BigInt
+): void {
+  if (amountUsd.le(BigDecimal.fromString("0"))) return;
+  const d = getOrInitDailyTotals(timestamp);
+  d.totalFeesOutUSD = d.totalFeesOutUSD.plus(amountUsd);
+  d.save();
+}
+
+export function updateMechDailyIn(
+  mechId: string,
+  amountUsd: BigDecimal,
+  amountRaw: BigDecimal,
+  timestamp: BigInt
+): void {
+  if (
+    amountUsd.le(BigDecimal.fromString("0")) &&
+    amountRaw.le(BigDecimal.fromString("0"))
+  )
+    return;
+  const md = getOrInitMechDaily(mechId, timestamp);
+  md.feesInUSD = md.feesInUSD.plus(amountUsd);
+  md.feesInRaw = md.feesInRaw.plus(amountRaw);
+  md.save();
+}
+
+export function updateMechDailyOut(
+  mechId: string,
+  amountUsd: BigDecimal,
+  amountRaw: BigDecimal,
+  timestamp: BigInt
+): void {
+  if (
+    amountUsd.le(BigDecimal.fromString("0")) &&
+    amountRaw.le(BigDecimal.fromString("0"))
+  )
+    return;
+  const md = getOrInitMechDaily(mechId, timestamp);
+  md.feesOutUSD = md.feesOutUSD.plus(amountUsd);
+  md.feesOutRaw = md.feesOutRaw.plus(amountRaw);
+  md.save();
 } 

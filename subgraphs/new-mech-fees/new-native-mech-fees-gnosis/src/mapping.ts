@@ -14,7 +14,11 @@ import {
   updateMechFeesIn,
   updateMechFeesOut,
   createMechTransactionForAccrued,
-  createMechTransactionForCollected
+  createMechTransactionForCollected,
+  updateDailyTotalsIn,
+  updateDailyTotalsOut,
+  updateMechDailyIn,
+  updateMechDailyOut
 } from "../../common/utils"
 
 const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
@@ -27,6 +31,8 @@ export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): 
 
   updateTotalFeesIn(earningsAmountUsd);
   updateMechFeesIn(mechId, earningsAmountUsd, earningsAmountWei.toBigDecimal());
+  updateDailyTotalsIn(earningsAmountUsd, event.block.timestamp);
+  updateMechDailyIn(mechId, earningsAmountUsd, earningsAmountWei.toBigDecimal(), event.block.timestamp);
 
   // Create MechTransaction for the accrued fees
   const mech = Mech.load(mechId);
@@ -56,6 +62,8 @@ export function handleWithdrawForNative(event: Withdraw): void {
 
   updateTotalFeesOut(withdrawalAmountUsd);
   updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalAmountWei.toBigDecimal());
+  updateDailyTotalsOut(withdrawalAmountUsd, event.block.timestamp);
+  updateMechDailyOut(mechId, withdrawalAmountUsd, withdrawalAmountWei.toBigDecimal(), event.block.timestamp);
 
   // Create MechTransaction for the collected fees
   const mech = Mech.load(mechId);

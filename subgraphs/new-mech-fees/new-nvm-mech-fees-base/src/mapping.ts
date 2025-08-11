@@ -20,7 +20,11 @@ import {
   updateMechFeesIn,
   updateMechFeesOut,
   createMechTransactionForAccrued,
-  createMechTransactionForCollected
+  createMechTransactionForCollected,
+  updateDailyTotalsIn,
+  updateDailyTotalsOut,
+  updateMechDailyIn,
+  updateMechDailyOut
 } from "../../common/utils";
 
 const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
@@ -36,6 +40,8 @@ export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): voi
   updateTotalFeesIn(deliveryRateUsd);
   // Store credits as raw value (not converted to USDC)
   updateMechFeesIn(mechId, deliveryRateUsd, deliveryRateCredits.toBigDecimal());
+  updateDailyTotalsIn(deliveryRateUsd, event.block.timestamp);
+  updateMechDailyIn(mechId, deliveryRateUsd, deliveryRateCredits.toBigDecimal(), event.block.timestamp);
 
   // Create the transaction record
   const mech = Mech.load(mechId);
@@ -75,6 +81,8 @@ export function handleWithdrawForNvm(event: Withdraw): void {
   updateTotalFeesOut(withdrawalAmountUsd);
   // Store credits as raw value (converted from USDC)
   updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalCredits);
+  updateDailyTotalsOut(withdrawalAmountUsd, event.block.timestamp);
+  updateMechDailyOut(mechId, withdrawalAmountUsd, withdrawalCredits, event.block.timestamp);
 
   // Create MechTransaction for the collected fees
   const mech = Mech.load(mechId);
