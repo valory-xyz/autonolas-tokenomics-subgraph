@@ -18,21 +18,9 @@ export function getChainlinkPrice(feedAddress: Address): BigDecimal {
   
   let roundData = roundResult.value
   let price = roundData.value1.toBigDecimal().div(BigDecimal.fromString("1e8")) // 8 decimals
-  let updatedAt = roundData.value3
-
-  // Check price staleness (Chainlink updates should be within 24 hours for these feeds)
-  // Note: In production, this would use block.timestamp, but for testing we skip staleness check
-  // let currentTime = BigInt.fromI32((Date.now() / 1000) as i32) // Current timestamp in seconds
-  // let timeDiff = currentTime.minus(updatedAt)
-  // let maxStaleTime = BigInt.fromI32(86400) // 24 hours
-
-  // if (timeDiff.gt(maxStaleTime)) {
-  //   log.warning("⚠️ CHAINLINK: Stale price from feed {} - {} hours old", [
-  //     feedAddress.toHexString(),
-  //     timeDiff.div(BigInt.fromI32(3600)).toString()
-  //   ])
-  //   // Still return the price but log the warning
-  // }
+  
+  // Note: Chainlink staleness checking could be added here using block.timestamp
+  // if needed for production. Current implementation trusts Chainlink feed freshness.
   
   // Validate price is reasonable (not zero, not negative)
   if (price.le(BigDecimal.fromString("0"))) {
