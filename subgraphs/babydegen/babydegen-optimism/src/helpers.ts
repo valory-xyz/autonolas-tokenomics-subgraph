@@ -4,8 +4,7 @@ import {
   AgentPortfolio, 
   AgentPortfolioSnapshot,
   ProtocolPosition,
-  Service,
-  OlasRewards
+  Service
 } from "../../../../generated/schema"
 import { calculateUninvestedValue } from "./tokenBalances"
 import { getServiceByAgent } from "./config"
@@ -99,15 +98,8 @@ export function calculatePortfolioMetrics(
   // 3. Calculate uninvested funds
   let uninvestedValue = calculateUninvestedValue(serviceSafe)
   
-  // 4. Calculate OLAS rewards value
-  let olasRewardsValue = BigDecimal.zero()
-  let olasRewards = OlasRewards.load(serviceSafe as Bytes)
-  if (olasRewards !== null) {
-    olasRewardsValue = olasRewards.olasRewardsEarnedUSD
-  }
-  
-  // 5. Calculate total portfolio value INCLUDING OLAS rewards
-  let finalValue = positionsValue.plus(uninvestedValue).plus(olasRewardsValue)
+  // 4. Calculate total portfolio value (positions + uninvested)
+  let finalValue = positionsValue.plus(uninvestedValue)
   
   // 5. Calculate ROI and APR
   let roi = BigDecimal.zero()
@@ -136,27 +128,47 @@ export function calculatePortfolioMetrics(
   portfolio.initialValue = initialValue  
   portfolio.positionsValue = positionsValue
   portfolio.uninvestedValue = uninvestedValue
-  portfolio.olasRewardsValue = olasRewardsValue
   portfolio.roi = roi
   portfolio.apr = apr
   portfolio.lastUpdated = block.timestamp
   
   // Count positions
-  let positionCounts = countPositions(serviceSafe)
-  portfolio.totalPositions = positionCounts.active
-  portfolio.totalClosedPositions = positionCounts.closed
+  let activeCount = 0
+  let closedCount = 0
+  
+  // Get the service entity for position counting
+  let serviceEntity = Service.load(serviceSafe)
+  if (serviceEntity != null && serviceEntity.positionIds != null) {
+    // Iterate through all position IDs
+    let positionIds = serviceEntity.positionIds
+    for (let i = 0; i < positionIds.length; i++) {
+      // Position IDs are stored as strings, convert to Bytes
+      let positionId = Bytes.fromUTF8(positionIds[i])
+      let position = ProtocolPosition.load(positionId)
+      
+      if (position != null) {
+        if (position.isActive) {
+          activeCount++
+        } else {
+          closedCount++
+        }
+      }
+    }
+  }
+  
+  portfolio.totalPositions = activeCount
+  portfolio.totalClosedPositions = closedCount
   
   portfolio.save()
   
   // Create snapshot
   createPortfolioSnapshot(portfolio, block)
   
-  log.info("PORTFOLIO: {} USD (ROI: {}%, positions: {}, uninvested: {}, OLAS: {})", [
+  log.info("PORTFOLIO: {} USD (ROI: {}%, positions: {}, uninvested: {})", [
     finalValue.toString(),
     roi.toString(),
     positionsValue.toString(),
-    uninvestedValue.toString(),
-    olasRewardsValue.toString()
+    uninvestedValue.toString()
   ])
 }
 
@@ -186,47 +198,6 @@ function calculatePositionsValue(serviceSafe: Address): BigDecimal {
   return totalValue
 }
 
-// Count active and closed positions
-function countPositions(serviceSafe: Address): PositionCounts {
-  let activeCount = 0
-  let closedCount = 0
-  
-  // Get the service entity
-  let service = Service.load(serviceSafe)
-  if (service == null || service.positionIds == null) {
-    return {
-      active: activeCount,
-      closed: closedCount
-    }
-  }
-  
-  // Iterate through all position IDs
-  let positionIds = service.positionIds
-  for (let i = 0; i < positionIds.length; i++) {
-    // Position IDs are stored as strings, convert to Bytes
-    let positionId = Bytes.fromUTF8(positionIds[i])
-    let position = ProtocolPosition.load(positionId)
-    
-    if (position != null) {
-      if (position.isActive) {
-        activeCount++
-      } else {
-        closedCount++
-      }
-    }
-  }
-  
-  return {
-    active: activeCount,
-    closed: closedCount
-  }
-}
-
-// Helper class for position counts
-class PositionCounts {
-  active: i32
-  closed: i32
-}
 
 // Create a portfolio snapshot
 function createPortfolioSnapshot(portfolio: AgentPortfolio, block: ethereum.Block): void {
