@@ -5,13 +5,6 @@ import {
 } from "../../common/generated/BalanceTrackerFixedPriceToken/BalanceTrackerFixedPriceToken"
 import { Mech } from "../../common/generated/schema"
 import {
-  BURN_ADDRESS_MECH_FEES_BASE,
-  BALANCER_VAULT_ADDRESS_BASE,
-  OLAS_USDC_POOL_ADDRESS_BASE,
-  OLAS_ADDRESS_BASE,
-  USDC_ADDRESS_BASE
-} from "../../common/constants"
-import {
   updateTotalFeesIn,
   updateTotalFeesOut,
   updateMechFeesIn,
@@ -25,12 +18,13 @@ import {
 } from "../../common/utils"
 import { calculateOlasInUsd } from "../../common/token-utils"
 import { BalancerV2WeightedPool } from "../../common/generated/BalanceTrackerFixedPriceToken/BalancerV2WeightedPool";
+import { balancerVault, olasStablePool, olasToken, stableToken, burnAddressMechFees } from "../../../../shared/constants";
 
-const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
-const VAULT_ADDRESS = Address.fromString(BALANCER_VAULT_ADDRESS_BASE);
-const POOL_ADDRESS = Address.fromString(OLAS_USDC_POOL_ADDRESS_BASE);
-const OLAS_ADDRESS = Address.fromString(OLAS_ADDRESS_BASE);
-const USDC_ADDRESS = Address.fromString(USDC_ADDRESS_BASE);
+const BURN_ADDRESS = burnAddressMechFees();
+const VAULT_ADDRESS = balancerVault();
+const POOL_ADDRESS = olasStablePool();
+const OLAS_ADDRESS = olasToken();
+const STABLE_ADDRESS = stableToken();
 
 function getPoolIdSafe(poolAddress: Address): Bytes {
   const pool = BalancerV2WeightedPool.bind(poolAddress);
@@ -54,7 +48,7 @@ export function handleMechBalanceAdjustedForToken(event: MechBalanceAdjusted): v
     VAULT_ADDRESS,
     poolId,
     OLAS_ADDRESS,
-    USDC_ADDRESS,
+    STABLE_ADDRESS,
     6,
     deliveryRateOlas
   );
@@ -94,7 +88,7 @@ export function handleWithdrawForToken(event: Withdraw): void {
     VAULT_ADDRESS,
     poolId,
     OLAS_ADDRESS,
-    USDC_ADDRESS,
+    STABLE_ADDRESS,
     6,
     withdrawalAmountOlas
   );
