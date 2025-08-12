@@ -290,3 +290,131 @@ This query returns the total fees processed by the subgraph across all mechs.
   }
 }
 ``` 
+
+### Sample Queries — By Model
+
+```graphql
+# All token-model mechs (OLAS-based payments)
+{
+  mechModels(where: { model: "token" }, first: 1000) {
+    mech { id }
+    totalFeesInUSD
+    totalFeesOutUSD
+    totalFeesInRaw   # OLAS wei
+    totalFeesOutRaw  # OLAS wei
+  }
+}
+```
+
+```graphql
+# Top native-model mechs by lifetime USD (run on each chain's endpoint)
+{
+  mechModels(
+    where: { model: "native" }
+    orderBy: totalFeesInUSD
+    orderDirection: desc
+    first: 100
+  ) {
+    mech { id }
+    totalFeesInUSD
+    totalFeesOutUSD
+    totalFeesInRaw   # xDAI/ETH wei
+    totalFeesOutRaw
+  }
+}
+```
+
+```graphql
+# Top NVM-model mechs by lifetime USD (run on Base and Gnosis)
+{
+  mechModels(
+    where: { model: "nvm" }
+    orderBy: totalFeesInUSD
+    orderDirection: desc
+    first: 100
+  ) {
+    mech { id }
+    totalFeesInUSD
+    totalFeesOutUSD
+    totalFeesInRaw   # credits
+    totalFeesOutRaw  # credits
+  }
+}
+```
+
+```graphql
+# Per‑mech transactions filtered by model (example: token)
+{
+  mechTransactions(
+    where: {
+      mech: "0xMECH_ADDRESS",
+      model: "token"
+      # optional time window:
+      # timestamp_gte: 1710460800,
+      # timestamp_lt: 1711065600
+    },
+    orderBy: timestamp,
+    orderDirection: desc,
+    first: 1000
+  ) {
+    id
+    type         # FEE_IN or FEE_OUT
+    amountRaw    # model-specific units
+    amountUSD
+    timestamp
+    txHash
+  }
+}
+```
+
+### Sample Queries — Per‑Mech Per‑Day
+
+```graphql
+# Per‑mech per‑day range
+{
+  mechDailies(
+    where: { mech: "0xMECH_ADDRESS", date_gte: 1710460800, date_lt: 1711065600 },
+    orderBy: date,
+    orderDirection: asc
+  ) {
+    id
+    date
+    feesInUSD
+    feesOutUSD
+    feesInRaw
+    feesOutRaw
+  }
+}
+```
+
+```graphql
+# Single day for a mech (composite id = `${mech}-${dayStart}`)
+{
+  mechDaily(id: "0xMECH_ADDRESS-1710460800") {
+    id
+    date
+    mech { id }
+    feesInUSD
+    feesOutUSD
+    feesInRaw
+    feesOutRaw
+  }
+}
+```
+
+```graphql
+# Latest day for a mech
+{
+  mechDailies(
+    where: { mech: "0xMECH_ADDRESS" },
+    orderBy: date,
+    orderDirection: desc,
+    first: 1
+  ) {
+    id
+    date
+    feesInUSD
+    feesOutUSD
+  }
+}
+```
