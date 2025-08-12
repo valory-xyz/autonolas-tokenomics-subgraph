@@ -110,72 +110,21 @@ const networkTypes = {
     }
   },
   '5': {
-    name: 'New Native Mech Fees - Gnosis',
-    description: 'New Native Mech Fees Subgraphs on Gnosis',
-    buildCommand: 'yarn build-new-native-mech-fees-gnosis',
+    name: 'New Mech Fees (Consolidated)',
+    description: 'Consolidated per-chain manifests (native+nvm+token) for new-mech-fees',
+    buildCommand: (network) => network === 'gnosis' ? 'yarn build-new-mech-fees-gnosis' : 'yarn build-new-mech-fees-base',
     networks: {
       'gnosis': {
-        path: 'subgraphs/new-mech-fees/new-native-mech-fees-gnosis/subgraph.yaml',
-        description: 'New Native Mech Fees on Gnosis'
+        path: 'subgraphs/new-mech-fees/mech-fees-gnosis/subgraph.yaml',
+        description: 'Consolidated Gnosis (xdai)'
+      },
+      'base': {
+        path: 'subgraphs/new-mech-fees/mech-fees-base/subgraph.yaml',
+        description: 'Consolidated Base'
       }
     }
   },
   '6': {
-    name: 'New Native Mech Fees - Base',
-    description: 'New Native Mech Fees Subgraphs on Base',
-    buildCommand: 'yarn build-new-native-mech-fees-base',
-    networks: {
-      'base': {
-        path: 'subgraphs/new-mech-fees/new-native-mech-fees-base/subgraph.yaml',
-        description: 'New Native Mech Fees on Base'
-      }
-    }
-  },
-  '7': {
-    name: 'New NVM Mech Fees - Gnosis',
-    description: 'New NVM Mech Fees Subgraphs on Gnosis',
-    buildCommand: 'yarn build-new-nvm-mech-fees-gnosis',
-    networks: {
-      'gnosis': {
-        path: 'subgraphs/new-mech-fees/new-nvm-mech-fees-gnosis/subgraph.yaml',
-        description: 'New NVM Mech Fees on Gnosis'
-      }
-    }
-  },
-  '8': {
-    name: 'New NVM Mech Fees - Base',
-    description: 'New NVM Mech Fees Subgraphs on Base',
-    buildCommand: 'yarn build-new-nvm-mech-fees-base',
-    networks: {
-      'base': {
-        path: 'subgraphs/new-mech-fees/new-nvm-mech-fees-base/subgraph.yaml',
-        description: 'New NVM Mech Fees on Base'
-      }
-    }
-  },
-  '9': {
-    name: 'New Token Mech Fees - Gnosis',
-    description: 'New Token-based Mech Fees Subgraphs on Gnosis',
-    buildCommand: 'yarn build-new-token-mech-fees-gnosis',
-    networks: {
-      'gnosis': {
-        path: 'subgraphs/new-mech-fees/new-token-mech-fees-gnosis/subgraph.yaml',
-        description: 'New Token Mech Fees on Gnosis'
-      }
-    }
-  },
-  '10': {
-    name: 'New Token Mech Fees - Base',
-    description: 'New Token-based Mech Fees Subgraphs on Base',
-    buildCommand: 'yarn build-new-token-mech-fees-base',
-    networks: {
-      'base': {
-        path: 'subgraphs/new-mech-fees/new-token-mech-fees-base/subgraph.yaml',
-        description: 'New Token Mech Fees on Base'
-      }
-    }
-  },
-  '11': {
     name: 'Predict',
     description: 'Olas Predict Subgraph',
     buildCommand: 'yarn build-predict',
@@ -186,7 +135,7 @@ const networkTypes = {
       }
     }
   },
-  '12': {
+  '7': {
     name: 'Governance',
     description: 'Olas Governance Subgraph',
     buildCommand: 'yarn build-governance',
@@ -197,7 +146,7 @@ const networkTypes = {
       }
     }
   },
-  '13': {
+  '8': {
     name: 'Staking',
     description: 'Olas Staking Subgraph',
     buildCommand: 'yarn build-staking',
@@ -236,7 +185,7 @@ const networkTypes = {
       }
     }
   },
-  '14': {
+  '9': {
     name: 'Liquidity',
     description: 'Liquidity Pool Tracking Subgraphs',
     buildCommand: 'yarn build-liquidity',
