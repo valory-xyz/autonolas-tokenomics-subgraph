@@ -27,6 +27,7 @@ The system tracks two distinct types of legacy mechs:
 - **`LegacyMechMarketPlace`**: Tracks marketplace-based mechs with the same structure as LegacyMech
 - **`Global`**: Aggregates system-wide statistics with separate totals for each mech type
 - **`DailyFees`**: Daily fee aggregation entity that tracks daily totals for both mech types
+- **`MechDaily`**: Daily fee aggregation entity that tracks daily totals for each mech
 
 ## Fee Units
 
@@ -48,6 +49,12 @@ All fee amounts in this subgraph are denominated in:
 
 ### Daily Aggregation
 - **Daily Totals**: Automatic daily fee aggregation by mech type
+- **Date-Based IDs**: Unix timestamp-based daily entity identification
+- **Historical Analysis**: Complete daily fee history since deployment
+
+## Mech Daily Aggregation
+
+- **Daily Totals**: Automatic daily fee aggregation for each mech
 - **Date-Based IDs**: Unix timestamp-based daily entity identification
 - **Historical Analysis**: Complete daily fee history since deployment
 
@@ -137,6 +144,27 @@ All fee amounts in this subgraph are denominated in:
 }
 ```
 
+### Get Daily Fees for the first 7 mechs
+```graphql
+{
+  mechDailies(
+    where: {
+      date_gte: 1754298643
+    }
+    orderBy: date
+    orderDirection: asc
+    first: 7
+  ) {
+    date
+    agentId
+    feesInLegacyMech
+    feesInLegacyMechMarketPlace
+    feesOutLegacyMech
+    feesOutLegacyMechMarketPlace
+  }
+}
+```
+
 ## Architecture
 
 ### Factory Pattern
@@ -159,7 +187,7 @@ All fee amounts in this subgraph are denominated in:
 1. **Mech Creation**: Factory contracts emit `CreateMech` events
 2. **Fee Accrual**: Direct requests or marketplace calls trigger fee-in tracking
 3. **Fee Distribution**: `exec` calls distribute fees to recipients (fee-out tracking)
-4. **Daily Aggregation**: All fee events automatically update daily totals
+4. **Daily Aggregation**: All fee events automatically update daily totals globally and for each mech
 5. **Global Updates**: System-wide statistics updated with each transaction
 
 ## Network Information
