@@ -14,7 +14,9 @@ import {
   updateDailyTotalsIn,
   updateDailyTotalsOut,
   updateMechDailyIn,
-  updateMechDailyOut
+  updateMechDailyOut,
+  updateMechModelIn,
+  updateMechModelOut
 } from "../../common/utils"
 import { calculateOlasInUsd } from "../../common/token-utils"
 import { BalancerV2Vault } from "../../common/generated/BalanceTrackerFixedPriceToken/BalancerV2Vault";
@@ -26,6 +28,7 @@ const VAULT_ADDRESS = getBalancerVaultAddress();
 const POOL_ADDRESS = getOlasStablePoolAddress();
 const OLAS_ADDRESS = getOlasTokenAddress();
 const STABLE_ADDRESS = getStableTokenAddress();
+const MODEL = "token";
 
 function getPoolIdSafe(poolAddress: Address): Bytes {
   // For Balancer V2, the pool ID is typically the pool address + some additional data
@@ -59,6 +62,7 @@ export function handleMechBalanceAdjustedForToken(event: MechBalanceAdjusted): v
 
   updateTotalFeesIn(deliveryRateUsd);
   updateMechFeesIn(mechId, deliveryRateUsd, deliveryRateOlas.toBigDecimal());
+  updateMechModelIn(mechId, MODEL, deliveryRateUsd, deliveryRateOlas.toBigDecimal());
   updateDailyTotalsIn(deliveryRateUsd, event.block.timestamp);
   updateMechDailyIn(mechId, deliveryRateUsd, deliveryRateOlas.toBigDecimal(), event.block.timestamp);
 
@@ -72,7 +76,8 @@ export function handleMechBalanceAdjustedForToken(event: MechBalanceAdjusted): v
       event,
       event.params.deliveryRate,
       event.params.balance,
-      event.params.rateDiff
+      event.params.rateDiff,
+      MODEL
     );
   }
 }
@@ -100,6 +105,7 @@ export function handleWithdrawForToken(event: Withdraw): void {
 
   updateTotalFeesOut(withdrawalAmountUsd);
   updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalAmountOlas.toBigDecimal());
+  updateMechModelOut(mechId, MODEL, withdrawalAmountUsd, withdrawalAmountOlas.toBigDecimal());
   updateDailyTotalsOut(withdrawalAmountUsd, event.block.timestamp);
   updateMechDailyOut(mechId, withdrawalAmountUsd, withdrawalAmountOlas.toBigDecimal(), event.block.timestamp);
 
@@ -110,7 +116,8 @@ export function handleWithdrawForToken(event: Withdraw): void {
       mech,
       withdrawalAmountOlas.toBigDecimal(),
       withdrawalAmountUsd,
-      event
+      event,
+      MODEL
     );
   }
 } 
