@@ -1,14 +1,14 @@
 import { BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { Global, MechTransaction, Mech } from "./generated/schema";
-import { 
+import { Global, MechTransaction, Mech, MechDaily, DailyTotals } from "./generated/schema";
+import {
   TOKEN_RATIO_GNOSIS,
   TOKEN_DECIMALS_GNOSIS,
   TOKEN_RATIO_BASE,
   TOKEN_DECIMALS_BASE,
   CHAINLINK_PRICE_FEED_DECIMALS,
   ETH_DECIMALS,
-} from "../constants";
-import { Address, Bytes, log } from "@graphprotocol/graph-ts";
+} from "./constants";
+import { USDC_DECIMALS } from "../../../shared/constants";
 
 const GLOBAL_ID = "1";
 const FEE_IN = "FEE_IN";
@@ -20,7 +20,7 @@ export function getOrInitialiseGlobal(): Global {
     global = new Global(GLOBAL_ID);
     global.totalFeesInUSD = BigDecimal.fromString("0");
     global.totalFeesOutUSD = BigDecimal.fromString("0");
- }
+  }
   return global;
 }
 
@@ -147,7 +147,7 @@ export function calculateBaseNvmFeesInUsd(
 
 // For USDC withdrawals on Base (assumes 1 USDC = 1 USD)
 export function convertBaseUsdcToUsd(amountInUsdc: BigInt): BigDecimal {
-  const usdcDivisor = BigInt.fromI32(10).pow(6).toBigDecimal();
+  const usdcDivisor = BigInt.fromI32(10).pow(USDC_DECIMALS as u8).toBigDecimal();
   return amountInUsdc.toBigDecimal().div(usdcDivisor);
 }
 
@@ -189,8 +189,6 @@ export function updateMechFeesOut(
 }
 
 // ---------------- Daily aggregation helpers ----------------
-import { MechDaily, DailyTotals } from "./generated/schema";
-
 function dayStart(timestamp: BigInt): i32 {
   return (timestamp.toI32() / 86400) * 86400;
 }

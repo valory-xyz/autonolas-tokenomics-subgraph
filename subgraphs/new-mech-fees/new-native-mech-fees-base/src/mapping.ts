@@ -4,12 +4,9 @@ import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts"
 import {
   MechBalanceAdjusted,
   Withdraw
-} from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceNative/BalanceTrackerFixedPriceNative"
-import { Mech } from "../../../../shared/new-mech-fees/generated/schema"
-import { 
-  BURN_ADDRESS_MECH_FEES_BASE,
-  CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD
-} from "../../../../shared/constants"
+} from "../../common/generated/BalanceTrackerFixedPriceNative/BalanceTrackerFixedPriceNative"
+import { Mech } from "../../common/generated/schema"
+import { getBurnAddressMechFees, CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD } from "../../../../shared/constants"
 import { 
   updateTotalFeesIn, 
   updateTotalFeesOut, 
@@ -17,15 +14,11 @@ import {
   updateMechFeesIn,
   updateMechFeesOut,
   createMechTransactionForAccrued,
-  createMechTransactionForCollected,
-  updateDailyTotalsIn,
-  updateDailyTotalsOut,
-  updateMechDailyIn,
-  updateMechDailyOut
-} from "../../../../shared/new-mech-fees/utils"
-import { AggregatorV3Interface } from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceNative/AggregatorV3Interface"
+  createMechTransactionForCollected
+} from "../../common/utils"
+import { AggregatorV3Interface } from "../../common/generated/BalanceTrackerFixedPriceNative/AggregatorV3Interface"
 
-const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
+const BURN_ADDRESS = getBurnAddressMechFees();
 const PRICE_FEED_ADDRESS = Address.fromString(CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD);
 
 export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): void {
@@ -47,8 +40,6 @@ export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): 
 
   updateTotalFeesIn(deliveryRateUsd);
   updateMechFeesIn(mechId, deliveryRateUsd, deliveryRateEth.toBigDecimal());
-  updateDailyTotalsIn(deliveryRateUsd, event.block.timestamp);
-  updateMechDailyIn(mechId, deliveryRateUsd, deliveryRateEth.toBigDecimal(), event.block.timestamp);
 
   // Create MechTransaction for the accrued fees
   const mech = Mech.load(mechId);
@@ -89,8 +80,6 @@ export function handleWithdrawForNative(event: Withdraw): void {
 
   updateTotalFeesOut(withdrawalAmountUsd);
   updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalAmountWei.toBigDecimal());
-  updateDailyTotalsOut(withdrawalAmountUsd, event.block.timestamp);
-  updateMechDailyOut(mechId, withdrawalAmountUsd, withdrawalAmountWei.toBigDecimal(), event.block.timestamp);
 
   // Create MechTransaction for the collected fees
   const mech = Mech.load(mechId);
