@@ -20,7 +20,7 @@ export const CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD = "0x71041dddad3595F9CEd3
 
 // Convenience selectors (AssemblyScript-friendly)
 export function burnAddressMechFees(): Address {
-  const n = dataSource.network();
+  const network = dataSource.network();
   if (n == "gnosis" || n == "xdai") return Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
   if (n == "base") return Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
   return Address.zero();
