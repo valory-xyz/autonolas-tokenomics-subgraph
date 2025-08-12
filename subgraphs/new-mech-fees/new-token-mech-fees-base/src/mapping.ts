@@ -18,13 +18,13 @@ import {
 } from "../../common/utils"
 import { calculateOlasInUsd } from "../../common/token-utils"
 import { BalancerV2WeightedPool } from "../../common/generated/BalanceTrackerFixedPriceToken/BalancerV2WeightedPool";
-import { balancerVault, olasStablePool, olasToken, stableToken, burnAddressMechFees } from "../../../../shared/constants";
+import { getBalancerVaultAddress, getOlasStablePoolAddress, getOlasTokenAddress, getStableTokenAddress, getBurnAddressMechFees } from "../../../../shared/constants";
 
-const BURN_ADDRESS = burnAddressMechFees();
-const VAULT_ADDRESS = balancerVault();
-const POOL_ADDRESS = olasStablePool();
-const OLAS_ADDRESS = olasToken();
-const STABLE_ADDRESS = stableToken();
+const BURN_ADDRESS = getBurnAddressMechFees();
+const VAULT_ADDRESS = getBalancerVaultAddress();
+const POOL_ADDRESS = getOlasStablePoolAddress();
+const OLAS_ADDRESS = getOlasTokenAddress();
+const STABLE_ADDRESS = getStableTokenAddress();
 
 function getPoolIdSafe(poolAddress: Address): Bytes {
   const pool = BalancerV2WeightedPool.bind(poolAddress);

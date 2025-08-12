@@ -11,8 +11,8 @@ import {
   TOKEN_DECIMALS_BASE,
   ETH_DECIMALS
 } from "../../common/constants"
-import { burnAddressMechFees } from "../../../../shared/constants"
-import {
+import { getBurnAddressMechFees } from "../../../../shared/constants"
+import { 
   updateTotalFeesIn,
   updateTotalFeesOut,
   convertBaseUsdcToUsd,
@@ -23,7 +23,7 @@ import {
   createMechTransactionForCollected
 } from "../../common/utils";
 
-const BURN_ADDRESS = burnAddressMechFees();
+const BURN_ADDRESS = getBurnAddressMechFees();
 
 export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): void {
   const deliveryRateCredits = event.params.deliveryRate;

@@ -6,7 +6,7 @@ import {
   Withdraw
 } from "../../common/generated/BalanceTrackerFixedPriceNative/BalanceTrackerFixedPriceNative"
 import { Mech } from "../../common/generated/schema"
-import { burnAddressMechFees } from "../../../../shared/constants"
+import { getBurnAddressMechFees } from "../../../../shared/constants"
 import { 
   updateTotalFeesIn, 
   updateTotalFeesOut, 
@@ -17,7 +17,7 @@ import {
   createMechTransactionForCollected
 } from "../../common/utils"
 
-const BURN_ADDRESS = burnAddressMechFees();
+const BURN_ADDRESS = getBurnAddressMechFees();
 
 export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): void {
   const earningsAmountWei = event.params.deliveryRate;

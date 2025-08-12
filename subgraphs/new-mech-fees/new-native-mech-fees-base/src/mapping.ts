@@ -6,7 +6,7 @@ import {
   Withdraw
 } from "../../common/generated/BalanceTrackerFixedPriceNative/BalanceTrackerFixedPriceNative"
 import { Mech } from "../../common/generated/schema"
-import { burnAddressMechFees, CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD } from "../../../../shared/constants"
+import { getBurnAddressMechFees, CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD } from "../../../../shared/constants"
 import { 
   updateTotalFeesIn, 
   updateTotalFeesOut, 
@@ -18,7 +18,7 @@ import {
 } from "../../common/utils"
 import { AggregatorV3Interface } from "../../common/generated/BalanceTrackerFixedPriceNative/AggregatorV3Interface"
 
-const BURN_ADDRESS = burnAddressMechFees();
+const BURN_ADDRESS = getBurnAddressMechFees();
 const PRICE_FEED_ADDRESS = Address.fromString(CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD);
 
 export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): void {
