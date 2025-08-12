@@ -80,10 +80,22 @@ export const CRITICAL_STABLECOINS: string[] = [
 ]
 
 // Known service safe addresses that require ETH balance tracking
-// These are hardcoded because:
+// 
+// WHY HARDCODED:
 // 1. Service registry events may be missed during bootstrap
-// 2. Historical services need retroactive tracking
+// 2. Historical services need retroactive tracking from creation
 // 3. Dynamic discovery is unreliable for existing services
+// 4. AssemblyScript limitations make entity iteration difficult
+//
+// MAINTENANCE:
+// - New services are automatically tracked via ServiceRegistry events
+// - This list only needs updates for services created BEFORE subgraph deployment
+// - For new deployments, update this list with all existing service safes
+//
+// ALTERNATIVE APPROACHES CONSIDERED:
+// - Dynamic discovery: AssemblyScript/The Graph limitations
+// - Event-only tracking: Misses historical services
+// - External service: Adds unnecessary complexity
 export const KNOWN_SERVICE_SAFES: string[] = [
   "0xc8e264f402ae94f69bdef8b1f035f7200cd2b0c7", // Service 25
   "0xf38820f03313535a4024dccbe2689aa7cc158f5c", // Service 28
