@@ -7,7 +7,7 @@ export const BURN_ADDRESS_MECH_FEES_BASE = "0x3FD8C757dE190bcc82cF69Df3Cd9Ab15bC
 export const BALANCER_VAULT_ADDRESS_GNOSIS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8";
 export const BALANCER_VAULT_ADDRESS_BASE = "0xBA12222222228d8Ba445958a75a0704d566BF2C8";
 
-export const OLAS_ADDRESS_GNOSIS = "0xcE11e14225575949b3742a533d34341804A54C22";
+export const OLAS_ADDRESS_GNOSIS = "0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f";
 export const OLAS_ADDRESS_BASE = "0x54330d28ca3357F294334BDC454a032e7f353416";
 
 export const WXDAI_ADDRESS_GNOSIS = "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d";
@@ -21,35 +21,35 @@ export const CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD = "0x71041dddad3595F9CEd3
 // Convenience selectors (AssemblyScript-friendly)
 export function burnAddressMechFees(): Address {
   const n = dataSource.network();
-  if (n == "gnosis") return Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
+  if (n == "gnosis" || n == "xdai") return Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
   if (n == "base") return Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
   return Address.zero();
 }
 
 export function balancerVault(): Address {
   const n = dataSource.network();
-  if (n == "gnosis") return Address.fromString(BALANCER_VAULT_ADDRESS_GNOSIS);
+  if (n == "gnosis" || n == "xdai") return Address.fromString(BALANCER_VAULT_ADDRESS_GNOSIS);
   if (n == "base") return Address.fromString(BALANCER_VAULT_ADDRESS_BASE);
   return Address.zero();
 }
 
 export function olasToken(): Address {
   const n = dataSource.network();
-  if (n == "gnosis") return Address.fromString(OLAS_ADDRESS_GNOSIS);
+  if (n == "gnosis" || n == "xdai") return Address.fromString(OLAS_ADDRESS_GNOSIS);
   if (n == "base") return Address.fromString(OLAS_ADDRESS_BASE);
   return Address.zero();
 }
 
 export function olasStablePool(): Address {
   const n = dataSource.network();
-  if (n == "gnosis") return Address.fromString(OLAS_WXDAI_POOL_ADDRESS_GNOSIS);
+  if (n == "gnosis" || n == "xdai") return Address.fromString(OLAS_WXDAI_POOL_ADDRESS_GNOSIS);
   if (n == "base") return Address.fromString(OLAS_USDC_POOL_ADDRESS_BASE);
   return Address.zero();
 }
 
 export function stableToken(): Address {
   const n = dataSource.network();
-  if (n == "gnosis") return Address.fromString(WXDAI_ADDRESS_GNOSIS);
+  if (n == "gnosis" || n == "xdai") return Address.fromString(WXDAI_ADDRESS_GNOSIS);
   if (n == "base") return Address.fromString(USDC_ADDRESS_BASE);
   return Address.zero();
 } 
