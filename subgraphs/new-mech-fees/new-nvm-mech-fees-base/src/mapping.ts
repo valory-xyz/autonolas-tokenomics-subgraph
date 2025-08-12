@@ -7,12 +7,12 @@ import {
 } from "../../common/generated/BalanceTrackerNvmSubscriptionToken/BalanceTrackerNvmSubscriptionToken"
 import { Mech } from "../../common/generated/schema"
 import { 
-  BURN_ADDRESS_MECH_FEES_BASE,
   TOKEN_RATIO_BASE,
   TOKEN_DECIMALS_BASE,
   ETH_DECIMALS
 } from "../../common/constants"
-import {
+import { getBurnAddressMechFees } from "../../../../shared/constants"
+import { 
   updateTotalFeesIn,
   updateTotalFeesOut,
   convertBaseUsdcToUsd,
@@ -20,14 +20,10 @@ import {
   updateMechFeesIn,
   updateMechFeesOut,
   createMechTransactionForAccrued,
-  createMechTransactionForCollected,
-  updateDailyTotalsIn,
-  updateDailyTotalsOut,
-  updateMechDailyIn,
-  updateMechDailyOut
+  createMechTransactionForCollected
 } from "../../common/utils";
 
-const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
+const BURN_ADDRESS = getBurnAddressMechFees();
 
 export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): void {
   const deliveryRateCredits = event.params.deliveryRate;
@@ -40,8 +36,6 @@ export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): voi
   updateTotalFeesIn(deliveryRateUsd);
   // Store credits as raw value (not converted to USDC)
   updateMechFeesIn(mechId, deliveryRateUsd, deliveryRateCredits.toBigDecimal());
-  updateDailyTotalsIn(deliveryRateUsd, event.block.timestamp);
-  updateMechDailyIn(mechId, deliveryRateUsd, deliveryRateCredits.toBigDecimal(), event.block.timestamp);
 
   // Create the transaction record
   const mech = Mech.load(mechId);
@@ -81,8 +75,6 @@ export function handleWithdrawForNvm(event: Withdraw): void {
   updateTotalFeesOut(withdrawalAmountUsd);
   // Store credits as raw value (converted from USDC)
   updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalCredits);
-  updateDailyTotalsOut(withdrawalAmountUsd, event.block.timestamp);
-  updateMechDailyOut(mechId, withdrawalAmountUsd, withdrawalCredits, event.block.timestamp);
 
   // Create MechTransaction for the collected fees
   const mech = Mech.load(mechId);

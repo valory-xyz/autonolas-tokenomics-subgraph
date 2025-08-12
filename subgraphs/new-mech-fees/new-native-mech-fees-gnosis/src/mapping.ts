@@ -6,7 +6,7 @@ import {
   Withdraw
 } from "../../common/generated/BalanceTrackerFixedPriceNative/BalanceTrackerFixedPriceNative"
 import { Mech } from "../../common/generated/schema"
-import { BURN_ADDRESS_MECH_FEES_GNOSIS } from "../../common/constants"
+import { getBurnAddressMechFees } from "../../../../shared/constants"
 import { 
   updateTotalFeesIn, 
   updateTotalFeesOut, 
@@ -14,14 +14,10 @@ import {
   updateMechFeesIn,
   updateMechFeesOut,
   createMechTransactionForAccrued,
-  createMechTransactionForCollected,
-  updateDailyTotalsIn,
-  updateDailyTotalsOut,
-  updateMechDailyIn,
-  updateMechDailyOut
+  createMechTransactionForCollected
 } from "../../common/utils"
 
-const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
+const BURN_ADDRESS = getBurnAddressMechFees();
 
 export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): void {
   const earningsAmountWei = event.params.deliveryRate;
@@ -31,8 +27,6 @@ export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): 
 
   updateTotalFeesIn(earningsAmountUsd);
   updateMechFeesIn(mechId, earningsAmountUsd, earningsAmountWei.toBigDecimal());
-  updateDailyTotalsIn(earningsAmountUsd, event.block.timestamp);
-  updateMechDailyIn(mechId, earningsAmountUsd, earningsAmountWei.toBigDecimal(), event.block.timestamp);
 
   // Create MechTransaction for the accrued fees
   const mech = Mech.load(mechId);
@@ -62,8 +56,6 @@ export function handleWithdrawForNative(event: Withdraw): void {
 
   updateTotalFeesOut(withdrawalAmountUsd);
   updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalAmountWei.toBigDecimal());
-  updateDailyTotalsOut(withdrawalAmountUsd, event.block.timestamp);
-  updateMechDailyOut(mechId, withdrawalAmountUsd, withdrawalAmountWei.toBigDecimal(), event.block.timestamp);
 
   // Create MechTransaction for the collected fees
   const mech = Mech.load(mechId);
