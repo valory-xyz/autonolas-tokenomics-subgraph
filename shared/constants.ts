@@ -1,4 +1,4 @@
-import { Address, dataSource } from "@graphprotocol/graph-ts";
+import { Address, dataSource, log } from "@graphprotocol/graph-ts";
 
 // Raw address constants (by network)
 export const BURN_ADDRESS_MECH_FEES_GNOSIS = "0x153196110040a0c729227c603db3a6c6d91851b2";
@@ -22,37 +22,42 @@ export const CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD = "0x71041dddad3595F9CEd3
 export const USDC_DECIMALS = 6;
 
 // Convenience selectors (AssemblyScript-friendly)
-export function burnAddressMechFees(): Address {
+export function getBurnAddressMechFees(): Address {
   const n = dataSource.network();
   if (n == "gnosis" || n == "xdai") return Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
   if (n == "base") return Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
+  log.critical("Unsupported network in getBurnAddressMechFees: {}", [n]);
   return Address.zero();
 }
 
-export function balancerVault(): Address {
+export function getBalancerVaultAddress(): Address {
   const n = dataSource.network();
   if (n == "gnosis" || n == "xdai") return Address.fromString(BALANCER_VAULT_ADDRESS_GNOSIS);
   if (n == "base") return Address.fromString(BALANCER_VAULT_ADDRESS_BASE);
+  log.critical("Unsupported network in getBalancerVaultAddress: {}", [n]);
   return Address.zero();
 }
 
-export function olasToken(): Address {
+export function getOlasTokenAddress(): Address {
   const n = dataSource.network();
   if (n == "gnosis" || n == "xdai") return Address.fromString(OLAS_ADDRESS_GNOSIS);
   if (n == "base") return Address.fromString(OLAS_ADDRESS_BASE);
+  log.critical("Unsupported network in getOlasTokenAddress: {}", [n]);
   return Address.zero();
 }
 
-export function olasStablePool(): Address {
+export function getOlasStablePoolAddress(): Address {
   const n = dataSource.network();
   if (n == "gnosis" || n == "xdai") return Address.fromString(OLAS_WXDAI_POOL_ADDRESS_GNOSIS);
   if (n == "base") return Address.fromString(OLAS_USDC_POOL_ADDRESS_BASE);
+  log.critical("Unsupported network in getOlasStablePoolAddress: {}", [n]);
   return Address.zero();
 }
 
-export function stableToken(): Address {
+export function getStableTokenAddress(): Address {
   const n = dataSource.network();
   if (n == "gnosis" || n == "xdai") return Address.fromString(WXDAI_ADDRESS_GNOSIS);
   if (n == "base") return Address.fromString(USDC_ADDRESS_BASE);
+  log.critical("Unsupported network in getStableTokenAddress: {}", [n]);
   return Address.zero();
 } 
