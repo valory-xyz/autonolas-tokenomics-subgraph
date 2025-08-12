@@ -1,6 +1,5 @@
 ### Deployment Tracking
 
-- Source of truth: discovered from `subgraphs/*` YAMLs and `package.json` build scripts
 - Update the last two columns during release cycles
 - [x] = means true, [ ] = means false
 
