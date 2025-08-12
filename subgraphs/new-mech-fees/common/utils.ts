@@ -8,6 +8,7 @@ import {
   CHAINLINK_PRICE_FEED_DECIMALS,
   ETH_DECIMALS,
 } from "./constants";
+import { USDC_DECIMALS } from "../../../shared/constants";
 
 const GLOBAL_ID = "1";
 const FEE_IN = "FEE_IN";
@@ -146,7 +147,7 @@ export function calculateBaseNvmFeesInUsd(
 
 // For USDC withdrawals on Base (assumes 1 USDC = 1 USD)
 export function convertBaseUsdcToUsd(amountInUsdc: BigInt): BigDecimal {
-  const usdcDivisor = BigInt.fromI32(10).pow(6).toBigDecimal();
+  const usdcDivisor = BigInt.fromI32(10).pow(USDC_DECIMALS as u8).toBigDecimal();
   return amountInUsdc.toBigDecimal().div(usdcDivisor);
 }
 

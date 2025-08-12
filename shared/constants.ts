@@ -18,9 +18,12 @@ export const OLAS_USDC_POOL_ADDRESS_BASE = "0x5332584890D6E415a6dc910254d6430b8a
 
 export const CHAINLINK_PRICE_FEED_ADDRESS_BASE_ETH_USD = "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70";
 
+// Cross-subgraph constants
+export const USDC_DECIMALS = 6;
+
 // Convenience selectors (AssemblyScript-friendly)
 export function burnAddressMechFees(): Address {
-  const network = dataSource.network();
+  const n = dataSource.network();
   if (n == "gnosis" || n == "xdai") return Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
   if (n == "base") return Address.fromString(BURN_ADDRESS_MECH_FEES_BASE);
   return Address.zero();
