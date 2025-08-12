@@ -54,6 +54,9 @@
     "build-staking-mode": "graph build subgraphs/staking/subgraph.mode-mainnet.yaml",
     "build-staking-optimism": "graph build subgraphs/staking/subgraph.optimism.yaml",
     "build-staking": "yarn codegen-staking && yarn build-staking-arbitrum && yarn build-staking-base && yarn build-staking-celo && yarn build-staking-gnosis && yarn build-staking-ethereum && yarn build-staking-polygon && yarn build-staking-mode && yarn build-staking-optimism",
+    "codegen-liquidity-eth": "graph codegen subgraphs/liquidity/liquidity-eth/subgraph.yaml",
+    "build-liquidity-eth": "graph build subgraphs/liquidity/liquidity-eth/subgraph.yaml",
+    "build-liquidity": "yarn codegen-liquidity-eth && yarn build-liquidity-eth",
     "deploy-studio": "node scripts/deploy-studio.js",
     "test": "graph test"
   },

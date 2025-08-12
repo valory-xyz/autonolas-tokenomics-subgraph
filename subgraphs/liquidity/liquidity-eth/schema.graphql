@@ -1,0 +1,52 @@
+type LPTransfer @entity(immutable: true) {
+  id: Bytes! # transaction hash + log index
+  from: Bytes! # address
+  to: Bytes! # address
+  value: BigInt! # LP tokens transferred (in wei)
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PoolReserves @entity(immutable: false) {
+  id: Bytes! # pool contract address
+  reserve0: BigInt! # OLAS reserves (in wei)
+  reserve1: BigInt! # ETH reserves (in wei)
+  lastSyncBlock: BigInt!
+  lastSyncTimestamp: BigInt!
+  lastSyncTransaction: Bytes!
+}
+
+
+# Treasury LP token holdings tracker
+type TreasuryHoldings @entity(immutable: false) {
+  id: Bytes! # treasury address
+  currentBalance: BigInt! # current LP token balance
+  totalAcquired: BigInt! # cumulative acquired
+  totalSold: BigInt! # cumulative sold
+  firstTransactionTimestamp: BigInt!
+  lastTransactionTimestamp: BigInt!
+  transactionCount: Int!
+}
+
+# Global LP token metrics
+type LPTokenMetrics @entity(immutable: false) {
+  id: ID! # "global"
+  
+  # Supply metrics
+  totalSupply: BigInt! # current total LP supply
+  totalMinted: BigInt! # cumulative minted
+  totalBurned: BigInt! # cumulative burned
+  
+  # Treasury metrics
+  treasurySupply: BigInt! # LP tokens held by treasury
+  treasuryPercentage: BigInt! # treasury % of total (in basis points, 10000 = 100%)
+  
+  # Pool metrics
+  currentReserve0: BigInt! # current OLAS reserves
+  currentReserve1: BigInt! # current ETH reserves
+  
+  # Timestamps
+  lastUpdated: BigInt!
+  firstTransferTimestamp: BigInt!
+}

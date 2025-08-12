@@ -235,6 +235,17 @@ const networkTypes = {
         description: 'Mode'
       }
     }
+  },
+  '14': {
+    name: 'Liquidity',
+    description: 'Liquidity Pool Tracking Subgraphs',
+    buildCommand: 'yarn build-liquidity',
+    networks: {
+      'ethereum': {
+        path: 'subgraphs/liquidity/liquidity-eth/subgraph.yaml',
+        description: 'Ethereum Mainnet - OLAS/ETH LP tracking'
+      }
+    }
   }
 };
 
