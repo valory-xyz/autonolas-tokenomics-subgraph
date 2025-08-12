@@ -2,7 +2,7 @@ import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts"
 import { VelodromeCLPool } from "../../../../generated/VeloNFTManager/VelodromeCLPool"
 import { AggregatorV3Interface } from "../../../../generated/templates/Safe/AggregatorV3Interface"
 import { getTokenConfig } from "./tokenConfig"
-import { USDC_NATIVE, USDT, DAI, LUSD, WETH } from "./constants"
+import { USDC_NATIVE, USDT, DAI, LUSD, WETH, Q96 } from "./constants"
 
 // Chainlink price adapter with validation
 export function getChainlinkPrice(feedAddress: Address): BigDecimal {
@@ -235,8 +235,7 @@ function sqrtPriceToToken0Price(
     return BigDecimal.fromString("0")
   }
   
-  let Q96 = BigDecimal.fromString("79228162514264337593543950336") // 2^96
-  let sqrtPrice = sqrtPriceX96.toBigDecimal().div(Q96)
+  let sqrtPrice = sqrtPriceX96.toBigDecimal().div(Q96.toBigDecimal())
   
   // Safety check: reasonable sqrtPrice range
   if (sqrtPrice.le(BigDecimal.fromString("0")) || 

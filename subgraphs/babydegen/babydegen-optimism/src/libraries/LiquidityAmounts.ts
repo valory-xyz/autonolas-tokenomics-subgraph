@@ -1,4 +1,5 @@
 import { BigInt } from "@graphprotocol/graph-ts"
+import { Q96 } from "../constants"
 
 export class LiquidityAmounts {
   
@@ -46,7 +47,7 @@ export class LiquidityAmounts {
     // amount0 = liquidity * (sqrtRatioBX96 - sqrtRatioAX96) / (sqrtRatioAX96 * sqrtRatioBX96 / 2^96)
     // Simplified calculation to avoid overflow
     let numerator = liquidity.times(sqrtRatioBX96.minus(sqrtRatioAX96))
-    let denominator = sqrtRatioAX96.times(sqrtRatioBX96).div(BigInt.fromString("79228162514264337593543950336")) // 2^96
+    let denominator = sqrtRatioAX96.times(sqrtRatioBX96).div(Q96)
     
     if (denominator.isZero()) {
       return BigInt.zero()
@@ -68,7 +69,7 @@ export class LiquidityAmounts {
 
     // amount1 = liquidity * (sqrtRatioBX96 - sqrtRatioAX96) / 2^96
     let numerator = liquidity.times(sqrtRatioBX96.minus(sqrtRatioAX96))
-    let denominator = BigInt.fromString("79228162514264337593543950336") // 2^96
+    let denominator = Q96
     
     return numerator.div(denominator)
   }

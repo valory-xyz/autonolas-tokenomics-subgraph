@@ -1,4 +1,5 @@
 import { BigInt } from "@graphprotocol/graph-ts"
+import { Q96 } from "../constants"
 
 export class TickMath {
   static MIN_TICK: i32 = -887272
@@ -21,7 +22,7 @@ export class TickMath {
     
     // For tick = 0, return exactly 2^96
     if (tick == 0) {
-      return BigInt.fromString("79228162514264337593543950336")
+      return Q96
     }
     
     // For small ticks, use precise calculation
@@ -33,24 +34,24 @@ export class TickMath {
       ratio = BigInt.fromString("79232162514264337593543950336")
     } else if (absTick <= 10) {
       // Approximate for ticks 1-10
-      let base = BigInt.fromString("79228162514264337593543950336") // 2^96
+      let base = Q96
       let increment = BigInt.fromString("3960000000000000000000000") // ~0.00005 * 2^96
       ratio = base.plus(increment.times(BigInt.fromI32(absTick)))
     } else if (absTick <= 100) {
       // For ticks 11-100
-      let base = BigInt.fromString("79228162514264337593543950336")
+      let base = Q96
       let increment = BigInt.fromString("39600000000000000000000000") // larger increment
       ratio = base.plus(increment.times(BigInt.fromI32(absTick)))
     } else {
       // For larger ticks, use exponential approximation
-      let base = BigInt.fromString("79228162514264337593543950336")
+      let base = Q96
       let multiplier = BigInt.fromI32(1 + absTick / 100)
       ratio = base.times(multiplier)
     }
     
     // For negative ticks, invert the ratio
     if (tick < 0) {
-      let base = BigInt.fromString("79228162514264337593543950336") // 2^96
+      let base = Q96
       ratio = base.times(base).div(ratio)
     }
     
@@ -59,7 +60,7 @@ export class TickMath {
 
   static getTickAtSqrtRatio(sqrtPriceX96: BigInt): i32 {
     // Simplified reverse calculation
-    let base = BigInt.fromString("79228162514264337593543950336") // 2^96
+    let base = Q96
     
     if (sqrtPriceX96.equals(base)) {
       return 0
