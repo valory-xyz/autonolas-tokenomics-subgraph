@@ -1,7 +1,7 @@
 ### Deployment Tracking
 
 - Update the last two columns during release cycles
-- [x] = means true, [ ] = means false
+- [ x ] = means true, [ ] = means false
 
 | Sno. | Name | Chain | Ready for production | Deployed / Live |
 |---:|---|---|---|---|
