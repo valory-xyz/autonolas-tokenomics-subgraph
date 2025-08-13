@@ -4,16 +4,16 @@ import {
   CreateService,
   RegisterInstance,
   TerminateService,
-} from "../../../../shared/service-registry/generated/ServiceRegistryL2/ServiceRegistryL2";
+} from "../../common/generated/ServiceRegistryL2/ServiceRegistryL2";
 import {
   ExecutionSuccess,
   ExecutionFromModuleSuccess,
-} from "../../../../shared/service-registry/generated/templates/GnosisSafe/GnosisSafe";
+} from "../../common/generated/templates/GnosisSafe/GnosisSafe";
 import {
   Multisig,
   Service,
-} from "../../../../shared/service-registry/generated/schema";
-import { GnosisSafe as GnosisSafeTemplate } from "../../../../shared/service-registry/generated/templates";
+} from "../../common/generated/schema";
+import { GnosisSafe as GnosisSafeTemplate } from "../../common/generated/templates";
 import {
   getOrCreateService,
   getOrCreateMultisig,
@@ -28,7 +28,7 @@ import {
   createDailyActiveMultisig,
   createOrUpdateAgentRegistration,
   getMostRecentAgentId,
-} from "../../../../shared/service-registry/utils";
+} from "../../common/utils";
 
 function updateDailyAgentPerformance(
   event: ethereum.Event,
