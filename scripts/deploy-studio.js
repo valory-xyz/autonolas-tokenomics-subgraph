@@ -11,239 +11,200 @@ const rl = readline.createInterface({
 // Network configurations
 const networkTypes = {
   '1': {
-    name: 'Tokenomics L1',
-    description: 'Ethereum Mainnet - Full tokenomics + OLAS holders',
-    buildCommand: 'yarn build-tokenomics-l1',
+    name: 'Tokenomics',
+    description: 'Tokenomics Subgraphs',
     networks: {
       'mainnet': {
         path: 'subgraphs/tokenomics/tokenomics-eth/subgraph.yaml',
-        description: 'Ethereum Mainnet'
+        description: 'Ethereum Mainnet - Full tokenomics + OLAS holders',
+        buildCommand: 'yarn build-tokenomics:ethereum'
+      },
+      'arbitrum': {
+        path: 'subgraphs/tokenomics/tokenomics-arbitrum/subgraph.arbitrum.yaml',
+        description: 'Arbitrum Network',
+        buildCommand: 'yarn build-tokenomics:arbitrum'
+      },
+      'base': {
+        path: 'subgraphs/tokenomics/tokenomics-base/subgraph.base.yaml',
+        description: 'Base Network',
+        buildCommand: 'yarn build-tokenomics:base'
+      },
+      'celo': {
+        path: 'subgraphs/tokenomics/tokenomics-celo/subgraph.celo.yaml',
+        description: 'Celo Network',
+        buildCommand: 'yarn build-tokenomics:celo'
+      },
+      'gnosis': {
+        path: 'subgraphs/tokenomics/tokenomics-gnosis/subgraph.gnosis.yaml',
+        description: 'Gnosis Chain',
+        buildCommand: 'yarn build-tokenomics:gnosis'
+      },
+      'mode': {
+        path: 'subgraphs/tokenomics/tokenomics-mode/subgraph.mode.yaml',
+        description: 'Mode Network',
+        buildCommand: 'yarn build-tokenomics:mode'
+      },
+      'optimism': {
+        path: 'subgraphs/tokenomics/tokenomics-optimism/subgraph.optimism.yaml',
+        description: 'Optimism Network',
+        buildCommand: 'yarn build-tokenomics:optimism'
+      },
+      'polygon': {
+        path: 'subgraphs/tokenomics/tokenomics-polygon/subgraph.polygon.yaml',
+        description: 'Polygon Network',
+        buildCommand: 'yarn build-tokenomics:polygon'
       }
     }
   },
   '2': {
-    name: 'Tokenomics L2',
-    description: 'Layer 2 Networks - OLAS holders only',
-    buildCommand: 'yarn build-tokenomics-l2',
+    name: 'Service Registry',
+    description: 'Service Registry Subgraphs',
     networks: {
-      'arbitrum': {
-        path: 'subgraphs/tokenomics/tokenomics-arbitrum/subgraph.arbitrum.yaml',
-        description: 'Arbitrum Network'
-      },
-      'base': {
-        path: 'subgraphs/tokenomics/tokenomics-base/subgraph.base.yaml',
-        description: 'Base Network'
-      },
-      'celo': {
-        path: 'subgraphs/tokenomics/tokenomics-celo/subgraph.celo.yaml',
-        description: 'Celo Network'
-      },
-      'gnosis': {
-        path: 'subgraphs/tokenomics/tokenomics-gnosis/subgraph.gnosis.yaml',
-        description: 'Gnosis Chain'
-      },
-      'mode': {
-        path: 'subgraphs/tokenomics/tokenomics-mode/subgraph.mode.yaml',
-        description: 'Mode Network'
+      'ethereum': {
+        path: 'subgraphs/service-registry/service-registry-eth/subgraph.yaml',
+        description: 'Ethereum Mainnet',
+        buildCommand: 'yarn build-service-registry:ethereum'
       },
       'optimism': {
-        path: 'subgraphs/tokenomics/tokenomics-optimism/subgraph.optimism.yaml',
-        description: 'Optimism Network'
+        path: 'subgraphs/service-registry/service-registry-optimism/subgraph.optimism.yaml',
+        description: 'Optimism Network',
+        buildCommand: 'yarn build-service-registry:optimism'
+      },
+      'base': {
+        path: 'subgraphs/service-registry/service-registry-base/subgraph.base.yaml',
+        description: 'Base Network',
+        buildCommand: 'yarn build-service-registry:base'
+      },
+      'gnosis': {
+        path: 'subgraphs/service-registry/service-registry-gnosis/subgraph.gnosis.yaml',
+        description: 'Gnosis Chain',
+        buildCommand: 'yarn build-service-registry:gnosis'
+      },
+      'arbitrum': {
+        path: 'subgraphs/service-registry/service-registry-arbitrum/subgraph.arbitrum.yaml',
+        description: 'Arbitrum Network',
+        buildCommand: 'yarn build-service-registry:arbitrum'
+      },
+      'celo': {
+        path: 'subgraphs/service-registry/service-registry-celo/subgraph.celo.yaml',
+        description: 'Celo Network',
+        buildCommand: 'yarn build-service-registry:celo'
+      },
+      'mode': {
+        path: 'subgraphs/service-registry/service-registry-mode/subgraph.mode.yaml',
+        description: 'Mode Network',
+        buildCommand: 'yarn build-service-registry:mode'
       },
       'polygon': {
-        path: 'subgraphs/tokenomics/tokenomics-polygon/subgraph.polygon.yaml',
-        description: 'Polygon Network'
+        path: 'subgraphs/service-registry/service-registry-polygon/subgraph.polygon.yaml',
+        description: 'Polygon Network',
+        buildCommand: 'yarn build-service-registry:polygon'
       }
     }
   },
   '3': {
-    name: 'Service Registry',
-    description: 'Service Registry Subgraphs',
-    buildCommand: (selectedNetwork) =>
-      selectedNetwork === 'ethereum'
-        ? 'yarn build-service-registry-l1'
-        : 'yarn build-service-registry-l2',
+    name: 'Legacy Mech Fees',
+    description: 'Legacy Mech Fees Subgraphs',
     networks: {
-      'ethereum': {
-        path: 'subgraphs/service-registry/service-registry-eth/subgraph.yaml',
-        description: 'Ethereum Mainnet'
-      },
-      'optimism': {
-        path: 'subgraphs/service-registry/service-registry-optimism/subgraph.optimism.yaml',
-        description: 'Optimism Network'
-      },
-      'base': {
-        path: 'subgraphs/service-registry/service-registry-base/subgraph.base.yaml',
-        description: 'Base Network'
-      },
       'gnosis': {
-        path: 'subgraphs/service-registry/service-registry-gnosis/subgraph.gnosis.yaml',
-        description: 'Gnosis Chain'
-      },
-      'arbitrum': {
-        path: 'subgraphs/service-registry/service-registry-arbitrum/subgraph.arbitrum.yaml',
-        description: 'Arbitrum Network'
-      },
-      'celo': {
-        path: 'subgraphs/service-registry/service-registry-celo/subgraph.celo.yaml',
-        description: 'Celo Network'
-      },
-      'mode': {
-        path: 'subgraphs/service-registry/service-registry-mode/subgraph.mode.yaml',
-        description: 'Mode Network'
-      },
-      'polygon': {
-        path: 'subgraphs/service-registry/service-registry-polygon/subgraph.polygon.yaml',
-        description: 'Polygon Network'
+        path: 'subgraphs/legacy-mech-fees-gnosis/subgraph.yaml',
+        description: 'Gnosis Chain',
+        buildCommand: 'yarn build-legacy-mech-fees:gnosis'
       }
     }
   },
   '4': {
-    name: 'Legacy Mech Fees',
-    description: 'Legacy Mech Fees Subgraphs',
-    buildCommand: 'yarn build-legacy-mech-fees',
+    name: 'New Mech Fees',
+    description: 'Consolidated per-chain manifests (native+nvm+token) for new-mech-fees',
     networks: {
       'gnosis': {
-        path: 'subgraphs/legacy-mech-fees-gnosis/subgraph.yaml',
-        description: 'Gnosis Chain'
+        path: 'subgraphs/new-mech-fees/mech-fees-gnosis/subgraph.yaml',
+        description: 'Consolidated Gnosis (xdai)',
+        buildCommand: 'yarn build-new-mech-fees:gnosis'
+      },
+      'base': {
+        path: 'subgraphs/new-mech-fees/mech-fees-base/subgraph.yaml',
+        description: 'Consolidated Base',
+        buildCommand: 'yarn build-new-mech-fees:base'
       }
     }
   },
   '5': {
-    name: 'New Native Mech Fees - Gnosis',
-    description: 'New Native Mech Fees Subgraphs on Gnosis',
-    buildCommand: 'yarn build-new-native-mech-fees-gnosis',
+    name: 'Predict',
+    description: 'Olas Predict Subgraph',
     networks: {
       'gnosis': {
-        path: 'subgraphs/new-mech-fees/new-native-mech-fees-gnosis/subgraph.yaml',
-        description: 'New Native Mech Fees on Gnosis'
+        path: 'subgraphs/predict/subgraph.yaml',
+        description: 'Gnosis Chain',
+        buildCommand: 'yarn build-predict:gnosis'
       }
     }
   },
   '6': {
-    name: 'New Native Mech Fees - Base',
-    description: 'New Native Mech Fees Subgraphs on Base',
-    buildCommand: 'yarn build-new-native-mech-fees-base',
+    name: 'Governance',
+    description: 'Olas Governance Subgraph',
     networks: {
-      'base': {
-        path: 'subgraphs/new-mech-fees/new-native-mech-fees-base/subgraph.yaml',
-        description: 'New Native Mech Fees on Base'
+      'mainnet': {
+        path: 'subgraphs/governance/subgraph.yaml',
+        description: 'Ethereum Mainnet',
+        buildCommand: 'yarn build-governance:mainnet'
       }
     }
   },
   '7': {
-    name: 'New NVM Mech Fees - Gnosis',
-    description: 'New NVM Mech Fees Subgraphs on Gnosis',
-    buildCommand: 'yarn build-new-nvm-mech-fees-gnosis',
+    name: 'Staking',
+    description: 'Olas Staking Subgraph',
     networks: {
+      'mainnet': {
+        path: 'subgraphs/staking/subgraph.mainnet.yaml',
+        description: 'Ethereum Mainnet',
+        buildCommand: 'yarn build-staking:mainnet'
+      },
       'gnosis': {
-        path: 'subgraphs/new-mech-fees/new-nvm-mech-fees-gnosis/subgraph.yaml',
-        description: 'New NVM Mech Fees on Gnosis'
+        path: 'subgraphs/staking/subgraph.gnosis.yaml',
+        description: 'Gnosis Chain',
+        buildCommand: 'yarn build-staking:gnosis'
+      },
+      'arbitrum': {
+        path: 'subgraphs/staking/subgraph.arbitrum-one.yaml',
+        description: 'Arbitrum One',
+        buildCommand: 'yarn build-staking:arbitrum'
+      },
+      'polygon': {
+        path: 'subgraphs/staking/subgraph.matic.yaml',
+        description: 'Polygon',
+        buildCommand: 'yarn build-staking:polygon'
+      },
+      'optimism': {
+        path: 'subgraphs/staking/subgraph.optimism.yaml',
+        description: 'Optimism',
+        buildCommand: 'yarn build-staking:optimism'
+      },
+      'base': {
+        path: 'subgraphs/staking/subgraph.base.yaml',
+        description: 'Base',
+        buildCommand: 'yarn build-staking:base'
+      },
+      'celo': {
+        path: 'subgraphs/staking/subgraph.celo.yaml',
+        description: 'Celo',
+        buildCommand: 'yarn build-staking:celo'
+      },
+      'mode': {
+        path: 'subgraphs/staking/subgraph.mode-mainnet.yaml',
+        description: 'Mode',
+        buildCommand: 'yarn build-staking:mode'
       }
     }
   },
   '8': {
-    name: 'New NVM Mech Fees - Base',
-    description: 'New NVM Mech Fees Subgraphs on Base',
-    buildCommand: 'yarn build-new-nvm-mech-fees-base',
-    networks: {
-      'base': {
-        path: 'subgraphs/new-mech-fees/new-nvm-mech-fees-base/subgraph.yaml',
-        description: 'New NVM Mech Fees on Base'
-      }
-    }
-  },
-  '9': {
-    name: 'New Token Mech Fees - Gnosis',
-    description: 'New Token-based Mech Fees Subgraphs on Gnosis',
-    buildCommand: 'yarn build-new-token-mech-fees-gnosis',
-    networks: {
-      'gnosis': {
-        path: 'subgraphs/new-mech-fees/new-token-mech-fees-gnosis/subgraph.yaml',
-        description: 'New Token Mech Fees on Gnosis'
-      }
-    }
-  },
-  '10': {
-    name: 'New Token Mech Fees - Base',
-    description: 'New Token-based Mech Fees Subgraphs on Base',
-    buildCommand: 'yarn build-new-token-mech-fees-base',
-    networks: {
-      'base': {
-        path: 'subgraphs/new-mech-fees/new-token-mech-fees-base/subgraph.yaml',
-        description: 'New Token Mech Fees on Base'
-      }
-    }
-  },
-  '11': {
-    name: 'Predict',
-    description: 'Olas Predict Subgraph',
-    buildCommand: 'yarn build-predict',
-    networks: {
-      'gnosis': {
-        path: 'subgraphs/predict/subgraph.yaml',
-        description: 'Gnosis Chain'
-      }
-    }
-  },
-  '12': {
-    name: 'Governance',
-    description: 'Olas Governance Subgraph',
-    buildCommand: 'yarn build-governance',
-    networks: {
-      'mainnet': {
-        path: 'subgraphs/governance/subgraph.yaml',
-        description: 'Ethereum Mainnet'
-      }
-    }
-  },
-  '13': {
-    name: 'Staking',
-    description: 'Olas Staking Subgraph',
-    buildCommand: 'yarn build-staking',
-    networks: {
-      'mainnet': {
-        path: 'subgraphs/staking/subgraph.mainnet.yaml',
-        description: 'Ethereum Mainnet'
-      },
-      'gnosis': {
-        path: 'subgraphs/staking/subgraph.gnosis.yaml',
-        description: 'Gnosis Chain'
-      },
-      'arbitrum': {
-        path: 'subgraphs/staking/subgraph.arbitrum-one.yaml',
-        description: 'Arbitrum One'
-      },
-      'polygon': {
-        path: 'subgraphs/staking/subgraph.matic.yaml',
-        description: 'Polygon'
-      },
-      'optimism': {
-        path: 'subgraphs/staking/subgraph.optimism.yaml',
-        description: 'Optimism'
-      },
-      'base': {
-        path: 'subgraphs/staking/subgraph.base.yaml',
-        description: 'Base'
-      },
-      'celo': {
-        path: 'subgraphs/staking/subgraph.celo.yaml',
-        description: 'Celo'
-      },
-      'mode': {
-        path: 'subgraphs/staking/subgraph.mode-mainnet.yaml',
-        description: 'Mode'
-      }
-    }
-  },
-  '14': {
     name: 'Liquidity',
     description: 'Liquidity Pool Tracking Subgraphs',
-    buildCommand: 'yarn build-liquidity',
     networks: {
       'ethereum': {
         path: 'subgraphs/liquidity/liquidity-eth/subgraph.yaml',
-        description: 'Ethereum Mainnet - OLAS/ETH LP tracking'
+        description: 'Ethereum Mainnet - OLAS/ETH LP tracking',
+        buildCommand: 'yarn build-liquidity:ethereum'
       }
     }
   }
@@ -334,13 +295,7 @@ async function main() {
     console.log(`Config: ${networkConfig.path}\n`);
     
     // Determine build command based on network type
-    let buildCommand;
-
-    if (typeof networkType.buildCommand === 'function') {
-      buildCommand = networkType.buildCommand(selectedNetwork);
-    } else {
-      buildCommand = networkType.buildCommand;
-    }
+    const buildCommand = networkConfig.buildCommand;
 
     console.log(`🔨 Building subgraph with: ${buildCommand}`);
     execSync(buildCommand, {

@@ -1,5 +1,5 @@
 import { BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { Global, MechTransaction, Mech, MechDaily, DailyTotals } from "./generated/schema";
+import { Global, MechTransaction, Mech, MechDaily, DailyTotals, MechModel } from "./generated/schema";
 import {
   TOKEN_RATIO_GNOSIS,
   TOKEN_DECIMALS_GNOSIS,
@@ -24,6 +24,51 @@ export function getOrInitialiseGlobal(): Global {
   return global;
 }
 
+// ---------------- Per-model helpers ----------------
+function mechModelId(mechId: string, model: string): string {
+  return mechId + "-" + model;
+}
+
+function getOrInitializeMechModel(mechId: string, model: string): MechModel {
+  const id = mechModelId(mechId, model);
+  let mm = MechModel.load(id);
+  if (mm == null) {
+    mm = new MechModel(id);
+    mm.mech = mechId;
+    mm.model = model;
+    mm.totalFeesInUSD = BigDecimal.fromString("0");
+    mm.totalFeesOutUSD = BigDecimal.fromString("0");
+    mm.totalFeesInRaw = BigDecimal.fromString("0");
+    mm.totalFeesOutRaw = BigDecimal.fromString("0");
+  }
+  return mm as MechModel;
+}
+
+export function updateMechModelIn(
+  mechId: string,
+  model: string,
+  amountUsd: BigDecimal,
+  amountRaw: BigDecimal
+): void {
+  const mm = getOrInitializeMechModel(mechId, model);
+  mm.totalFeesInUSD = mm.totalFeesInUSD.plus(amountUsd);
+  mm.totalFeesInRaw = mm.totalFeesInRaw.plus(amountRaw);
+  mm.save();
+}
+
+export function updateMechModelOut(
+  mechId: string,
+  model: string,
+  amountUsd: BigDecimal,
+  amountRaw: BigDecimal
+): void {
+  const mm = getOrInitializeMechModel(mechId, model);
+  mm.totalFeesOutUSD = mm.totalFeesOutUSD.plus(amountUsd);
+  mm.totalFeesOutRaw = mm.totalFeesOutRaw.plus(amountRaw);
+  mm.save();
+}
+
+// ---------------- Transactions ----------------
 export function createMechTransactionForAccrued(
   mech: Mech,
   amountRaw: BigDecimal,
@@ -31,13 +76,15 @@ export function createMechTransactionForAccrued(
   event: ethereum.Event,
   deliveryRate: BigInt,
   balance: BigInt,
-  rateDiff: BigInt
+  rateDiff: BigInt,
+  model: string
 ): void {
   const transaction = new MechTransaction(
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString()
   );
   transaction.mech = mech.id;
   transaction.type = FEE_IN;
+  transaction.model = model;
   transaction.amountRaw = amountRaw;
   transaction.amountUSD = amountUSD;
   transaction.timestamp = event.block.timestamp;
@@ -53,13 +100,15 @@ export function createMechTransactionForCollected(
   mech: Mech,
   amountRaw: BigDecimal,
   amountUSD: BigDecimal,
-  event: ethereum.Event
+  event: ethereum.Event,
+  model: string
 ): void {
   const transaction = new MechTransaction(
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString()
   );
   transaction.mech = mech.id;
   transaction.type = FEE_OUT;
+  transaction.model = model;
   transaction.amountRaw = amountRaw;
   transaction.amountUSD = amountUSD;
   transaction.timestamp = event.block.timestamp;
