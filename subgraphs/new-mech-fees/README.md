@@ -55,22 +55,18 @@ The raw fields in both `MechTransaction` and `Mech` entities represent amounts i
 }
 ```
 
-❌ **Across Payment Models**: Raw units are incompatible
-```graphql
-# ❌ AVOID: Mixing payment models in raw comparisons
-{
-  nvm_mech: mech(id: "0x...") { totalFeesInRaw }     # Credits
-  native_mech: mech(id: "0x...") { totalFeesInRaw }  # Wei
-}
-```
+✅ **Handling Raw Units Across Payment Models**
 
-✅ **Use per‑model aggregates for raw correctness**
+The `Mech.totalFeesInRaw` field aggregates raw values from all payment models a mech participates in. Since raw units are not comparable (e.g., `credits` vs. `wei`), this field can be misleading.
+
+To get correct, model-specific raw totals, always use the `MechModel` entity:
+
 ```graphql
-# ✅ GOOD: Use MechModel to keep raw units per model
+# ✅ GOOD: Use MechModel to isolate raw values per model
 {
-  nvm: mechModel(id: "0xMECH-nvm") { totalFeesInRaw totalFeesOutRaw }
-  token: mechModel(id: "0xMECH-token") { totalFeesInRaw totalFeesOutRaw }
-  native: mechModel(id: "0xMECH-native") { totalFeesInRaw totalFeesOutRaw }
+  nvm_totals: mechModel(id: "0xMECH-nvm") { totalFeesInRaw totalFeesOutRaw }
+  token_totals: mechModel(id: "0xMECH-token") { totalFeesInRaw totalFeesOutRaw }
+  native_totals: mechModel(id: "0xMECH-native") { totalFeesInRaw totalFeesOutRaw }
 }
 ```
 
