@@ -2,7 +2,7 @@
 
 specVersion: 0.0.5
 schema:
-  file: ../../../shared/service-registry/schema.graphql
+  file: ../common/schema.graphql
 dataSources:
   - kind: ethereum/contract
     name: ServiceRegistryL2
@@ -36,7 +36,7 @@ dataSources:
           handler: handleRegisterInstance
         - event: TerminateService(indexed uint256)
           handler: handleTerminateService
-      file: ../../../shared/service-registry/mappers/mapping.ts
+      file: ../common/mappers/mapping.ts
 
 templates:
   - kind: ethereum/contract
@@ -48,7 +48,7 @@ templates:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
-      file: ../../../shared/service-registry/mappers/mapping.ts
+      file: ../common/mappers/mapping.ts
       entities:
         - Service
         - Multisig

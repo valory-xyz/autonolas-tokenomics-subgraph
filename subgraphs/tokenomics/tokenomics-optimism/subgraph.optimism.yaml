@@ -1,6 +1,6 @@
 specVersion: 0.0.5
 schema:
-  file: ../../../shared/tokenomics/schema-l2.graphql
+  file: ../common/schema-l2.graphql
 dataSources:
   - kind: ethereum
     name: OLAS
@@ -23,4 +23,4 @@ dataSources:
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      file: ../../../shared/tokenomics/mappers/olas-l2.ts 
+      file: ../common/mappers/olas-l2.ts 
