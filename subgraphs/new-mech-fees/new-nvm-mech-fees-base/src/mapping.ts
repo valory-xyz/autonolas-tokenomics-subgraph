@@ -20,10 +20,17 @@ import {
   updateMechFeesIn,
   updateMechFeesOut,
   createMechTransactionForAccrued,
-  createMechTransactionForCollected
+  createMechTransactionForCollected,
+  updateMechModelIn,
+  updateMechModelOut,
+  updateDailyTotalsIn,
+  updateDailyTotalsOut,
+  updateMechDailyIn,
+  updateMechDailyOut
 } from "../../common/utils";
 
 const BURN_ADDRESS = getBurnAddressMechFees();
+const MODEL = "nvm";
 
 export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): void {
   const deliveryRateCredits = event.params.deliveryRate;
@@ -36,6 +43,9 @@ export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): voi
   updateTotalFeesIn(deliveryRateUsd);
   // Store credits as raw value (not converted to USDC)
   updateMechFeesIn(mechId, deliveryRateUsd, deliveryRateCredits.toBigDecimal());
+  updateMechModelIn(mechId, MODEL, deliveryRateUsd, deliveryRateCredits.toBigDecimal());
+  updateDailyTotalsIn(deliveryRateUsd, event.block.timestamp);
+  updateMechDailyIn(mechId, deliveryRateUsd, deliveryRateCredits.toBigDecimal(), event.block.timestamp);
 
   // Create the transaction record
   const mech = Mech.load(mechId);
@@ -47,7 +57,8 @@ export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): voi
       event,
       event.params.deliveryRate,
       event.params.balance,
-      event.params.rateDiff
+      event.params.rateDiff,
+      MODEL
     );
   }
 }
@@ -75,6 +86,9 @@ export function handleWithdrawForNvm(event: Withdraw): void {
   updateTotalFeesOut(withdrawalAmountUsd);
   // Store credits as raw value (converted from USDC)
   updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalCredits);
+  updateMechModelOut(mechId, MODEL, withdrawalAmountUsd, withdrawalCredits);
+  updateDailyTotalsOut(withdrawalAmountUsd, event.block.timestamp);
+  updateMechDailyOut(mechId, withdrawalAmountUsd, withdrawalCredits, event.block.timestamp);
 
   // Create MechTransaction for the collected fees
   const mech = Mech.load(mechId);
@@ -83,7 +97,8 @@ export function handleWithdrawForNvm(event: Withdraw): void {
       mech,
       withdrawalCredits, // Store credits as raw amount
       withdrawalAmountUsd,
-      event
+      event,
+      MODEL
     );
   }
 } 
