@@ -22,6 +22,7 @@ import {
   getOrCreateDailyAgentPerformance,
   getOrCreateDailyActiveMultisigs,
   getGlobal,
+  getOrCreateAgent,
   getOrCreateAgentPerformance,
   createDailyUniqueAgent,
   createDailyAgentMultisig,
@@ -107,6 +108,9 @@ export function handleCreateService(event: CreateService): void {
 export function handleRegisterInstance(event: RegisterInstance): void {
   let service = getOrCreateService(event.params.serviceId);
   const newAgentId = event.params.agentId.toI32();
+
+  // Make sure agent is created
+  getOrCreateAgent(newAgentId);
 
   // Track agent registration timestamp for later use in multisig creation
   createOrUpdateAgentRegistration(

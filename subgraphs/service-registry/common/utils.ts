@@ -1,5 +1,6 @@
 import { BigInt, ethereum, Bytes } from "@graphprotocol/graph-ts";
 import {
+  Agent,
   AgentPerformance,
   AgentRegistration,
   DailyActiveMultisig,
@@ -123,6 +124,7 @@ export function getGlobal(): Global {
   if (global == null) {
     global = new Global("");
     global.txCount = BigInt.fromI32(0);
+    global.totalAgents = BigInt.fromI32(0);
     global.lastUpdated = BigInt.fromI32(0);
     global.save();
   }
@@ -137,6 +139,19 @@ export function getOrCreateAgentPerformance(
     agent = new AgentPerformance(agentId.toString());
     agent.txCount = BigInt.fromI32(0);
     agent.save();
+  }
+  return agent;
+}
+
+export function getOrCreateAgent(agentId: i32): Agent {
+  let agent = Agent.load(agentId.toString());
+  if (agent == null) {
+    agent = new Agent(agentId.toString());
+    agent.save();
+
+    const global = getGlobal();
+    global.totalAgents = global.totalAgents.plus(BigInt.fromI32(1));
+    global.save();
   }
   return agent;
 }
