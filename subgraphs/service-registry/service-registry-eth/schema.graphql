@@ -72,8 +72,13 @@ type AgentPerformance @entity(immutable: false) {
   txCount: BigInt!
 }
 
+type Agent @entity(immutable: true) {
+  id: ID! # agentId
+}
+
 type Global @entity(immutable: false) {
   id: ID!
   txCount: BigInt!
+  totalAgents: BigInt!
   lastUpdated: BigInt!
 }
