@@ -110,17 +110,18 @@ const networkTypes = {
     }
   },
   '5': {
-    name: 'New Mech Fees (Consolidated)',
+    name: 'New Mech Fees',
     description: 'Consolidated per-chain manifests (native+nvm+token) for new-mech-fees',
-    buildCommand: (network) => network === 'gnosis' ? 'yarn build-new-mech-fees-gnosis' : 'yarn build-new-mech-fees-base',
     networks: {
       'gnosis': {
         path: 'subgraphs/new-mech-fees/mech-fees-gnosis/subgraph.yaml',
-        description: 'Consolidated Gnosis (xdai)'
+        description: 'Consolidated Gnosis (xdai)',
+        buildCommand: 'yarn build-new-mech-fees-gnosis'
       },
       'base': {
         path: 'subgraphs/new-mech-fees/mech-fees-base/subgraph.yaml',
-        description: 'Consolidated Base'
+        description: 'Consolidated Base',
+        buildCommand: 'yarn build-new-mech-fees-base'
       }
     }
   },
@@ -283,12 +284,13 @@ async function main() {
     console.log(`Config: ${networkConfig.path}\n`);
     
     // Determine build command based on network type
-    let buildCommand;
-
-    if (typeof networkType.buildCommand === 'function') {
-      buildCommand = networkType.buildCommand(selectedNetwork);
-    } else {
-      buildCommand = networkType.buildCommand;
+    let buildCommand = networkConfig.buildCommand;
+    if (!buildCommand) {
+      if (typeof networkType.buildCommand === 'function') {
+        buildCommand = networkType.buildCommand(selectedNetwork);
+      } else {
+        buildCommand = networkType.buildCommand;
+      }
     }
 
     console.log(`🔨 Building subgraph with: ${buildCommand}`);
