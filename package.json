@@ -4,7 +4,7 @@
   "scripts": {
     "codegen-tokenomics-l1": "graph codegen subgraphs/tokenomics/tokenomics-eth/subgraph.yaml",
     "codegen-tokenomics-l2": "graph codegen subgraphs/tokenomics/tokenomics-base/subgraph.base.yaml -o subgraphs/tokenomics/common/generated",
-    "codegen-service-registry-l2": "graph codegen subgraphs/service-registry/service-registry-base/subgraph.base.yaml -o shared/service-registry/generated",
+    "codegen-service-registry-l2": "graph codegen subgraphs/service-registry/service-registry-base/subgraph.base.yaml -o subgraphs/service-registry/common/generated",
     "codegen-legacy-mech-fees": "graph codegen subgraphs/legacy-mech-fees-gnosis/subgraph.yaml -o subgraphs/legacy-mech-fees-gnosis/generated",
     "codegen-new-mech-fees-gnosis": "graph codegen subgraphs/new-mech-fees/mech-fees-gnosis/subgraph.yaml -o subgraphs/new-mech-fees/common/generated",
     "codegen-new-mech-fees-base": "graph codegen subgraphs/new-mech-fees/mech-fees-base/subgraph.yaml -o subgraphs/new-mech-fees/common/generated",
