@@ -4,14 +4,14 @@ import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import {
   MechBalanceAdjusted,
   Withdraw
-} from "../../../../shared/new-mech-fees/generated/BalanceTrackerNvmSubscriptionNative/BalanceTrackerNvmSubscriptionNative"
-import { Mech } from "../../../../shared/new-mech-fees/generated/schema"
+} from "../../common/generated/BalanceTrackerNvmSubscriptionNative/BalanceTrackerNvmSubscriptionNative"
+import { Mech } from "../../common/generated/schema"
 import { 
-  BURN_ADDRESS_MECH_FEES_GNOSIS,
   TOKEN_RATIO_GNOSIS,
   TOKEN_DECIMALS_GNOSIS,
   ETH_DECIMALS
-} from "../../../../shared/constants"
+} from "../../common/constants"
+import { getBurnAddressMechFees } from "../../../../shared/constants"
 import { 
   updateTotalFeesIn, 
   updateTotalFeesOut, 
@@ -21,13 +21,16 @@ import {
   updateMechFeesOut,
   createMechTransactionForAccrued,
   createMechTransactionForCollected,
+  updateMechModelIn,
+  updateMechModelOut,
   updateDailyTotalsIn,
   updateDailyTotalsOut,
   updateMechDailyIn,
   updateMechDailyOut
-} from "../../../../shared/new-mech-fees/utils"
+} from "../../common/utils"
 
-const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
+const BURN_ADDRESS = getBurnAddressMechFees();
+const MODEL = "nvm";
 
 export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): void {
   const deliveryRateCredits = event.params.deliveryRate;
@@ -39,6 +42,7 @@ export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): voi
   updateTotalFeesIn(earningsAmountUsd);
   // Store credits as raw value (not converted to xDAI wei)
   updateMechFeesIn(mechId, earningsAmountUsd, deliveryRateCredits.toBigDecimal());
+  updateMechModelIn(mechId, MODEL, earningsAmountUsd, deliveryRateCredits.toBigDecimal());
   updateDailyTotalsIn(earningsAmountUsd, event.block.timestamp);
   updateMechDailyIn(mechId, earningsAmountUsd, deliveryRateCredits.toBigDecimal(), event.block.timestamp);
 
@@ -52,7 +56,8 @@ export function handleMechBalanceAdjustedForNvm(event: MechBalanceAdjusted): voi
       event,
       event.params.deliveryRate,
       event.params.balance,
-      event.params.rateDiff
+      event.params.rateDiff,
+      MODEL
     );
   }
 }
@@ -81,6 +86,7 @@ export function handleWithdrawForNvm(event: Withdraw): void {
   updateTotalFeesOut(withdrawalAmountUsd);
   // Store credits as raw value (converted from xDAI wei)
   updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalCredits);
+  updateMechModelOut(mechId, MODEL, withdrawalAmountUsd, withdrawalCredits);
   updateDailyTotalsOut(withdrawalAmountUsd, event.block.timestamp);
   updateMechDailyOut(mechId, withdrawalAmountUsd, withdrawalCredits, event.block.timestamp);
 
@@ -91,7 +97,8 @@ export function handleWithdrawForNvm(event: Withdraw): void {
       mech,
       withdrawalCredits, // Store credits as raw amount
       withdrawalAmountUsd,
-      event
+      event,
+      MODEL
     );
   }
 } 

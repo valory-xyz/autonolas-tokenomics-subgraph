@@ -2,15 +2,8 @@ import { Address, BigDecimal, Bytes, log } from "@graphprotocol/graph-ts"
 import {
   MechBalanceAdjusted,
   Withdraw
-} from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceToken/BalanceTrackerFixedPriceToken"
-import { Mech } from "../../../../shared/new-mech-fees/generated/schema"
-import {
-  BURN_ADDRESS_MECH_FEES_GNOSIS,
-  BALANCER_VAULT_ADDRESS_GNOSIS,
-  OLAS_WXDAI_POOL_ADDRESS_GNOSIS,
-  OLAS_ADDRESS_GNOSIS,
-  WXDAI_ADDRESS_GNOSIS
-} from "../../../../shared/constants"
+} from "../../common/generated/BalanceTrackerFixedPriceToken/BalanceTrackerFixedPriceToken"
+import { Mech } from "../../common/generated/schema"
 import {
   updateTotalFeesIn,
   updateTotalFeesOut,
@@ -21,16 +14,21 @@ import {
   updateDailyTotalsIn,
   updateDailyTotalsOut,
   updateMechDailyIn,
-  updateMechDailyOut
-} from "../../../../shared/new-mech-fees/utils"
-import { calculateOlasInUsd } from "../../../../shared/new-mech-fees/token-utils"
-import { BalancerV2WeightedPool } from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceToken/BalancerV2WeightedPool";
+  updateMechDailyOut,
+  updateMechModelIn,
+  updateMechModelOut
+} from "../../common/utils"
+import { calculateOlasInUsd } from "../../common/token-utils"
+import { BalancerV2Vault } from "../../common/generated/BalanceTrackerFixedPriceToken/BalancerV2Vault";
+import { BalancerV2WeightedPool } from "../../common/generated/BalanceTrackerFixedPriceToken/BalancerV2WeightedPool";
+import { getBalancerVaultAddress, getOlasStablePoolAddress, getOlasTokenAddress, getStableTokenAddress, getBurnAddressMechFees } from "../../../../shared/constants";
 
-const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
-const VAULT_ADDRESS = Address.fromString(BALANCER_VAULT_ADDRESS_GNOSIS);
-const POOL_ADDRESS = Address.fromString(OLAS_WXDAI_POOL_ADDRESS_GNOSIS);
-const OLAS_ADDRESS = Address.fromString(OLAS_ADDRESS_GNOSIS);
-const WXDAI_ADDRESS = Address.fromString(WXDAI_ADDRESS_GNOSIS);
+const BURN_ADDRESS = getBurnAddressMechFees();
+const VAULT_ADDRESS = getBalancerVaultAddress();
+const POOL_ADDRESS = getOlasStablePoolAddress();
+const OLAS_ADDRESS = getOlasTokenAddress();
+const STABLE_ADDRESS = getStableTokenAddress();
+const MODEL = "token";
 
 function getPoolIdSafe(poolAddress: Address): Bytes {
   // For Balancer V2, the pool ID is typically the pool address + some additional data
@@ -57,13 +55,14 @@ export function handleMechBalanceAdjustedForToken(event: MechBalanceAdjusted): v
     VAULT_ADDRESS,
     poolId,
     OLAS_ADDRESS,
-    WXDAI_ADDRESS,
+    STABLE_ADDRESS,
     18,
     deliveryRateOlas
   );
 
   updateTotalFeesIn(deliveryRateUsd);
   updateMechFeesIn(mechId, deliveryRateUsd, deliveryRateOlas.toBigDecimal());
+  updateMechModelIn(mechId, MODEL, deliveryRateUsd, deliveryRateOlas.toBigDecimal());
   updateDailyTotalsIn(deliveryRateUsd, event.block.timestamp);
   updateMechDailyIn(mechId, deliveryRateUsd, deliveryRateOlas.toBigDecimal(), event.block.timestamp);
 
@@ -77,7 +76,8 @@ export function handleMechBalanceAdjustedForToken(event: MechBalanceAdjusted): v
       event,
       event.params.deliveryRate,
       event.params.balance,
-      event.params.rateDiff
+      event.params.rateDiff,
+      MODEL
     );
   }
 }
@@ -98,13 +98,14 @@ export function handleWithdrawForToken(event: Withdraw): void {
     VAULT_ADDRESS,
     poolId,
     OLAS_ADDRESS,
-    WXDAI_ADDRESS,
+    STABLE_ADDRESS,
     18,
     withdrawalAmountOlas
   );
 
   updateTotalFeesOut(withdrawalAmountUsd);
   updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalAmountOlas.toBigDecimal());
+  updateMechModelOut(mechId, MODEL, withdrawalAmountUsd, withdrawalAmountOlas.toBigDecimal());
   updateDailyTotalsOut(withdrawalAmountUsd, event.block.timestamp);
   updateMechDailyOut(mechId, withdrawalAmountUsd, withdrawalAmountOlas.toBigDecimal(), event.block.timestamp);
 
@@ -115,7 +116,8 @@ export function handleWithdrawForToken(event: Withdraw): void {
       mech,
       withdrawalAmountOlas.toBigDecimal(),
       withdrawalAmountUsd,
-      event
+      event,
+      MODEL
     );
   }
 } 

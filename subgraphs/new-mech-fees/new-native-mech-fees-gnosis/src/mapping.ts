@@ -4,9 +4,9 @@ import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts"
 import {
   MechBalanceAdjusted,
   Withdraw
-} from "../../../../shared/new-mech-fees/generated/BalanceTrackerFixedPriceNative/BalanceTrackerFixedPriceNative"
-import { Mech } from "../../../../shared/new-mech-fees/generated/schema"
-import { BURN_ADDRESS_MECH_FEES_GNOSIS } from "../../../../shared/constants"
+} from "../../common/generated/BalanceTrackerFixedPriceNative/BalanceTrackerFixedPriceNative"
+import { Mech } from "../../common/generated/schema"
+import { getBurnAddressMechFees } from "../../../../shared/constants"
 import { 
   updateTotalFeesIn, 
   updateTotalFeesOut, 
@@ -15,13 +15,16 @@ import {
   updateMechFeesOut,
   createMechTransactionForAccrued,
   createMechTransactionForCollected,
+  updateMechModelIn,
+  updateMechModelOut,
   updateDailyTotalsIn,
   updateDailyTotalsOut,
   updateMechDailyIn,
   updateMechDailyOut
-} from "../../../../shared/new-mech-fees/utils"
+} from "../../common/utils"
 
-const BURN_ADDRESS = Address.fromString(BURN_ADDRESS_MECH_FEES_GNOSIS);
+const BURN_ADDRESS = getBurnAddressMechFees();
+const MODEL = "native";
 
 export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): void {
   const earningsAmountWei = event.params.deliveryRate;
@@ -31,6 +34,7 @@ export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): 
 
   updateTotalFeesIn(earningsAmountUsd);
   updateMechFeesIn(mechId, earningsAmountUsd, earningsAmountWei.toBigDecimal());
+  updateMechModelIn(mechId, MODEL, earningsAmountUsd, earningsAmountWei.toBigDecimal());
   updateDailyTotalsIn(earningsAmountUsd, event.block.timestamp);
   updateMechDailyIn(mechId, earningsAmountUsd, earningsAmountWei.toBigDecimal(), event.block.timestamp);
 
@@ -44,7 +48,8 @@ export function handleMechBalanceAdjustedForNative(event: MechBalanceAdjusted): 
       event,
       event.params.deliveryRate,
       event.params.balance,
-      event.params.rateDiff
+      event.params.rateDiff,
+      MODEL
     );
   }
 }
@@ -62,6 +67,7 @@ export function handleWithdrawForNative(event: Withdraw): void {
 
   updateTotalFeesOut(withdrawalAmountUsd);
   updateMechFeesOut(mechId, withdrawalAmountUsd, withdrawalAmountWei.toBigDecimal());
+  updateMechModelOut(mechId, MODEL, withdrawalAmountUsd, withdrawalAmountWei.toBigDecimal());
   updateDailyTotalsOut(withdrawalAmountUsd, event.block.timestamp);
   updateMechDailyOut(mechId, withdrawalAmountUsd, withdrawalAmountWei.toBigDecimal(), event.block.timestamp);
 
@@ -72,7 +78,8 @@ export function handleWithdrawForNative(event: Withdraw): void {
       mech,
       withdrawalAmountWei.toBigDecimal(),
       withdrawalAmountUsd,
-      event
+      event,
+      MODEL
     );
   }
 }

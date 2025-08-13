@@ -6,7 +6,9 @@ A blockchain indexing system that tracks fees for autonomous agents (mechs) inte
 
 These subgraphs provide real-time tracking of every fee-in (accrual) and fee-out (collection) event for mechs. By logging each transaction, the subgraphs enable detailed time-based analysis, such as calculating daily and weekly fees per mech.
 
-The system is split into six subgraphs, one for each combination of payment model and network.
+The system is deployed as two subgraphs (one per chain), each composed of three data sources (payment models):
+- Base: `subgraphs/new-mech-fees/mech-fees-base/subgraph.yaml`
+- Gnosis (xdai): `subgraphs/new-mech-fees/mech-fees-gnosis/subgraph.yaml`
 
 ## Subgraph Details
 
@@ -24,6 +26,7 @@ The system is split into six subgraphs, one for each combination of payment mode
 - **`Mech`**: Central entity for a mech, identified by its address. It stores the lifetime totals for fees in and out, both in raw units and USD.
 - **`Global`**: A singleton entity that aggregates total fees in and out in USD across all mechs for a given subgraph.
 - **`MechTransaction`**: A detailed record of every individual fee event (`MechBalanceAdjusted` or `Withdraw`). This is the core entity for time-based analysis. Each transaction is immutable.
+- **`MechModel` (new)**: Per‑mech, per‑payment‑model aggregates to keep raw units correct when the same mech appears in multiple models. `id = "${mech}-${model}"`, where `model` ∈ {`native`,`nvm`,`token`}.
 
 ### Note  
 `Withdraw` event gives information about mech claimed payments. Since currently Protocol fees is off, mech claimed payments coincide with realised mech earnings.  
@@ -52,12 +55,18 @@ The raw fields in both `MechTransaction` and `Mech` entities represent amounts i
 }
 ```
 
-❌ **Across Payment Models**: Raw units are incompatible
+✅ **Handling Raw Units Across Payment Models**
+
+The `Mech.totalFeesInRaw` field aggregates raw values from all payment models a mech participates in. Since raw units are not comparable (e.g., `credits` vs. `wei`), this field can be misleading.
+
+To get correct, model-specific raw totals, always use the `MechModel` entity:
+
 ```graphql
-# ❌ AVOID: Mixing payment models in raw comparisons
+# ✅ GOOD: Use MechModel to isolate raw values per model
 {
-  nvm_mech: mech(id: "0x...") { totalFeesInRaw }     # Credits
-  native_mech: mech(id: "0x...") { totalFeesInRaw }  # Wei
+  nvm_totals: mechModel(id: "0xMECH-nvm") { totalFeesInRaw totalFeesOutRaw }
+  token_totals: mechModel(id: "0xMECH-token") { totalFeesInRaw totalFeesOutRaw }
+  native_totals: mechModel(id: "0xMECH-native") { totalFeesInRaw totalFeesOutRaw }
 }
 ```
 
@@ -143,6 +152,20 @@ This query fetches the total fees in and out for a specific mech over its entire
 }
 ```
 
+### Get Mech Lifetime Totals per‑Model (raw correctness)
+```graphql
+{
+  models: mechModels(where: { mech: "0xMECH" }) {
+    id
+    model
+    totalFeesInUSD
+    totalFeesOutUSD
+    totalFeesInRaw
+    totalFeesOutRaw
+  }
+}
+```
+
 ### Get Daily Fee Transactions for a Mech
 This query retrieves all fee transactions for a specific mech within a given time window (e.g., one day). The client can then aggregate these transactions to calculate the daily total.
 ```graphql
@@ -158,6 +181,7 @@ This query retrieves all fee transactions for a specific mech within a given tim
   ) {
     id
     type # FEE_IN or FEE_OUT
+    model # native | nvm | token
     amountRaw
     amountUSD
     timestamp
@@ -262,3 +286,131 @@ This query returns the total fees processed by the subgraph across all mechs.
   }
 }
 ``` 
+
+### Sample Queries — By Model
+
+```graphql
+# All token-model mechs (OLAS-based payments)
+{
+  mechModels(where: { model: "token" }, first: 1000) {
+    mech { id }
+    totalFeesInUSD
+    totalFeesOutUSD
+    totalFeesInRaw   # OLAS wei
+    totalFeesOutRaw  # OLAS wei
+  }
+}
+```
+
+```graphql
+# Top native-model mechs by lifetime USD (run on each chain's endpoint)
+{
+  mechModels(
+    where: { model: "native" }
+    orderBy: totalFeesInUSD
+    orderDirection: desc
+    first: 100
+  ) {
+    mech { id }
+    totalFeesInUSD
+    totalFeesOutUSD
+    totalFeesInRaw   # xDAI/ETH wei
+    totalFeesOutRaw
+  }
+}
+```
+
+```graphql
+# Top NVM-model mechs by lifetime USD (run on Base and Gnosis)
+{
+  mechModels(
+    where: { model: "nvm" }
+    orderBy: totalFeesInUSD
+    orderDirection: desc
+    first: 100
+  ) {
+    mech { id }
+    totalFeesInUSD
+    totalFeesOutUSD
+    totalFeesInRaw   # credits
+    totalFeesOutRaw  # credits
+  }
+}
+```
+
+```graphql
+# Per‑mech transactions filtered by model (example: token)
+{
+  mechTransactions(
+    where: {
+      mech: "0xMECH_ADDRESS",
+      model: "token"
+      # optional time window:
+      # timestamp_gte: 1710460800,
+      # timestamp_lt: 1711065600
+    },
+    orderBy: timestamp,
+    orderDirection: desc,
+    first: 1000
+  ) {
+    id
+    type         # FEE_IN or FEE_OUT
+    amountRaw    # model-specific units
+    amountUSD
+    timestamp
+    txHash
+  }
+}
+```
+
+### Sample Queries — Per‑Mech Per‑Day
+
+```graphql
+# Per‑mech per‑day range
+{
+  mechDailies(
+    where: { mech: "0xMECH_ADDRESS", date_gte: 1710460800, date_lt: 1711065600 },
+    orderBy: date,
+    orderDirection: asc
+  ) {
+    id
+    date
+    feesInUSD
+    feesOutUSD
+    feesInRaw
+    feesOutRaw
+  }
+}
+```
+
+```graphql
+# Single day for a mech (composite id = `${mech}-${dayStart}`)
+{
+  mechDaily(id: "0xMECH_ADDRESS-1710460800") {
+    id
+    date
+    mech { id }
+    feesInUSD
+    feesOutUSD
+    feesInRaw
+    feesOutRaw
+  }
+}
+```
+
+```graphql
+# Latest day for a mech
+{
+  mechDailies(
+    where: { mech: "0xMECH_ADDRESS" },
+    orderBy: date,
+    orderDirection: desc,
+    first: 1
+  ) {
+    id
+    date
+    feesInUSD
+    feesOutUSD
+  }
+}
+```

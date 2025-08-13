@@ -1,14 +1,14 @@
 import { BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { Global, MechTransaction, Mech } from "./generated/schema";
-import { 
+import { Global, MechTransaction, Mech, MechDaily, DailyTotals, MechModel } from "./generated/schema";
+import {
   TOKEN_RATIO_GNOSIS,
   TOKEN_DECIMALS_GNOSIS,
   TOKEN_RATIO_BASE,
   TOKEN_DECIMALS_BASE,
   CHAINLINK_PRICE_FEED_DECIMALS,
   ETH_DECIMALS,
-} from "../constants";
-import { Address, Bytes, log } from "@graphprotocol/graph-ts";
+} from "./constants";
+import { USDC_DECIMALS } from "../../../shared/constants";
 
 const GLOBAL_ID = "1";
 const FEE_IN = "FEE_IN";
@@ -20,10 +20,55 @@ export function getOrInitialiseGlobal(): Global {
     global = new Global(GLOBAL_ID);
     global.totalFeesInUSD = BigDecimal.fromString("0");
     global.totalFeesOutUSD = BigDecimal.fromString("0");
- }
+  }
   return global;
 }
 
+// ---------------- Per-model helpers ----------------
+function mechModelId(mechId: string, model: string): string {
+  return mechId + "-" + model;
+}
+
+function getOrInitializeMechModel(mechId: string, model: string): MechModel {
+  const id = mechModelId(mechId, model);
+  let mm = MechModel.load(id);
+  if (mm == null) {
+    mm = new MechModel(id);
+    mm.mech = mechId;
+    mm.model = model;
+    mm.totalFeesInUSD = BigDecimal.fromString("0");
+    mm.totalFeesOutUSD = BigDecimal.fromString("0");
+    mm.totalFeesInRaw = BigDecimal.fromString("0");
+    mm.totalFeesOutRaw = BigDecimal.fromString("0");
+  }
+  return mm as MechModel;
+}
+
+export function updateMechModelIn(
+  mechId: string,
+  model: string,
+  amountUsd: BigDecimal,
+  amountRaw: BigDecimal
+): void {
+  const mm = getOrInitializeMechModel(mechId, model);
+  mm.totalFeesInUSD = mm.totalFeesInUSD.plus(amountUsd);
+  mm.totalFeesInRaw = mm.totalFeesInRaw.plus(amountRaw);
+  mm.save();
+}
+
+export function updateMechModelOut(
+  mechId: string,
+  model: string,
+  amountUsd: BigDecimal,
+  amountRaw: BigDecimal
+): void {
+  const mm = getOrInitializeMechModel(mechId, model);
+  mm.totalFeesOutUSD = mm.totalFeesOutUSD.plus(amountUsd);
+  mm.totalFeesOutRaw = mm.totalFeesOutRaw.plus(amountRaw);
+  mm.save();
+}
+
+// ---------------- Transactions ----------------
 export function createMechTransactionForAccrued(
   mech: Mech,
   amountRaw: BigDecimal,
@@ -31,13 +76,15 @@ export function createMechTransactionForAccrued(
   event: ethereum.Event,
   deliveryRate: BigInt,
   balance: BigInt,
-  rateDiff: BigInt
+  rateDiff: BigInt,
+  model: string
 ): void {
   const transaction = new MechTransaction(
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString()
   );
   transaction.mech = mech.id;
   transaction.type = FEE_IN;
+  transaction.model = model;
   transaction.amountRaw = amountRaw;
   transaction.amountUSD = amountUSD;
   transaction.timestamp = event.block.timestamp;
@@ -53,13 +100,15 @@ export function createMechTransactionForCollected(
   mech: Mech,
   amountRaw: BigDecimal,
   amountUSD: BigDecimal,
-  event: ethereum.Event
+  event: ethereum.Event,
+  model: string
 ): void {
   const transaction = new MechTransaction(
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString()
   );
   transaction.mech = mech.id;
   transaction.type = FEE_OUT;
+  transaction.model = model;
   transaction.amountRaw = amountRaw;
   transaction.amountUSD = amountUSD;
   transaction.timestamp = event.block.timestamp;
@@ -147,7 +196,7 @@ export function calculateBaseNvmFeesInUsd(
 
 // For USDC withdrawals on Base (assumes 1 USDC = 1 USD)
 export function convertBaseUsdcToUsd(amountInUsdc: BigInt): BigDecimal {
-  const usdcDivisor = BigInt.fromI32(10).pow(6).toBigDecimal();
+  const usdcDivisor = BigInt.fromI32(10).pow(USDC_DECIMALS as u8).toBigDecimal();
   return amountInUsdc.toBigDecimal().div(usdcDivisor);
 }
 
@@ -189,8 +238,6 @@ export function updateMechFeesOut(
 }
 
 // ---------------- Daily aggregation helpers ----------------
-import { MechDaily, DailyTotals } from "./generated/schema";
-
 function dayStart(timestamp: BigInt): i32 {
   return (timestamp.toI32() / 86400) * 86400;
 }
