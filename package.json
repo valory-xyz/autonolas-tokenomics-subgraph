@@ -7,7 +7,7 @@
     "codegen-tokenomics-l1": "graph codegen subgraphs/tokenomics/tokenomics-eth/subgraph.yaml",
     "copy-generated-tokenomics-l1": "cp -r generated subgraphs/tokenomics/tokenomics-eth/",
     "build-tokenomics-ethereum": "graph build subgraphs/tokenomics/tokenomics-eth/subgraph.yaml",
-    "codegen-tokenomics-l2": "graph codegen subgraphs/tokenomics/tokenomics-base/subgraph.base.yaml -o shared/tokenomics/generated",
+    "codegen-tokenomics-l2": "graph codegen subgraphs/tokenomics/tokenomics-base/subgraph.base.yaml -o subgraphs/tokenomics/common/generated",
     "build-tokenomics-arbitrum": "graph build subgraphs/tokenomics/tokenomics-arbitrum/subgraph.arbitrum.yaml",
     "build-tokenomics-base": "graph build subgraphs/tokenomics/tokenomics-base/subgraph.base.yaml",
     "build-tokenomics-celo": "graph build subgraphs/tokenomics/tokenomics-celo/subgraph.celo.yaml",
@@ -54,9 +54,6 @@
     "build-staking-mode": "graph build subgraphs/staking/subgraph.mode-mainnet.yaml",
     "build-staking-optimism": "graph build subgraphs/staking/subgraph.optimism.yaml",
     "build-staking": "yarn codegen-staking && yarn build-staking-arbitrum && yarn build-staking-base && yarn build-staking-celo && yarn build-staking-gnosis && yarn build-staking-ethereum && yarn build-staking-polygon && yarn build-staking-mode && yarn build-staking-optimism",
-    "codegen-liquidity-eth": "graph codegen subgraphs/liquidity/liquidity-eth/subgraph.yaml",
-    "build-liquidity-eth": "graph build subgraphs/liquidity/liquidity-eth/subgraph.yaml",
-    "build-liquidity": "yarn codegen-liquidity-eth && yarn build-liquidity-eth",
     "deploy-studio": "node scripts/deploy-studio.js",
     "test": "graph test"
   },
