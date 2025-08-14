@@ -9,7 +9,7 @@ This repository contains multiple subgraphs for [The Graph](https://thegraph.com
 
 ## Monorepo Architecture
 
-This repository is a monorepo that houses multiple subgraph projects. The goal is to maintain a centralized, organized, and consistent structure for all subgraphs related to the Autonolas ecosystem which are not self hosted. or are hosted on platform like The Graph Studio or Alchemy.
+This repository is a monorepo that houses multiple subgraph projects. The goal is to maintain a centralized, organized, and consistent structure for all subgraphs related to the Autonolas ecosystem which are hosted on platform like The Graph Studio or Alchemy.
 
 ### Key Directories
 
