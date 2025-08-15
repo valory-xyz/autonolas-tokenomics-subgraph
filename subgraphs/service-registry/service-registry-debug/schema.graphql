@@ -1,0 +1,9 @@
+type Multisig @entity(immutable: false) {
+  id: Bytes! # multisig address
+  txCount: BigInt!
+}
+
+type Global @entity(immutable: false) {
+  id: ID!
+  txCount: BigInt!
+} 
