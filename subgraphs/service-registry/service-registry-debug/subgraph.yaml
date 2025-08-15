@@ -1,0 +1,48 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: ServiceRegistryL2-Debug
+    network: matic
+    source:
+      address: "0xE3607b00E75f6405248323A9417ff6b39B244b50"
+      abi: ServiceRegistryL2
+      startBlock: 41783952
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Multisig
+        - Global
+      abis:
+        - name: ServiceRegistryL2
+          file: ../../../abis/ServiceRegistryL2.json
+      eventHandlers:
+        - event: CreateMultisigWithAgents(indexed uint256,indexed address)
+          handler: handleCreateMultisig
+      file: ./src/mapping.ts
+
+templates:
+  - kind: ethereum/contract
+    name: GnosisSafe-Debug
+    network: matic
+    source:
+      abi: GnosisSafe
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mapping.ts
+      entities:
+        - Multisig
+        - Global
+      abis:
+        - name: GnosisSafe
+          file: ../../../abis/GnosisSafe.json
+      eventHandlers:
+        - event: ExecutionSuccess(bytes32,uint256)
+          handler: handleExecutionSuccess
+        - event: ExecutionFromModuleSuccess(indexed address)
+          handler: handleExecutionFromModuleSuccess 
