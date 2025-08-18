@@ -19,6 +19,7 @@ export const VELO_NFT_MANAGER = Address.fromString("0x416b433906b1B72FA758e166e2
 
 // Service lookup functions
 export function getServiceByAgent(address: Address): Service | null {
+  // Normal service lookup
   return Service.load(address)
 }
 
@@ -29,18 +30,4 @@ export function isServiceAgent(address: Address): boolean {
 // Legacy function name for compatibility
 export function isValidAgent(address: Address): boolean {
   return isServiceAgent(address)
-}
-
-// Get service by operator safe
-export function getServiceByOperator(operator: Address): Service | null {
-  // Note: This is not efficient in subgraphs as we can't query by field
-  // In practice, we'll check if a specific service's operator matches
-  // This is mainly used in funding logic where we already have the service
-  return null
-}
-
-// Check if address is a service operator
-export function isServiceOperator(address: Address): boolean {
-  // This will be checked in context where we have a specific service
-  return false
 }

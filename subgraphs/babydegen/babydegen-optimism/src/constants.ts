@@ -37,8 +37,8 @@ export const VELO_V2_SUGAR = Address.fromString("0xA64db2D254f07977609def75c3A7d
 export const VELO_V2_FACTORY = Address.fromString("0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a")
 
 // Velodrome CL (Concentrated Liquidity) addresses
-export const VELO_MANAGER = Address.fromString("0x416b433906b1B72FA758e166e239c43d68dC6F29") // Same as VELO_NFT_MANAGER
-export const VELO_FACTORY = Address.fromString("0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a") // Same as VELO_V2_FACTORY
+export const VELO_MANAGER = Address.fromString("0x416b433906b1B72FA758e166e239c43d68dC6F29") // Velodrome CL NFT Position Manager
+export const VELO_FACTORY = Address.fromString("0xCc0bDDB707055e04e497aB22a59c2aF4391cd12F") // Velodrome CL Factory (NOT V2 Factory!)
 
 // Uniswap V3 addresses (Optimism mainnet)
 export const UNI_V3_MANAGER = Address.fromString("0xC36442b4a4522E871399CD717aBDD847Ab11FE88") // Uniswap V3 NFT Position Manager
@@ -59,7 +59,8 @@ export const WHITELISTED_TOKENS: string[] = [
   USDT.toHexString(),
   WBTC.toHexString(),
   SUSD.toHexString(),
-  DAI.toHexString()
+  DAI.toHexString(),
+  DOLA.toHexString()
 ]
 
 // Stablecoin addresses (for price fallbacks)
@@ -68,7 +69,8 @@ export const STABLECOINS: string[] = [
   USDC_BRIDGED.toHexString(),
   USDT.toHexString(),
   DAI.toHexString(),
-  LUSD.toHexString()
+  LUSD.toHexString(),
+  DOLA.toHexString()  // DOLA is a stablecoin pegged to USD
 ]
 
 // Critical stablecoins (for emergency fallbacks)

@@ -6,7 +6,7 @@ import {
   NonfungiblePositionManager
 } from "../../../../generated/VeloNFTManager/NonfungiblePositionManager"
 import { VELO_NFT_MANAGER, getServiceByAgent } from "./config"
-import { ensurePoolTemplate, refreshVeloCLPosition, refreshVeloCLPositionWithEventAmounts, handleNFTTransferForCache } from "./veloCLShared"
+import { ensurePoolTemplate, refreshVeloCLPosition, refreshVeloCLPositionWithEventAmounts, refreshVeloCLPositionWithExitAmounts, handleNFTTransferForCache } from "./veloCLShared"
 import { isSafeOwnedNFT } from "./poolIndexCache"
 import { log, Address, Bytes } from "@graphprotocol/graph-ts"
 import { ProtocolPosition } from "../../../../generated/schema"
@@ -53,7 +53,16 @@ export function handleNFTTransfer(ev: Transfer): void {
 }
 
 export function handleIncreaseLiquidity(ev: IncreaseLiquidity): void {
-  log.info("VELODROME: handleIncreaseLiquidity called for tokenId: {}, tx: {}", [
+  // Get owner early for logging
+  let owner = Address.zero()
+  const mgr = NonfungiblePositionManager.bind(MANAGER)
+  const ownerResult = mgr.try_ownerOf(ev.params.tokenId)
+  if (!ownerResult.reverted) {
+    owner = ownerResult.value
+  }
+  
+  log.info("VELODROME[{}]: handleIncreaseLiquidity called for tokenId: {}, tx: {}", [
+    owner.toHexString(),
     ev.params.tokenId.toString(),
     ev.transaction.hash.toHexString()
   ])
@@ -63,7 +72,8 @@ export function handleIncreaseLiquidity(ev: IncreaseLiquidity): void {
   // PHASE 1 OPTIMIZATION: Use cache instead of ownerOf() RPC call
   const isSafeOwned = isSafeOwnedNFT("velodrome-cl", ev.params.tokenId)
   
-  log.info("VELODROME: isSafeOwned check result: {} for tokenId: {}", [
+  log.info("VELODROME[{}]: isSafeOwned check result: {} for tokenId: {}", [
+    owner.toHexString(),
     isSafeOwned.toString(),
     ev.params.tokenId.toString()
   ])
@@ -72,31 +82,37 @@ export function handleIncreaseLiquidity(ev: IncreaseLiquidity): void {
     shouldProcess = true
   } else {
     // FALLBACK: Check actual ownership for positions not in cache (existing positions)
-    log.info("VELODROME: Cache miss for tokenId: {}, checking actual ownership", [
+    log.info("VELODROME[{}]: Cache miss for tokenId: {}, checking actual ownership", [
+      owner.toHexString(),
       ev.params.tokenId.toString()
     ])
     
-    const mgr = NonfungiblePositionManager.bind(MANAGER)
-    const ownerResult = mgr.try_ownerOf(ev.params.tokenId)
-    
-    if (!ownerResult.reverted && getServiceByAgent(ownerResult.value) != null) {
+    if (!ownerResult.reverted && getServiceByAgent(owner) != null) {
       shouldProcess = true
-      log.info("VELODROME: Actual ownership confirmed for tokenId: {}, owner: {}", [
-        ev.params.tokenId.toString(),
-        ownerResult.value.toHexString()
+      log.info("VELODROME[{}]: Actual ownership confirmed for tokenId: {}", [
+        owner.toHexString(),
+        ev.params.tokenId.toString()
       ])
       
       // Ensure pool template exists and populate cache for future
       ensurePoolTemplate(ev.params.tokenId)
     } else {
-      log.info("VELODROME: Actual ownership check failed for tokenId: {}", [
+      log.info("VELODROME[{}]: Actual ownership check failed for tokenId: {}", [
+        owner.toHexString(),
         ev.params.tokenId.toString()
       ])
     }
   }
   
+  log.info("VELODROME[{}]: shouldProcess value: {} for tokenId: {}", [
+    owner.toHexString(),
+    shouldProcess.toString(),
+    ev.params.tokenId.toString()
+  ])
+  
   if (shouldProcess) {
-    log.info("VELODROME: Processing IncreaseLiquidity for tokenId: {}, amount0: {}, amount1: {}", [
+    log.info("VELODROME[{}]: Processing IncreaseLiquidity for tokenId: {}, amount0: {}, amount1: {}", [
+      owner.toHexString(),
       ev.params.tokenId.toString(),
       ev.params.amount0.toString(),
       ev.params.amount1.toString()
@@ -110,15 +126,20 @@ export function handleIncreaseLiquidity(ev: IncreaseLiquidity): void {
       ev.params.amount1,
       ev.transaction.hash
     )
+    
+    log.info("VELODROME[{}]: Completed processing IncreaseLiquidity for tokenId: {}", [
+      owner.toHexString(),
+      ev.params.tokenId.toString()
+    ])
   } else {
-    log.info("VELODROME: Skipping IncreaseLiquidity for tokenId: {} - not owned by safe", [
+    log.info("VELODROME[{}]: Skipping IncreaseLiquidity for tokenId: {} - not owned by safe", [
+      owner.toHexString(),
       ev.params.tokenId.toString()
     ])
   }
 }
 
 export function handleDecreaseLiquidity(ev: DecreaseLiquidity): void {
-  
   let shouldProcess = false
   
   // 1. Check cache first (fast path)
@@ -156,7 +177,15 @@ export function handleDecreaseLiquidity(ev: DecreaseLiquidity): void {
   }
   
   if (shouldProcess) {
-    refreshVeloCLPosition(ev.params.tokenId, ev.block, ev.transaction.hash)
+    // Use refreshVeloCLPositionWithExitAmounts to handle exit with actual event amounts
+    refreshVeloCLPositionWithExitAmounts(
+      ev.params.tokenId,
+      ev.block,
+      ev.params.amount0,  // Actual amount0 from event
+      ev.params.amount1,  // Actual amount1 from event
+      ev.params.liquidity, // Liquidity being removed
+      ev.transaction.hash
+    )
   }
 }
 

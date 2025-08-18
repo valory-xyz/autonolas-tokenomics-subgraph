@@ -199,3 +199,12 @@ type TokenBalance @entity(immutable: false) {
   lastUpdated: BigInt!          # Last update timestamp
   lastBlock: BigInt!            # Last update block
 }
+
+# Temporary storage for pending positions that need mint data
+type PendingMintPosition @entity(immutable: false) {
+  id: String!                   # "<txHash>-<poolAddress>"
+  txHash: Bytes!                # Transaction hash
+  poolAddress: Bytes!           # Pool address
+  positionId: Bytes!            # Position ID that needs mint amounts
+  recipient: Bytes!             # The recipient address (for validation)
+}

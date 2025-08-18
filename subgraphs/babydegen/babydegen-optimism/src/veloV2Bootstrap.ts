@@ -8,7 +8,7 @@ import {
   PoolCreated as PoolCreatedEvent
 } from "../../../../generated/VeloV2Factory/PoolFactory"
 import { 
-  VeloV2Pool as VeloV2PoolTemplate 
+  VeloV2Pool
 } from "../../../../generated/templates"
 import { 
   Address, 
@@ -48,7 +48,7 @@ function createPoolTemplate(poolAddress: Address, token0: Address, token1: Addre
   }
   
   // Create template
-  VeloV2PoolTemplate.create(poolAddress)
+  VeloV2Pool.create(poolAddress)
   discoveredPools.set(poolKey, true)
   
   log.info("VELO V2: Created pool template {}", [poolKey])

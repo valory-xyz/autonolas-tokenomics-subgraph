@@ -227,7 +227,112 @@ export function refreshUniV3PositionWithEventAmounts(
   }
 }
 
-// 2b. Re-price NFT into USD + persist (for non-entry events)
+// 2b. Handle position exit with actual event amounts
+export function refreshUniV3PositionWithExitAmounts(
+  tokenId: BigInt, 
+  block: ethereum.Block, 
+  eventAmount0: BigInt,
+  eventAmount1: BigInt,
+  liquidityRemoved: BigInt,
+  txHash: Bytes = Bytes.empty()
+): void {
+  const mgr = NonfungiblePositionManager.bind(UNI_V3_MANAGER)
+  
+  // First, get the actual NFT owner
+  const ownerResult = mgr.try_ownerOf(tokenId)
+  if (ownerResult.reverted) {
+    log.error("UNISWAP V3: Failed to get owner for tokenId: {}", [tokenId.toString()])
+    return
+  }
+  
+  const nftOwner = ownerResult.value
+
+  // AGENT FILTERING: Only process positions owned by a service
+  if (!isServiceAgent(nftOwner)) {
+    log.info("UNISWAP V3: Skipping position {} - not owned by a service (owner: {})", [
+      tokenId.toString(),
+      nftOwner.toHexString()
+    ])
+    return
+  }
+
+  const dataResult = mgr.try_positions(tokenId)
+  
+  if (dataResult.reverted) {
+    log.error("UNISWAP V3: positions() call failed for tokenId: {}", [tokenId.toString()])
+    return
+  }
+  
+  const data = dataResult.value
+  
+  // Load existing position
+  const idString = nftOwner.toHex() + "-" + tokenId.toString()
+  const id = Bytes.fromUTF8(idString)
+  let pp = ProtocolPosition.load(id)
+  
+  if (pp == null) {
+    log.error("UNISWAP V3: Position {} not found for exit processing", [tokenId.toString()])
+    return
+  }
+  
+  // Check if this is a full exit (all liquidity removed)
+  const remainingLiquidity = data.value7
+  const isFullExit = remainingLiquidity.equals(BigInt.zero())
+  
+  if (isFullExit) {
+    log.info("UNISWAP V3: Processing FULL EXIT for position {} - using event amounts", [tokenId.toString()])
+    
+    // USD pricing for exit amounts
+    const token0Price = getTokenPriceUSD(data.value2, block.timestamp, false)
+    const token1Price = getTokenPriceUSD(data.value3, block.timestamp, false)
+    
+    // Convert exit amounts from wei to human readable
+    const exitAmount0Human = convertTokenAmount(eventAmount0, data.value2)
+    const exitAmount1Human = convertTokenAmount(eventAmount1, data.value3)
+    
+    const exitUsd0 = exitAmount0Human.times(token0Price)
+    const exitUsd1 = exitAmount1Human.times(token1Price)
+    const exitUsd = exitUsd0.plus(exitUsd1)
+    
+    // Set exit data using ACTUAL EVENT AMOUNTS
+    pp.isActive = false
+    pp.exitTxHash = txHash
+    pp.exitTimestamp = block.timestamp
+    pp.exitAmount0 = exitAmount0Human
+    pp.exitAmount0USD = exitUsd0
+    pp.exitAmount1 = exitAmount1Human
+    pp.exitAmount1USD = exitUsd1
+    pp.exitAmountUSD = exitUsd
+    
+    // Update current amounts to 0 (since position is closed)
+    pp.amount0 = BigDecimal.zero()
+    pp.amount1 = BigDecimal.zero()
+    pp.amount0USD = BigDecimal.zero()
+    pp.amount1USD = BigDecimal.zero()
+    pp.usdCurrent = BigDecimal.zero()
+    pp.liquidity = BigInt.zero()
+    
+    log.info("UNISWAP V3: Position {} EXIT AMOUNTS SET - exitAmount0: {}, exitAmount1: {}, exitAmountUSD: {}", [
+      tokenId.toString(),
+      exitAmount0Human.toString(),
+      exitAmount1Human.toString(),
+      exitUsd.toString()
+    ])
+    
+    // Remove from cache
+    const poolAddress = getUniV3PoolAddress(data.value2, data.value3, data.value4, tokenId)
+    removeAgentNFTFromPool("uniswap-v3", poolAddress, tokenId)
+    
+    pp.save()
+    refreshPortfolio(nftOwner, block)
+  } else {
+    // Partial withdrawal - just update current amounts normally
+    log.info("UNISWAP V3: Processing partial withdrawal for position {}", [tokenId.toString()])
+    refreshUniV3Position(tokenId, block, txHash)
+  }
+}
+
+// 2c. Re-price NFT into USD + persist (for non-entry events)
 export function refreshUniV3Position(tokenId: BigInt, block: ethereum.Block, txHash: Bytes = Bytes.empty()): void {
   const mgr = NonfungiblePositionManager.bind(UNI_V3_MANAGER)
   
@@ -369,10 +474,11 @@ export function refreshUniV3Position(tokenId: BigInt, block: ethereum.Block, txH
     pp.tickUpper = tickUpper
     pp.fee = data.value4 // Uniswap V3 uses fee (500, 3000, 10000)
     
-    // CRITICAL FIX: Initialize entry data to ZERO for new positions
-    // Entry amounts should ONLY be set by refreshUniV3PositionWithEventAmounts
-    pp.entryTxHash = Bytes.empty()
-    pp.entryTimestamp = BigInt.zero()
+    // CRITICAL FIX: Initialize entry data for new positions
+    // Entry amounts will be set by refreshUniV3PositionWithEventAmounts
+    // But we need to capture the initial transaction data
+    pp.entryTxHash = txHash
+    pp.entryTimestamp = block.timestamp
     pp.entryAmount0 = BigDecimal.zero()
     pp.entryAmount0USD = BigDecimal.zero()
     pp.entryAmount1 = BigDecimal.zero()
