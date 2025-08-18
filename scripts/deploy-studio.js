@@ -99,6 +99,11 @@ const networkTypes = {
         path: 'subgraphs/service-registry/service-registry-polygon/subgraph.polygon.yaml',
         description: 'Polygon Network',
         buildCommand: 'yarn build-service-registry:polygon'
+      },
+      'debug': {
+        path: 'subgraphs/service-registry/service-registry-debug/subgraph.yaml',
+        description: 'Debugging Subgraph for Service Registry',
+        buildCommand: 'yarn build-service-registry:debug'
       }
     }
   },
