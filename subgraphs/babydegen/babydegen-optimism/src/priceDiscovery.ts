@@ -231,10 +231,31 @@ function createPriceUpdate(
   update.token = token.id
   update.priceUSD = result.price
   update.confidence = result.confidence
-  update.source = token.priceSources[0] // Primary source used
+  
+  // Use the actual source that provided the price, not always the primary source
+  // Find the source by type
+  let sourceIndex = 0
+  let sourceType = result.source
+  
+  for (let i = 0; i < token.priceSources.length; i++) {
+    let source = PriceSource.load(token.priceSources[i])
+    if (source != null && source.sourceType == sourceType) {
+      sourceIndex = i
+      break
+    }
+  }
+  
+  update.source = token.priceSources[sourceIndex]
   update.timestamp = timestamp
   update.block = BigInt.fromI32(0) // Would need block context
   update.save()
+  
+  log.info("PRICE UPDATE: {} price ${} from source {} (index {})", [
+    token.symbol,
+    result.price.toString(),
+    sourceType,
+    sourceIndex.toString()
+  ])
 }
 
 function isValidPriceResult(price: BigDecimal, tokenSymbol: string): boolean {

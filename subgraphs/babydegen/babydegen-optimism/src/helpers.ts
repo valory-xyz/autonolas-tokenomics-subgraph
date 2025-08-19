@@ -6,43 +6,23 @@ import {
   ProtocolPosition,
   Service
 } from "../generated/schema"
-import { calculateUninvestedValue } from "./tokenBalances"
+import { calculateUninvestedValue, updateFundingBalance } from "./tokenBalances"
 import { getServiceByAgent } from "./config"
 
+// Use the single source of truth for funding balance updates
 export function updateFunding(
   serviceSafe: Address,
   usd: BigDecimal,
   deposit: boolean,
   ts: BigInt
 ): void {
-  let id = serviceSafe as Bytes
-  let fb = FundingBalance.load(id)
+  // Update funding balance using the shared function
+  updateFundingBalance(serviceSafe, usd, deposit, ts)
   
-  if (!fb) {
-    fb = new FundingBalance(id)
-    fb.service = serviceSafe // Link to Service entity
-    fb.totalInUsd = BigDecimal.zero()
-    fb.totalOutUsd = BigDecimal.zero()
-    fb.netUsd = BigDecimal.zero()
-    fb.firstInTimestamp = ts
-  }
-  
-  if (deposit) {
-    fb.totalInUsd = fb.totalInUsd.plus(usd)
-  } else {
-    fb.totalOutUsd = fb.totalOutUsd.plus(usd)
-  }
-  
-  fb.netUsd = fb.totalInUsd.minus(fb.totalOutUsd)
-  fb.lastChangeTs = ts
-  
-  log.info("FUNDING: {} {} USD - Net: {} USD", [
+  log.info("FUNDING: {} {} USD", [
     deposit ? "IN" : "OUT",
-    usd.toString(),
-    fb.netUsd.toString()
+    usd.toString()
   ])
-  
-  fb.save()
   
   // Update portfolio after funding change
   let block = new ethereum.Block(

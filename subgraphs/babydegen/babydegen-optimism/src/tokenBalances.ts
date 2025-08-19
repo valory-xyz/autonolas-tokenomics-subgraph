@@ -237,7 +237,8 @@ export function handleERC20Transfer(event: TransferEvent): void {
 }
 
 // Helper function to update funding balance without circular dependency
-function updateFundingBalance(
+// Exported to be the single source of truth for funding balance updates
+export function updateFundingBalance(
   serviceSafe: Address,
   usd: BigDecimal,
   deposit: boolean,

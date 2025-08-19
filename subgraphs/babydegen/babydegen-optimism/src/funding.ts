@@ -6,7 +6,7 @@ import {
 } from "./common"
 import { getServiceByAgent } from "./config"
 import { updateFunding } from "./helpers"
-import { handleERC20Transfer } from "./tokenBalances"
+import { updateTokenBalance } from "./tokenBalances"
 
 // Re-export handleERC20Transfer from tokenBalances
 export { handleERC20Transfer } from "./tokenBalances"
@@ -66,6 +66,17 @@ export function handleUSDC(ev: Transfer): void {
     }
   }
   
-  // Also update token balances for USDC
-  handleERC20Transfer(ev)
+  // Update token balances for USDC without updating funding balance again
+  // This prevents double-updating the fundingBalance entity
+  let tokenAddress = ev.address
+  
+  // Handle transfers TO service safes (deposits)
+  if (toService != null) {
+    updateTokenBalance(to, tokenAddress, value, true, ev.block)
+  }
+  
+  // Handle transfers FROM service safes (withdrawals)
+  if (fromService != null) {
+    updateTokenBalance(from, tokenAddress, value, false, ev.block)
+  }
 }
