@@ -10,6 +10,7 @@ import {
 import { Safe } from "../../../../generated/templates"
 import { BigInt, Bytes, store, log } from "@graphprotocol/graph-ts"
 import { OPTIMUS_AGENT_ID } from "./constants"
+import { registerServiceForSnapshots } from "./portfolioScheduler"
 
 export function handleRegisterInstance(event: RegisterInstance): void {
   // Filter for Optimus agents only
@@ -118,6 +119,9 @@ export function handleCreateMultisigWithAgents(event: CreateMultisigWithAgents):
     serviceId.toString(),
     multisig.toHexString()
   ])
+  
+  // Register service for portfolio snapshots
+  registerServiceForSnapshots(multisig)
   
   // Create Safe datasource instance to track ETH transfers
   Safe.create(multisig)

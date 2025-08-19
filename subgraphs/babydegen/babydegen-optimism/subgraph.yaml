@@ -409,48 +409,32 @@ dataSources:
       eventHandlers:
         - event: PoolCreated(indexed address,indexed address,indexed bool,address,uint256)
           handler: handleVeloV2PoolCreated
+  # Block handler for portfolio snapshots
+  - kind: ethereum/contract
+    name: PortfolioScheduler
+    network: optimism
+    source:
+      address: "0x3d77596beb0f130a4415df3D2D8232B3d3D31e44"  # ServiceRegistryL2 address
+      abi: ServiceRegistryL2
+      startBlock: 136774000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - AgentPortfolio
+        - AgentPortfolioSnapshot
+      abis:
+        - name: ServiceRegistryL2
+          file: ../../../abis/ServiceRegistryL2.json
+      blockHandlers:
+        - handler: handleBlock
+          filter:
+            kind: polling
+            every: 100  # Check every 100 blocks
+      file: ./src/portfolioScheduler.ts
 templates:
-  - kind: ethereum/contract
-    name: VeloCLPool
-    network: optimism
-    source:
-      abi: VelodromeCLPool
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.9
-      language: wasm/assemblyscript
-      entities:
-        - ProtocolPosition
-      abis:
-        - name: VelodromeCLPool
-          file: ../../../abis/defi/VelodromeCLPool.json
-        - name: AggregatorV3Interface
-          file: ../../../abis/oracles/AggregatorV3Interface.json
-      eventHandlers:
-        - event: Swap(indexed address,indexed address,int256,int256,uint160,uint128,int24)
-          handler: handleSwap
-      file: ./src/veloCLPool.ts
-  - kind: ethereum/contract
-    name: UniV3Pool
-    network: optimism
-    source:
-      abi: UniswapV3Pool
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.9
-      language: wasm/assemblyscript
-      entities:
-        - ProtocolPosition
-      abis:
-        - name: UniswapV3Pool
-          file: ../../../abis/defi/UniswapV3Pool.json
-        - name: AggregatorV3Interface
-          file: ../../../abis/oracles/AggregatorV3Interface.json
-      eventHandlers:
-        - event: Swap(indexed address,indexed address,int256,int256,uint160,uint128,int24)
-          handler: handleUniV3Swap
-      file: ./src/uniV3Pool.ts
-  # NEW: VelodromeV2 Pool template for tracking individual pools
+  # Keep VelodromeV2 Pool template for Mint event handling
   - kind: ethereum/contract
     name: VeloV2Pool
     network: optimism

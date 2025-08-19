@@ -5,7 +5,7 @@ import {
   AgentPortfolioSnapshot,
   ProtocolPosition,
   Service
-} from "../../../../generated/schema"
+} from "../generated/schema"
 import { calculateUninvestedValue } from "./tokenBalances"
 import { getServiceByAgent } from "./config"
 
@@ -84,6 +84,8 @@ export function calculatePortfolioMetrics(
     portfolio = new AgentPortfolio(portfolioId)
     portfolio.service = serviceSafe
     portfolio.firstTradingTimestamp = BigInt.zero() // Will be set on first position
+    portfolio.lastSnapshotTimestamp = BigInt.zero() // Initialize snapshot tracking
+    portfolio.lastSnapshotBlock = BigInt.zero()     // Initialize snapshot tracking
     portfolio.totalPositions = 0
     portfolio.totalClosedPositions = 0
   }
@@ -222,6 +224,9 @@ function createPortfolioSnapshot(portfolio: AgentPortfolio, block: ethereum.Bloc
   snapshot.block = block.number
   snapshot.totalPositions = portfolio.totalPositions
   snapshot.totalClosedPositions = portfolio.totalClosedPositions
+  
+  // Note: Position IDs can be retrieved through the Service entity's positionIds field
+  // We don't duplicate them in the snapshot to avoid compilation issues
   
   snapshot.save()
 }

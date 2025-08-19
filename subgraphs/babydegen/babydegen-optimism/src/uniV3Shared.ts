@@ -3,7 +3,7 @@ import { Address, BigDecimal, BigInt, ethereum, Bytes, log } from "@graphprotoco
 import { NonfungiblePositionManager } from "../../../../generated/UniV3NFTManager/NonfungiblePositionManager"
 import { UniswapV3Pool } from "../../../../generated/templates/UniV3Pool/UniswapV3Pool"
 import { UniswapV3Factory } from "../../../../generated/UniV3NFTManager/UniswapV3Factory"
-import { UniV3Pool } from "../../../../generated/templates"
+// import { UniV3Pool } from "../../../../generated/templates" // Removed - using snapshot approach instead of real-time tracking
 import { LiquidityAmounts } from "./libraries/LiquidityAmounts"
 import { TickMath } from "./libraries/TickMath"
 import { ProtocolPosition } from "../../../../generated/schema"
@@ -53,7 +53,7 @@ function getUniV3PoolAddress(token0: Address, token1: Address, fee: i32, tokenId
   return poolAddress
 }
 
-// 1. Spawn pool template the first time we meet an NFT
+// 1. Register NFT to pool mapping (no template creation - using snapshot approach)
 export function ensureUniV3PoolTemplate(tokenId: BigInt): void {
   const mgr = NonfungiblePositionManager.bind(UNI_V3_MANAGER)
   const posResult = mgr.try_positions(tokenId)
@@ -73,8 +73,16 @@ export function ensureUniV3PoolTemplate(tokenId: BigInt): void {
     return
   }
   
-  UniV3Pool.create(poolAddress)
+  // NOTE: Pool template creation removed - using portfolio snapshot approach instead of real-time tracking
+  // UniV3Pool.create(poolAddress) // REMOVED
+  
+  // Still maintain the NFT-to-pool mapping for cache purposes
   addAgentNFTToPool("uniswap-v3", poolAddress, tokenId)
+  
+  log.info("UNISWAP V3: Registered NFT {} to pool {} (snapshot-based tracking)", [
+    tokenId.toString(),
+    poolAddress.toHexString()
+  ])
 }
 
 // Helper function to check if position is closed

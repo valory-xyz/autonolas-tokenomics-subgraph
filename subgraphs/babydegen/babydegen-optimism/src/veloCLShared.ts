@@ -2,7 +2,7 @@ import { Address, BigDecimal, BigInt, ethereum, Bytes, log } from "@graphprotoco
 import { NonfungiblePositionManager } from "../../../../generated/VeloNFTManager/NonfungiblePositionManager"
 import { VelodromeCLPool }            from "../../../../generated/templates/VeloCLPool/VelodromeCLPool"
 import { VelodromeCLFactory }         from "../../../../generated/VeloNFTManager/VelodromeCLFactory"
-import { VeloCLPool }                 from "../../../../generated/templates"
+// import { VeloCLPool }                 from "../../../../generated/templates" // Removed - using snapshot approach instead of real-time tracking
 import { LiquidityAmounts }           from "./libraries/LiquidityAmounts"
 import { TickMath }                   from "./libraries/TickMath"
 import { ProtocolPosition, Service }  from "../../../../generated/schema"
@@ -85,7 +85,7 @@ function getPoolAddress(token0: Address, token1: Address, tickSpacing: i32, toke
   return poolAddress
 }
 
-// 1.  Spawn pool template the first time we meet an NFT
+// 1. Register NFT to pool mapping (no template creation - using snapshot approach)
 export function ensurePoolTemplate(tokenId: BigInt): void {
   const mgr = NonfungiblePositionManager.bind(VELO_MANAGER)
   const posResult = mgr.try_positions(tokenId)
@@ -105,8 +105,16 @@ export function ensurePoolTemplate(tokenId: BigInt): void {
     return
   }
   
-  VeloCLPool.create(poolAddress)
+  // NOTE: Pool template creation removed - using portfolio snapshot approach instead of real-time tracking
+  // VeloCLPool.create(poolAddress) // REMOVED
+  
+  // Still maintain the NFT-to-pool mapping for cache purposes
   addAgentNFTToPool("velodrome-cl", poolAddress, tokenId)
+  
+  log.info("VELODROME: Registered NFT {} to pool {} (snapshot-based tracking)", [
+    tokenId.toString(),
+    poolAddress.toHexString()
+  ])
 }
 
 // Helper function to check if position is closed

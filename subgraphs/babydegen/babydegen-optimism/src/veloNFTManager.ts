@@ -10,6 +10,7 @@ import { ensurePoolTemplate, refreshVeloCLPosition, refreshVeloCLPositionWithEve
 import { isSafeOwnedNFT } from "./poolIndexCache"
 import { log, Address, Bytes } from "@graphprotocol/graph-ts"
 import { ProtocolPosition } from "../../../../generated/schema"
+import { calculatePortfolioMetrics } from "./helpers"
 
 const MANAGER = VELO_NFT_MANAGER
 
@@ -194,6 +195,28 @@ export function handleCollect(ev: Collect): void {
   const isSafeOwned = isSafeOwnedNFT("velodrome-cl", ev.params.tokenId)
   
   if (isSafeOwned) {
+    // Log fee collection
+    log.info("VELODROME CL: Collected fees for tokenId {}: {} token0, {} token1", [
+      ev.params.tokenId.toString(),
+      ev.params.amount0.toString(),
+      ev.params.amount1.toString()
+    ])
+    
+    // Refresh position and trigger portfolio update
     refreshVeloCLPosition(ev.params.tokenId, ev.block, ev.transaction.hash)
+    
+    // Get the owner to trigger portfolio recalculation
+    const mgr = NonfungiblePositionManager.bind(MANAGER)
+    const ownerResult = mgr.try_ownerOf(ev.params.tokenId)
+    
+    if (!ownerResult.reverted) {
+      const owner = ownerResult.value
+      const ownerService = getServiceByAgent(owner)
+      
+      if (ownerService != null) {
+        // Trigger portfolio recalculation
+        calculatePortfolioMetrics(owner, ev.block)
+      }
+    }
   }
 }

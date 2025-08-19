@@ -1,7 +1,6 @@
 import { 
   Mint,
   Burn,
-  Sync,
   Transfer
 } from "../../../../generated/templates/VeloV2Pool/VelodromeV2Pool"
 
@@ -123,13 +122,21 @@ export function handleVeloV2Mint(event: Mint): void {
     event.block.number.toString()
   ])
   
+  // Note: In Velodrome V2, the Mint event sender is the router contract, not the actual user
+  // We need to look for the pending position to determine if this mint is for a tracked service
+  
   // Look for pending position created in the Transfer event
   const pending = getPendingPosition(event.transaction.hash, event.address)
   
   if (pending != null) {
-    log.warning("VELODROME V2 MINT: Found pending position {}, updating with mint amounts", [
-      pending.positionId.toHexString()
-    ])
+    // Validate that the pending position is for a tracked service
+    const recipientService = getServiceByAgent(Address.fromBytes(pending.recipient))
+    
+    if (recipientService != null) {
+      log.warning("VELODROME V2 MINT: Found pending position {} for tracked service {}, updating with mint amounts", [
+        pending.positionId.toHexString(),
+        pending.recipient.toHexString()
+      ])
     
     // Load the position
     let position = ProtocolPosition.load(pending.positionId)
@@ -178,8 +185,13 @@ export function handleVeloV2Mint(event: Mint): void {
     } else {
       log.error("VELODROME V2 MINT: Position {} not found!", [pending.positionId.toHexString()])
     }
+    } else {
+      log.warning("VELODROME V2 MINT: Pending position recipient {} is not a tracked service, skipping", [
+        pending.recipient.toHexString()
+      ])
+    }
   } else {
-    log.warning("VELODROME V2 MINT: No pending position found for tx {}, skipping", [
+    log.info("VELODROME V2 MINT: No pending position found for tx {} - this mint is not for a tracked service", [
       event.transaction.hash.toHexString()
     ])
   }
@@ -187,6 +199,15 @@ export function handleVeloV2Mint(event: Mint): void {
 
 // Handle VelodromeV2 Pool Burn events (liquidity removals)
 export function handleVeloV2Burn(event: Burn): void {
+  // Only process if sender is a tracked agent
+  const senderService = getServiceByAgent(event.params.sender)
+  if (senderService == null) {
+    log.info("VELODROME V2 BURN: Sender {} is not a tracked agent, skipping", [
+      event.params.sender.toHexString()
+    ])
+    return
+  }
+  
   log.warning("===== VELODROME V2 BURN EVENT START =====", [])
   log.warning("VELODROME V2 BURN: Block: {}, TxHash: {}, Timestamp: {}", [
     event.block.number.toString(),
@@ -242,15 +263,4 @@ export function handleVeloV2Burn(event: Burn): void {
   log.warning("===== VELODROME V2 BURN EVENT END =====", [])
 }
 
-// Handle VelodromeV2 Pool Sync events (pool state updates)
-export function handleVeloV2Sync(event: Sync): void {
-  // Sync events don't directly relate to user positions
-  // but can be used for pool analytics if needed
-  log.debug("VELODROME V2: Sync event - reserve0: {}, reserve1: {}", [
-    event.params.reserve0.toString(),
-    event.params.reserve1.toString()
-  ])
-  
-  // For now, we don't need to do anything with Sync events
-  // They're automatically handled when we refresh positions
-}
+// Swap and Sync events are completely removed - not needed for portfolio tracking
