@@ -127,13 +127,20 @@ function initializeTokens(): void {
         1,
         99
       ),
-      // Priority 2: Uniswap V3 WETH/USDC (high volume)
-      // TODO: VERIFY - Pool address needs verification on Optimism
+      // Priority 2: Velodrome Slipstream USDC/WETH (highest volume on OP)
       new PriceSourceConfig(
-        Address.fromString("0x85149247691df622eaf1a8bd0cafd40bc45154a9"), // VERIFY: WETH/USDC.e pool
-        "uniswap_v3",
+        Address.fromString("0x478946bcd4a5a22b316470f5486fafb928c0ba25"), // Velodrome Slipstream USDC/WETH
+        "velodrome_slipstream",
         2,
         90,
+        Address.fromString("0x0b2c639c533813f4aa9d7837caf62653d097ff85") // USDC
+      ),
+      // Priority 3: Uniswap V3 WETH/USDC (secondary fallback)
+      new PriceSourceConfig(
+        Address.fromString("0x85149247691df622eaf1a8bd0cafd40bc45154a9"), // WETH/USDC.e pool
+        "uniswap_v3",
+        3, // Changed from 2 to 3
+        85, // Slightly lower confidence than Velodrome
         Address.fromString("0x0b2c639c533813f4aa9d7837caf62653d097ff85"), // USDC
         5 // 0.05% fee
       )
