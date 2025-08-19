@@ -460,8 +460,6 @@ templates:
           handler: handleVeloV2Mint
         - event: Burn(indexed address,indexed address,uint256,uint256)
           handler: handleVeloV2Burn
-        - event: Sync(uint256,uint256)
-          handler: handleVeloV2Sync
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleVeloV2Transfer
       file: ./src/veloV2Pool.ts
