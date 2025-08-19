@@ -1,122 +1,155 @@
-import { BigInt } from "@graphprotocol/graph-ts"
+import { BigInt, log } from "@graphprotocol/graph-ts"
+import { mostSignificantBit, MAX_UINT256, ZERO } from "./mostSignificantBit"
 import { Q96 } from "../constants"
 
+// Constants for TickMath
+const ONE = BigInt.fromI32(1)
+const Q32 = BigInt.fromI32(2).pow(32)
+
 /**
- * TickMath library for Uniswap V3 tick calculations
+ * Helper function to multiply a value by a string literal and shift right by 128 bits
+ * Equivalent to (val * BigInt(mulBy)) >> 128n in JavaScript
+ */
+function mulShift(val: BigInt, mulBy: string): BigInt {
+  return val.times(BigInt.fromString(mulBy)).rightShift(128)
+}
+
+/**
+ * TickMath library for Uniswap V3 and Velodrome CL tick calculations
  * 
- * MATHEMATICAL BACKGROUND:
- * - Uniswap V3 uses ticks to represent price ranges
- * - Each tick represents a 0.01% (1 basis point) price change
- * - Price = 1.0001^tick
- * - sqrtPrice = sqrt(1.0001^tick) * 2^96
+ * This is the official Uniswap V3 implementation adapted for The Graph's AssemblyScript environment.
  * 
- * IMPORTANT: This is a SIMPLIFIED approximation of Uniswap V3's TickMath.
- * For production use, consider implementing the exact Uniswap V3 algorithm
- * which uses bit manipulation and precise mathematical constants.
- * 
- * Reference: https://github.com/Uniswap/v3-core/blob/main/contracts/libraries/TickMath.sol
+ * Reference: https://github.com/Uniswap/v3-sdk/blob/main/src/utils/tickMath.ts
  */
 export class TickMath {
-  // Tick bounds: These represent the minimum and maximum ticks in Uniswap V3
-  // MIN_TICK = log_1.0001(2^-128) ≈ -887272
-  // MAX_TICK = log_1.0001(2^128) ≈ 887272
+  /**
+   * The minimum tick that can be used on any pool.
+   */
   static MIN_TICK: i32 = -887272
-  static MAX_TICK: i32 = 887272
-
-  // Sqrt price bounds corresponding to MIN_TICK and MAX_TICK
-  // MIN_SQRT_RATIO = sqrt(1.0001^MIN_TICK) * 2^96 ≈ 4295128739
-  // MAX_SQRT_RATIO = sqrt(1.0001^MAX_TICK) * 2^96 ≈ 1461446703485210103287273052203988822378723970342
-  static MIN_SQRT_RATIO: BigInt = BigInt.fromString("4295128739")
-  static MAX_SQRT_RATIO: BigInt = BigInt.fromString("1461446703485210103287273052203988822378723970342")
-
-  // Mathematical constants for approximation
-  // sqrt(1.0001) * 2^96 ≈ 79232162514264337593543950336
-  static SQRT_1_0001_Q96: BigInt = BigInt.fromString("79232162514264337593543950336")
   
-  // Approximation increments for different tick ranges
-  // These are rough approximations and should be refined for better precision
-  static SMALL_TICK_INCREMENT: BigInt = BigInt.fromString("3960000000000000000000000") // ~0.00005 * 2^96
-  static MEDIUM_TICK_INCREMENT: BigInt = BigInt.fromString("39600000000000000000000000") // ~0.0005 * 2^96
-  
-  // Tick range thresholds for different approximation methods
-  static SMALL_TICK_THRESHOLD: i32 = 10
-  static MEDIUM_TICK_THRESHOLD: i32 = 100
+  /**
+   * The maximum tick that can be used on any pool.
+   */
+  static MAX_TICK: i32 = -TickMath.MIN_TICK
 
   /**
-   * Calculates sqrt(1.0001^tick) * 2^96 for a given tick
-   * 
-   * APPROXIMATION METHOD:
-   * This implementation uses a simplified approximation rather than the exact
-   * Uniswap V3 algorithm. The approximation works as follows:
-   * 
-   * 1. For tick = 0: Return exactly 2^96
-   * 2. For tick = 1: Use precomputed sqrt(1.0001) * 2^96
-   * 3. For small ticks (1-10): Linear approximation
-   * 4. For medium ticks (11-100): Larger linear increment
-   * 5. For large ticks (>100): Exponential approximation
-   * 6. For negative ticks: Invert the positive result
-   * 
-   * WARNING: This approximation may have significant precision errors for large ticks.
-   * Consider implementing Uniswap's exact algorithm for production use.
+   * The sqrt ratio corresponding to the minimum tick that could be used on any pool.
+   */
+  static MIN_SQRT_RATIO: BigInt = BigInt.fromString("4295128739")
+  
+  /**
+   * The sqrt ratio corresponding to the maximum tick that could be used on any pool.
+   */
+  static MAX_SQRT_RATIO: BigInt = BigInt.fromString("1461446703485210103287273052203988822378723970342")
+
+  /**
+   * Returns the sqrt ratio as a Q64.96 for the given tick. The sqrt ratio is computed as sqrt(1.0001)^tick
+   * @param tick the tick for which to compute the sqrt ratio
    */
   static getSqrtRatioAtTick(tick: i32): BigInt {
-    let absTick = tick < 0 ? -tick : tick
-    
-    // Clamp to valid tick range
-    if (absTick > TickMath.MAX_TICK) {
-      absTick = TickMath.MAX_TICK
+    // Validate tick is within allowed range and is an integer
+    if (tick < TickMath.MIN_TICK || tick > TickMath.MAX_TICK) {
+      log.warning("TickMath: Tick {} is outside valid range, clamping to valid range", [tick.toString()])
+      tick = tick < TickMath.MIN_TICK ? TickMath.MIN_TICK : TickMath.MAX_TICK
     }
     
+    const absTick: i32 = tick < 0 ? -tick : tick
+
     let ratio: BigInt
     
-    // Base case: tick = 0 returns exactly 2^96
-    if (tick == 0) {
-      return Q96
-    }
-    
-    // Special case: tick = 1 uses precomputed sqrt(1.0001) * 2^96
-    if (absTick == 1) {
-      ratio = TickMath.SQRT_1_0001_Q96
-    } else if (absTick <= TickMath.SMALL_TICK_THRESHOLD) {
-      // Small ticks: Linear approximation
-      // ratio ≈ Q96 + (tick * small_increment)
-      ratio = Q96.plus(TickMath.SMALL_TICK_INCREMENT.times(BigInt.fromI32(absTick)))
-    } else if (absTick <= TickMath.MEDIUM_TICK_THRESHOLD) {
-      // Medium ticks: Larger linear increment
-      // ratio ≈ Q96 + (tick * medium_increment)
-      ratio = Q96.plus(TickMath.MEDIUM_TICK_INCREMENT.times(BigInt.fromI32(absTick)))
+    // Initialize ratio based on the least significant bit of absTick
+    if ((absTick & 0x1) != 0) {
+      ratio = BigInt.fromString("0xfffcb933bd6fad37aa2d162d1a594001")
     } else {
-      // Large ticks: Exponential approximation
-      // This is a very rough approximation and should be improved
-      let multiplier = BigInt.fromI32(1 + absTick / 100)
-      ratio = Q96.times(multiplier)
+      ratio = BigInt.fromString("0x100000000000000000000000000000000")
     }
     
-    // For negative ticks, invert the ratio: ratio = Q96^2 / ratio
-    // This implements: sqrt(1.0001^(-tick)) = 1 / sqrt(1.0001^tick)
-    if (tick < 0) {
-      ratio = Q96.times(Q96).div(ratio)
+    // Apply the bit operations for each bit position
+    if ((absTick & 0x2) != 0) ratio = mulShift(ratio, "0xfff97272373d413259a46990580e213a")
+    if ((absTick & 0x4) != 0) ratio = mulShift(ratio, "0xfff2e50f5f656932ef12357cf3c7fdcc")
+    if ((absTick & 0x8) != 0) ratio = mulShift(ratio, "0xffe5caca7e10e4e61c3624eaa0941cd0")
+    if ((absTick & 0x10) != 0) ratio = mulShift(ratio, "0xffcb9843d60f6159c9db58835c926644")
+    if ((absTick & 0x20) != 0) ratio = mulShift(ratio, "0xff973b41fa98c081472e6896dfb254c0")
+    if ((absTick & 0x40) != 0) ratio = mulShift(ratio, "0xff2ea16466c96a3843ec78b326b52861")
+    if ((absTick & 0x80) != 0) ratio = mulShift(ratio, "0xfe5dee046a99a2a811c461f1969c3053")
+    if ((absTick & 0x100) != 0) ratio = mulShift(ratio, "0xfcbe86c7900a88aedcffc83b479aa3a4")
+    if ((absTick & 0x200) != 0) ratio = mulShift(ratio, "0xf987a7253ac413176f2b074cf7815e54")
+    if ((absTick & 0x400) != 0) ratio = mulShift(ratio, "0xf3392b0822b70005940c7a398e4b70f3")
+    if ((absTick & 0x800) != 0) ratio = mulShift(ratio, "0xe7159475a2c29b7443b29c7fa6e889d9")
+    if ((absTick & 0x1000) != 0) ratio = mulShift(ratio, "0xd097f3bdfd2022b8845ad8f792aa5825")
+    if ((absTick & 0x2000) != 0) ratio = mulShift(ratio, "0xa9f746462d870fdf8a65dc1f90e061e5")
+    if ((absTick & 0x4000) != 0) ratio = mulShift(ratio, "0x70d869a156d2a1b890bb3df62baf32f7")
+    if ((absTick & 0x8000) != 0) ratio = mulShift(ratio, "0x31be135f97d08fd981231505542fcfa6")
+    if ((absTick & 0x10000) != 0) ratio = mulShift(ratio, "0x9aa508b5b7a84e1c677de54f3e99bc9")
+    if ((absTick & 0x20000) != 0) ratio = mulShift(ratio, "0x5d6af8dedb81196699c329225ee604")
+    if ((absTick & 0x40000) != 0) ratio = mulShift(ratio, "0x2216e584f5fa1ea926041bedfe98")
+    if ((absTick & 0x80000) != 0) ratio = mulShift(ratio, "0x48a170391f7dc42444e8fa2")
+
+    // If tick is positive, invert the ratio
+    if (tick > 0) {
+      ratio = MAX_UINT256.div(ratio)
     }
-    
-    return ratio
+
+    // Convert back to Q96
+    if (ratio.mod(Q32).gt(ZERO)) {
+      return ratio.div(Q32).plus(ONE)
+    } else {
+      return ratio.div(Q32)
+    }
   }
 
   /**
-   * Calculates the tick corresponding to a given sqrt price
-   * 
-   * WARNING: This is a VERY simplified reverse calculation that only
-   * distinguishes between three cases: negative, zero, and positive ticks.
-   * 
-   * For accurate tick calculation, implement a proper binary search or
-   * use Uniswap's exact reverse algorithm.
+   * Returns the tick corresponding to a given sqrt ratio, s.t. #getSqrtRatioAtTick(tick) <= sqrtRatioX96
+   * and #getSqrtRatioAtTick(tick + 1) > sqrtRatioX96
+   * @param sqrtRatioX96 the sqrt ratio as a Q64.96 for which to compute the tick
    */
-  static getTickAtSqrtRatio(sqrtPriceX96: BigInt): i32 {
-    if (sqrtPriceX96.equals(Q96)) {
-      return 0  // Exact match for tick = 0
-    } else if (sqrtPriceX96.gt(Q96)) {
-      return 1  // Simplified: any price > 1.0 maps to tick = 1
-    } else {
-      return -1 // Simplified: any price < 1.0 maps to tick = -1
+  static getTickAtSqrtRatio(sqrtRatioX96: BigInt): i32 {
+    // Validate the input is within the valid range
+    if (sqrtRatioX96.lt(TickMath.MIN_SQRT_RATIO) || sqrtRatioX96.ge(TickMath.MAX_SQRT_RATIO)) {
+      log.warning("TickMath: sqrtRatioX96 {} is outside valid range", [sqrtRatioX96.toString()])
+      
+      if (sqrtRatioX96.lt(TickMath.MIN_SQRT_RATIO)) {
+        return TickMath.MIN_TICK
+      } else {
+        return TickMath.MAX_TICK
+      }
     }
+
+    const sqrtRatioX128 = sqrtRatioX96.leftShift(32)
+    const msb = mostSignificantBit(sqrtRatioX128)
+
+    let r: BigInt
+    if (msb >= 128) {
+      r = sqrtRatioX128.rightShift(msb - 127)
+    } else {
+      r = sqrtRatioX128.leftShift(127 - msb)
+    }
+
+    let log_2: BigInt = BigInt.fromI32(msb - 128).leftShift(64)
+
+    for (let i = 0; i < 14; i++) {
+      r = r.times(r).rightShift(127)
+      const f = r.rightShift(128)
+      log_2 = log_2.bitOr(f.leftShift(63 - i))
+      r = r.rightShift(f.toI32())
+    }
+
+    const log_sqrt10001 = log_2.times(BigInt.fromString("255738958999603826347141"))
+
+    const tickLow = log_sqrt10001
+      .minus(BigInt.fromString("3402992956809132418596140100660247210"))
+      .rightShift(128)
+      .toI32()
+      
+    const tickHigh = log_sqrt10001
+      .plus(BigInt.fromString("291339464771989622907027621153398088495"))
+      .rightShift(128)
+      .toI32()
+
+    return tickLow === tickHigh
+      ? tickLow
+      : TickMath.getSqrtRatioAtTick(tickHigh).le(sqrtRatioX96)
+      ? tickHigh
+      : tickLow
   }
 }
