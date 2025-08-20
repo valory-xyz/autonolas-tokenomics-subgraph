@@ -7,4 +7,4 @@ generated-l2/
 .env
 /temp-garbage
 
-/Users/gauravlochab/Babydegen-Subgraph/agent-funding-subgraph/autonolas-tokenomics-subgraph/subgraphs/babydegen/babydegen-optimism_test
+/subgraphs/babydegen/babydegen-optimism_test
