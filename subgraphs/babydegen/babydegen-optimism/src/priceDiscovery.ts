@@ -166,7 +166,12 @@ function getPriceFromSources(
     return new PriceResult(BigDecimal.fromString("0"), BigDecimal.fromString("0"), "none")
   }
   
-  // Try sources in priority order
+  // Track valid prices and their confidence
+  let validPrices: BigDecimal[] = []
+  let confidences: BigDecimal[] = []
+  let sourceTypes: string[] = []
+  
+  // Try all sources and collect valid prices
   for (let i = 0; i < config.priceSources.length; i++) {
     let sourceConfig = config.priceSources[i]
     let result = getPriceFromSource(token, sourceConfig, timestamp)
@@ -178,11 +183,69 @@ function getPriceFromSources(
         sourceConfig.sourceType,
         result.confidence.times(BigDecimal.fromString("100")).toString()
       ])
-      return result
+      
+      validPrices.push(result.price)
+      confidences.push(result.confidence)
+      sourceTypes.push(result.source)
     }
   }
   
-  return new PriceResult(BigDecimal.fromString("0"), BigDecimal.fromString("0"), "failed")
+  // If no valid prices, return failed result
+  if (validPrices.length == 0) {
+    return new PriceResult(BigDecimal.fromString("0"), BigDecimal.fromString("0"), "failed")
+  }
+  
+  // If only one valid price, return it directly
+  if (validPrices.length == 1) {
+    return new PriceResult(validPrices[0], confidences[0], sourceTypes[0])
+  }
+  
+  // Calculate weighted average based on confidence
+  let weightedSum = BigDecimal.fromString("0")
+  let totalConfidence = BigDecimal.fromString("0")
+  
+  // Log all sources that contributed to the average
+  let sourcesList = ""
+  for (let i = 0; i < validPrices.length; i++) {
+    weightedSum = weightedSum.plus(validPrices[i].times(confidences[i]))
+    totalConfidence = totalConfidence.plus(confidences[i])
+    
+    // Add to sources list for logging
+    sourcesList += sourceTypes[i]
+    if (i < validPrices.length - 1) {
+      sourcesList += ", "
+    }
+  }
+  
+  // Avoid division by zero
+  if (totalConfidence.equals(BigDecimal.fromString("0"))) {
+    // Simple average if all confidences are zero
+    let sum = BigDecimal.fromString("0")
+    for (let i = 0; i < validPrices.length; i++) {
+      sum = sum.plus(validPrices[i])
+    }
+    let avgPrice = sum.div(BigDecimal.fromString(validPrices.length.toString()))
+    let avgConfidence = BigDecimal.fromString("0.5") // Default to 50% confidence
+    
+    log.info("📊 PRICE: Calculated unweighted average price for {}: ${} from sources: {}", [
+      token.symbol,
+      avgPrice.toString(),
+      sourcesList
+    ])
+    
+    return new PriceResult(avgPrice, avgConfidence, "average_unweighted")
+  }
+  
+  let weightedAvgPrice = weightedSum.div(totalConfidence)
+  let avgConfidence = totalConfidence.div(BigDecimal.fromString(validPrices.length.toString()))
+  
+  log.info("📊 PRICE: Calculated weighted average price for {}: ${} from sources: {}", [
+    token.symbol,
+    weightedAvgPrice.toString(),
+    sourcesList
+  ])
+  
+  return new PriceResult(weightedAvgPrice, avgConfidence, "average_weighted")
 }
 
 function getPriceFromSource(
@@ -249,16 +312,20 @@ function createPriceUpdate(
   update.priceUSD = result.price
   update.confidence = result.confidence
   
-  // Use the actual source that provided the price, not always the primary source
-  // Find the source by type
+  // For averaged prices, we'll use the first source as a reference
+  // Since we can't modify the schema to store multiple sources
   let sourceIndex = 0
-  let sourceType = result.source
   
-  for (let i = 0; i < token.priceSources.length; i++) {
-    let source = PriceSource.load(token.priceSources[i])
-    if (source != null && source.sourceType == sourceType) {
-      sourceIndex = i
-      break
+  if (result.source != "average_weighted" && result.source != "average_unweighted") {
+    // Find the source by type for non-averaged prices
+    let sourceType = result.source
+    
+    for (let i = 0; i < token.priceSources.length; i++) {
+      let source = PriceSource.load(token.priceSources[i])
+      if (source != null && source.sourceType == sourceType) {
+        sourceIndex = i
+        break
+      }
     }
   }
   
@@ -267,12 +334,20 @@ function createPriceUpdate(
   update.block = BigInt.fromI32(0) // Would need block context
   update.save()
   
-  log.info("PRICE UPDATE: {} price ${} from source {} (index {})", [
-    token.symbol,
-    result.price.toString(),
-    sourceType,
-    sourceIndex.toString()
-  ])
+  // Enhanced logging for averaged prices
+  if (result.source == "average_weighted" || result.source == "average_unweighted") {
+    log.info("PRICE UPDATE: {} price ${} using {} from multiple sources", [
+      token.symbol,
+      result.price.toString(),
+      result.source
+    ])
+  } else {
+    log.info("PRICE UPDATE: {} price ${} from source {}", [
+      token.symbol,
+      result.price.toString(),
+      result.source
+    ])
+  }
 }
 
 function isValidPriceResult(price: BigDecimal, tokenSymbol: string): boolean {

@@ -5,7 +5,11 @@ import { TOKENS } from "./tokenConfig"
 import { getServiceByAgent } from "./config"
 import { isFundingSource } from "./common"
 import { getTokenPriceUSD } from "./priceDiscovery"
-import { WETH, WHITELISTED_TOKENS } from "./constants"
+import { WETH, WHITELISTED_TOKENS, USDC_NATIVE, USDC_BRIDGED } from "./constants"
+
+// NOTE: This subgraph is configured to ONLY track USDC transfers out for funding balance calculations.
+// While all token transfers are tracked for token balance purposes, only USDC outflows affect
+// the funding metrics. Other token outflows are logged but do not affect funding calculations.
 
 // Calculate the total USD value of uninvested funds (tokens held in the safe)
 export function calculateUninvestedValue(serviceSafe: Address): BigDecimal {
@@ -193,8 +197,9 @@ export function handleERC20Transfer(event: TransferEvent): void {
   if (toService != null) {
     updateTokenBalance(to, tokenAddress, value, true, event.block)
     
-    // Check if it's a funding deposit
-    if (isFundingSource(from, to, event.block, event.transaction.hash.toHexString())) {
+    // Check if it's a funding deposit AND is NATIVE USDC (explicitly excluding bridged USDC)
+    if (isFundingSource(from, to, event.block, event.transaction.hash.toHexString()) && 
+        tokenAddress.equals(USDC_NATIVE)) {
       // Calculate USD value using price discovery
       let divisor = BigDecimal.fromString("1" + "0".repeat(tokenConfig.decimals))
       let amountDecimal = value.toBigDecimal().div(divisor)
@@ -210,6 +215,14 @@ export function handleERC20Transfer(event: TransferEvent): void {
       
       // Update funding balance directly to avoid circular dependency
       updateFundingBalance(to, usdValue, true, event.block.timestamp)
+    } else if (isFundingSource(from, to, event.block, event.transaction.hash.toHexString())) {
+      // Log non-USDC token transfers that would have been funding but are excluded
+      log.info("TOKEN IN (not counted in funding): {} {} from {} to {}", [
+        tokenConfig.symbol,
+        value.toString(),
+        from.toHexString(),
+        to.toHexString()
+      ])
     }
   }
   
@@ -218,21 +231,40 @@ export function handleERC20Transfer(event: TransferEvent): void {
   if (fromService != null) {
     updateTokenBalance(from, tokenAddress, value, false, event.block)
     
-    // Calculate USD value for funding tracking
-    let divisor = BigDecimal.fromString("1" + "0".repeat(tokenConfig.decimals))
-    let amountDecimal = value.toBigDecimal().div(divisor)
-    let tokenPrice = getTokenPriceUSD(tokenAddress, event.block.timestamp, false)
-    let usdValue = amountDecimal.times(tokenPrice)
-    
-    log.info("FUNDING: OUT {} USD ({}) from {} to {}", [
-      usdValue.toString(),
-      tokenConfig.symbol,
-      from.toHexString(),
-      to.toHexString()
-    ])
-    
-    // Update funding balance directly to avoid circular dependency
-    updateFundingBalance(from, usdValue, false, event.block.timestamp)
+    // For outflows, only update funding if it's NATIVE USDC (explicitly excluding bridged USDC)
+    if (tokenAddress.equals(USDC_NATIVE)) {
+      // Check if receiver is valid funding source for this service
+      if (isFundingSource(to, from, event.block, event.transaction.hash.toHexString())) {
+        // Calculate USD value 
+        let divisor = BigDecimal.fromString("1" + "0".repeat(tokenConfig.decimals))
+        let amountDecimal = value.toBigDecimal().div(divisor)
+        let tokenPrice = getTokenPriceUSD(tokenAddress, event.block.timestamp, false)
+        let usdValue = amountDecimal.times(tokenPrice)
+        
+        log.info("FUNDING: OUT {} USD ({}) from {} to {}", [
+          usdValue.toString(),
+          tokenConfig.symbol,
+          from.toHexString(),
+          to.toHexString()
+        ])
+        
+        // Update funding balance
+        updateFundingBalance(from, usdValue, false, event.block.timestamp)
+      }
+    } else {
+      // Calculate USD value for non-USDC tokens for logging purposes only
+      let divisor = BigDecimal.fromString("1" + "0".repeat(tokenConfig.decimals))
+      let amountDecimal = value.toBigDecimal().div(divisor)
+      let tokenPrice = getTokenPriceUSD(tokenAddress, event.block.timestamp, false)
+      let usdValue = amountDecimal.times(tokenPrice)
+      
+      log.info("TOKEN OUT (not counted in funding): {} USD ({}) from {} to {}", [
+        usdValue.toString(),
+        tokenConfig.symbol,
+        from.toHexString(),
+        to.toHexString()
+      ])
+    }
   }
 }
 

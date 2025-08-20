@@ -12,8 +12,7 @@ import { getTokenPriceUSD } from "./priceDiscovery"
 import { calculatePortfolioMetrics } from "./helpers"
 
 export const FUNDING_TOKENS: Address[] = [
-  USDC_NATIVE, // Native USDC on Optimism
-  USDC_BRIDGED  // USDC.e (Bridged) on Optimism
+  USDC_NATIVE // Native USDC on Optimism only (USDC.e/Bridged excluded from funding)
 ]
 
 export function isEOA(addr: Address, block: ethereum.Block, txHash: string = ""): boolean {

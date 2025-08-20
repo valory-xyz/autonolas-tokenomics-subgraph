@@ -9,6 +9,10 @@ import { getServiceByAgent } from "./config"
 import { updateFunding } from "./helpers"
 import { updateETHBalance } from "./tokenBalances"
 
+// NOTE: This subgraph is configured to ONLY track USDC and ETH transfers for funding balance calculations.
+// ETH transfers out (through ExecutionSuccess events) are now tracked for funding metrics.
+// ETH transfers in are tracked via SafeReceived events.
+
 export function handleSafeReceived(event: SafeReceivedEvent): void {
   // Handle funding balance update for ETH received
   let from = event.params.sender
@@ -60,13 +64,65 @@ export function handleSafeReceived(event: SafeReceivedEvent): void {
 }
 
 export function handleExecutionSuccess(event: ExecutionSuccessEvent): void {
-  // ExecutionSuccess could be used to track ETH outflows
-  // For now, we'll just log it
-  log.debug("Safe ExecutionSuccess: txHash: {}, payment: {}", [
-    event.params.txHash.toHexString(),
-    event.params.payment.toString()
-  ])
+  // Get the safe that executed the transaction
+  let serviceSafe = event.address
+  let service = getServiceByAgent(serviceSafe)
   
-  // TODO: In the future, we could analyze the executed transaction
-  // to see if it's an ETH transfer out and update funding accordingly
+  if (service === null) {
+    log.debug("ExecutionSuccess for non-service safe: {}", [serviceSafe.toHexString()])
+    return // Not a service safe
+  }
+  
+  // Get transaction details
+  let txHash = event.params.txHash.toHexString()
+  let payment = event.params.payment
+  
+  // For ETH transfers, we need the transaction information
+  let tx = event.transaction
+  let to = tx.to
+  let value = tx.value
+  
+  // Check if this is a direct ETH transfer (value > 0 and to is valid)
+  if (value.gt(BigInt.zero()) && to !== null) {
+    // Only proceed if 'to' is not the service safe itself
+    if (!to.equals(serviceSafe)) {
+      // Check if recipient is an operator or EOA
+      if (isFundingSource(to, serviceSafe, event.block, txHash)) {
+        log.info("ETH Transfer detected from service safe to operator/EOA: {} -> {}, value: {}", [
+          serviceSafe.toHexString(),
+          to.toHexString(),
+          value.toString()
+        ])
+        
+        // 1. Update ETH balance
+        updateETHBalance(serviceSafe, value, false, event.block)
+        
+        // 2. Convert to USD for funding metrics
+        let ethPrice = getEthUsd(event.block)
+        let usdValue = value.toBigDecimal()
+          .times(ethPrice)
+          .div(BigDecimal.fromString("1e18"))
+        
+        // 3. Update funding balance (deposit=false for outflow)
+        updateFunding(serviceSafe, usdValue, false, event.block.timestamp)
+        
+        log.info("FUNDING: OUT {} USD (ETH) from {} to {}", [
+          usdValue.toString(),
+          serviceSafe.toHexString(),
+          to.toHexString()
+        ])
+      } else {
+        log.info("ETH transfer not to operator/EOA - not counting in funding: {} -> {}", [
+          serviceSafe.toHexString(),
+          to.toHexString()
+        ])
+      }
+    }
+  }
+  
+  // This could be a contract interaction or internal transaction
+  log.debug("Safe ExecutionSuccess: txHash: {}, payment: {}", [
+    txHash,
+    payment.toString()
+  ])
 }

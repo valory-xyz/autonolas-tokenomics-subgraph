@@ -1,6 +1,9 @@
 specVersion: 0.0.8
 schema:
   file: ./schema.graphql
+# NOTE: This subgraph is configured to ONLY track USDC transfers out for funding balance calculations.
+# While all token transfers are tracked for token balance purposes, only USDC outflows affect
+# the funding metrics. Other token outflows are logged but do not affect funding calculations.
 dataSources:
   - kind: ethereum
     name: ServiceRegistryL2
