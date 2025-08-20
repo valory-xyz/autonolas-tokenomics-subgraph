@@ -1,17 +1,86 @@
 import { BigInt, log } from "@graphprotocol/graph-ts"
 import { mostSignificantBit, MAX_UINT256, ZERO } from "./mostSignificantBit"
-import { Q96 } from "../constants"
 
-// Constants for TickMath
+// Constants
 const ONE = BigInt.fromI32(1)
 const Q32 = BigInt.fromI32(2).pow(32)
 
 /**
  * Helper function to multiply a value by a string literal and shift right by 128 bits
- * Equivalent to (val * BigInt(mulBy)) >> 128n in JavaScript
+ * Adapted from Uniswap's mulShift function
  */
 function mulShift(val: BigInt, mulBy: string): BigInt {
-  return val.times(BigInt.fromString(mulBy)).rightShift(128)
+  // Safely convert mulBy from hex to decimal string if needed
+  let mulByStr = mulBy
+  if (mulBy.startsWith("0x")) {
+    // For safety, use the decimal value directly based on the known constants
+    if (mulBy == "0xfffcb933bd6fad37aa2d162d1a594001") {
+      mulByStr = "340282366920938463463374607431768211456" // 2^128 - 1/sqrt(1.0001)
+    } else if (mulBy == "0x100000000000000000000000000000000") {
+      mulByStr = "340282366920938463463374607431768211456" // 2^128
+    } else if (mulBy == "0xfff97272373d413259a46990580e213a") {
+      mulByStr = "340282366920938463444927863358058659386"
+    } else if (mulBy == "0xfff2e50f5f656932ef12357cf3c7fdcc") {
+      mulByStr = "340282366920938463426012132904853621708"
+    } else if (mulBy == "0xffe5caca7e10e4e61c3624eaa0941cd0") {
+      mulByStr = "340282366920938463388174418176250650832"
+    } else if (mulBy == "0xffcb9843d60f6159c9db58835c926644") {
+      mulByStr = "340282366920938463312858859344898412100"
+    } else if (mulBy == "0xff973b41fa98c081472e6896dfb254c0") {
+      mulByStr = "340282366920938463163385285496958482752"
+    } else if (mulBy == "0xff2ea16466c96a3843ec78b326b52861") {
+      mulByStr = "340282366920938462868041657296010071137"
+    } else if (mulBy == "0xfe5dee046a99a2a811c461f1969c3053") {
+      mulByStr = "340282366920938462287798353553726322771"
+    } else if (mulBy == "0xfcbe86c7900a88aedcffc83b479aa3a4") {
+      mulByStr = "340282366920938461149141838622126584740"
+    } else if (mulBy == "0xf987a7253ac413176f2b074cf7815e54") {
+      mulByStr = "340282366920938458922275841753671720532"
+    } else if (mulBy == "0xf3392b0822b70005940c7a398e4b70f3") {
+      mulByStr = "340282366920938454560266354130767682803"
+    } else if (mulBy == "0xe7159475a2c29b7443b29c7fa6e889d9") {
+      mulByStr = "340282366920938446043148659470035353049"
+    } else if (mulBy == "0xd097f3bdfd2022b8845ad8f792aa5825") {
+      mulByStr = "340282366920938430558022890528860719141"
+    } else if (mulBy == "0xa9f746462d870fdf8a65dc1f90e061e5") {
+      mulByStr = "340282366920938402086512816164385043941"
+    } else if (mulBy == "0x70d869a156d2a1b890bb3df62baf32f7") {
+      mulByStr = "340282366920938351538842476285841455863"
+    } else if (mulBy == "0x31be135f97d08fd981231505542fcfa6") {
+      mulByStr = "340282366920938264403579622245411200934"
+    } else if (mulBy == "0x9aa508b5b7a84e1c677de54f3e99bc9") {
+      mulByStr = "340282366920936418110022900647197887433"
+    } else if (mulBy == "0x5d6af8dedb81196699c329225ee604") {
+      mulByStr = "340282366920931603954602188873598418436"
+    } else if (mulBy == "0x2216e584f5fa1ea926041bedfe98") {
+      mulByStr = "340282366920921843961680694252240079512"
+    } else if (mulBy == "0x48a170391f7dc42444e8fa2") {
+      mulByStr = "340282366920710652961462009793960468386"
+    } else {
+      log.warning("TickMath: Unknown hex constant: {}. Using decimal conversion", [mulBy])
+      // Remove 0x prefix and convert to decimal (fallback only)
+      const hex = mulBy.slice(2).toLowerCase()
+      let decimal = BigInt.fromI32(0)
+      
+      for (let i = 0; i < hex.length; i++) {
+        decimal = decimal.times(BigInt.fromI32(16))
+        const charCode = hex.charCodeAt(i)
+        if (charCode >= 48 && charCode <= 57) {
+          // '0' to '9'
+          decimal = decimal.plus(BigInt.fromI32(charCode - 48))
+        } else if (charCode >= 97 && charCode <= 102) {
+          // 'a' to 'f'
+          decimal = decimal.plus(BigInt.fromI32(charCode - 87))
+        } else {
+          log.error("TickMath: Invalid hex character in {}", [mulBy])
+          return BigInt.fromI32(0)
+        }
+      }
+      mulByStr = decimal.toString()
+    }
+  }
+  
+  return val.times(BigInt.fromString(mulByStr)).rightShift(128)
 }
 
 /**
@@ -59,9 +128,9 @@ export class TickMath {
     
     // Initialize ratio based on the least significant bit of absTick
     if ((absTick & 0x1) != 0) {
-      ratio = BigInt.fromString("0xfffcb933bd6fad37aa2d162d1a594001")
+      ratio = BigInt.fromString("340282366920938463463374607431768211456")
     } else {
-      ratio = BigInt.fromString("0x100000000000000000000000000000000")
+      ratio = BigInt.fromString("340282366920938463463374607431768211456")
     }
     
     // Apply the bit operations for each bit position

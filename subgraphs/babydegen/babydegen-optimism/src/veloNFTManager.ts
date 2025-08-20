@@ -50,6 +50,10 @@ export function handleNFTTransfer(ev: Transfer): void {
   // Update cache
   handleNFTTransferForCache(ev.params.tokenId, ev.params.from, ev.params.to)
   
+  // Call refresh with basic error logging - no try/catch since it's not supported
+  log.info("VELODROME: Calling refreshVeloCLPosition for tokenId: {} in handleNFTTransfer", [
+    ev.params.tokenId.toString()
+  ])
   refreshVeloCLPosition(ev.params.tokenId, ev.block, ev.transaction.hash)
 }
 

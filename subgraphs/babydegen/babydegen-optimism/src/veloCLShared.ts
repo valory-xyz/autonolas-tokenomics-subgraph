@@ -298,10 +298,25 @@ export function refreshVeloCLPositionWithEventAmounts(
       pp.entryAmountUSD.toString()
     ])
     
-    // For new positions, calculate current amounts using liquidity math (not event amounts)
-    // Call refreshVeloCLPosition to get current calculated amounts
-    pp.save() // Save entry data first
-    refreshVeloCLPosition(tokenId, block, txHash) // This will update current amounts
+    // For new positions, ensure usdCurrent is explicitly set to prevent "missing non-nullable field" errors
+    // Initially set it to match the entry USD value
+    pp.usdCurrent = eventUsd
+    
+    // Set additional required fields to ensure they are not null
+    pp.amount0 = eventAmount0Human
+    pp.amount1 = eventAmount1Human
+    pp.amount0USD = eventUsd0
+    pp.amount1USD = eventUsd1
+    pp.token0 = data.value2
+    pp.token1 = data.value3
+    pp.token0Symbol = getTokenSymbol(data.value2)
+    pp.token1Symbol = getTokenSymbol(data.value3)
+    
+    // Save entry data first with all required fields set
+    pp.save()
+    
+    // Then call refreshVeloCLPosition to get more accurate current amounts
+    refreshVeloCLPosition(tokenId, block, txHash) // This will update current amounts and save the entity again
     return // Exit early since refreshVeloCLPosition will save the entity
   } else {
     // DEBUG: Log the BEFORE values to track accumulation
