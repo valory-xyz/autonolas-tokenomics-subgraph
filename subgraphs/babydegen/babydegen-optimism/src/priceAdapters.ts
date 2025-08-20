@@ -1,11 +1,11 @@
-import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts"
+import { Address, BigDecimal, BigInt, log, ethereum } from "@graphprotocol/graph-ts"
 import { VelodromeCLPool } from "../../../../generated/VeloNFTManager/VelodromeCLPool"
 import { AggregatorV3Interface } from "../../../../generated/templates/Safe/AggregatorV3Interface"
 import { getTokenConfig } from "./tokenConfig"
 import { USDC_NATIVE, USDT, DAI, LUSD, WETH, Q96 } from "./constants"
 
 // Chainlink price adapter with validation
-export function getChainlinkPrice(feedAddress: Address): BigDecimal {
+export function getChainlinkPrice(feedAddress: Address, blockTimestamp: BigInt = BigInt.fromI32(0)): BigDecimal {
   log.info("📊 CHAINLINK: Getting price from feed {}", [feedAddress.toHexString()])
   
   let aggregator = AggregatorV3Interface.bind(feedAddress)
@@ -19,8 +19,33 @@ export function getChainlinkPrice(feedAddress: Address): BigDecimal {
   let roundData = roundResult.value
   let price = roundData.value1.toBigDecimal().div(BigDecimal.fromString("1e8")) // 8 decimals
   
-  // Note: Chainlink staleness checking could be added here using block.timestamp
-  // if needed for production. Current implementation trusts Chainlink feed freshness.
+  // PRODUCTION ENHANCEMENT: Staleness checking
+  // Only check staleness if a block timestamp is provided
+  if (!blockTimestamp.equals(BigInt.fromI32(0))) {
+    // Chainlink updatedAt timestamp
+    let updatedAt = roundData.value3
+    
+    // Stale data threshold (24 hours in seconds)
+    const STALE_PRICE_THRESHOLD = BigInt.fromI32(86400)
+    
+    // Calculate how old the data is
+    let dataAge = blockTimestamp.minus(updatedAt)
+    
+    // If data is older than threshold, reject it
+    if (dataAge.gt(STALE_PRICE_THRESHOLD)) {
+      log.warning("⚠️ CHAINLINK: Stale price from feed {}, last updated {} seconds ago", [
+        feedAddress.toHexString(),
+        dataAge.toString()
+      ])
+      return BigDecimal.fromString("0") // Reject stale price
+    }
+    
+    // Log the data age for monitoring
+    log.info("📊 CHAINLINK: Price from feed {} is {} seconds old", [
+      feedAddress.toHexString(),
+      dataAge.toString()
+    ])
+  }
   
   // Validate price is reasonable (not zero, not negative)
   if (price.le(BigDecimal.fromString("0"))) {
@@ -34,28 +59,6 @@ export function getChainlinkPrice(feedAddress: Address): BigDecimal {
   return price
 }
 
-// Curve 3Pool adapter - conservative approach
-export function getCurve3PoolPrice(token: Address): BigDecimal {
-  log.info("📊 CURVE: Getting {} price from 3Pool", [token.toHexString()])
-  
-  // Curve 3Pool is designed for 1:1 stablecoin trading
-  // These tokens should trade very close to $1.00
-  let knownStablecoins = [
-    USDC_NATIVE.toHexString().toLowerCase(),
-    USDT.toHexString().toLowerCase(),
-    DAI.toHexString().toLowerCase()
-  ]
-  
-  let tokenHex = token.toHexString().toLowerCase()
-  for (let i = 0; i < knownStablecoins.length; i++) {
-    if (tokenHex == knownStablecoins[i]) {
-      // For 3Pool tokens, return $1.00 (they should maintain peg)
-      return BigDecimal.fromString("1.0")
-    }
-  }
-  
-  return BigDecimal.fromString("0")
-}
 
 // Uniswap V3 price adapter with proper math
 export function getUniswapV3Price(
@@ -118,6 +121,10 @@ export function getUniswapV3Price(
   ])
   log.info("📊 UNISWAP: sqrtPriceX96: {}", [sqrtPriceX96.toString()])
 
+  // Get current block timestamp from slot0 if available
+  // Convert to BigInt as observationCardinality is a number
+  let blockTimestamp = BigInt.fromI32(slot0.value2) // observationCardinality contains the timestamp
+  
   if (token.equals(token0)) {
     token0Decimals = targetTokenConfig.decimals
     token1Decimals = pairTokenConfig.decimals
@@ -127,7 +134,8 @@ export function getUniswapV3Price(
     ])
     // Token is token0, get price in terms of token1
     let price = sqrtPriceToToken0Price(sqrtPriceX96, token0Decimals, token1Decimals)
-    let pairPrice = getPairTokenPrice(pairToken)
+    // Pass block timestamp for staleness checking
+    let pairPrice = getPairTokenPrice(pairToken, blockTimestamp)
     log.info("📊 UNISWAP: Raw price: {}, pair price: {}, final: {}", [
       price.toString(),
       pairPrice.toString(),
@@ -143,7 +151,8 @@ export function getUniswapV3Price(
     ])
     // Token is token1, get price in terms of token0
     let price = sqrtPriceToToken1Price(sqrtPriceX96, token0Decimals, token1Decimals)
-    let pairPrice = getPairTokenPrice(pairToken)
+    // Pass block timestamp for staleness checking
+    let pairPrice = getPairTokenPrice(pairToken, blockTimestamp)
     log.info("📊 UNISWAP: Raw price: {}, pair price: {}, final: {}", [
       price.toString(),
       pairPrice.toString(),
@@ -172,7 +181,7 @@ export function getVelodromePrice(
 }
 
 // Helper functions
-function getPairTokenPrice(pairToken: Address): BigDecimal {
+function getPairTokenPrice(pairToken: Address, blockTimestamp: BigInt = BigInt.fromI32(0)): BigDecimal {
   let tokenHex = pairToken.toHexString().toLowerCase()
   
   // Direct stablecoin pricing - NO RECURSION
@@ -192,7 +201,8 @@ function getPairTokenPrice(pairToken: Address): BigDecimal {
   // WETH - direct Chainlink call (NO RECURSION)
   if (tokenHex == WETH.toHexString().toLowerCase()) {
     let ethFeed = Address.fromString("0x13e3Ee699D1909E989722E753853AE30b17e08c5")
-    let ethPrice = getChainlinkPrice(ethFeed)
+    // Pass block timestamp for staleness checking if available
+    let ethPrice = getChainlinkPrice(ethFeed, blockTimestamp)
     return ethPrice.gt(BigDecimal.fromString("0")) ? ethPrice : BigDecimal.fromString("3000.0")
   }
   

@@ -81,7 +81,7 @@ function getChainlinkFeedSafe(feedName: string): string {
 // Initialize token configurations
 function initializeTokens(): void {
   
-  // USDC - Chainlink first, then high-liquidity pools
+  // USDC - Simplified: Chainlink only as it's consistently $1
   TOKENS.set(USDC_NATIVE.toHexString().toLowerCase(), new TokenConfig(
     USDC_NATIVE,
     "USDC",
@@ -93,24 +93,8 @@ function initializeTokens(): void {
         "chainlink",
         1,
         99
-      ),
-      // Priority 2: Curve 3Pool (validation)
-      new PriceSourceConfig(
-        Address.fromString("0x1337bedc9d22ecbe766df105c9623922a27963ec"),
-        "curve_3pool",
-        2,
-        95
-      ),
-      // Priority 3: Uniswap V3 USDC/USDT (high volume backup)
-      // TODO: VERIFY - Pool address needs verification on Optimism
-      new PriceSourceConfig(
-        Address.fromString("0xa73c628eaf6e283e26a7b1f8001cf186aa4c0e8e"), // VERIFY: USDC/USDT 0.01% pool
-        "uniswap_v3",
-        3,
-        90,
-        Address.fromString("0x94b008aa00579c1307b0ef2c499ad98a8ce58e58"), // USDT
-        1 // 0.01% fee
       )
+      // Removed secondary sources - stablecoin close to $1, don't need to track pools closely
     ]
   ))
 
@@ -147,7 +131,7 @@ function initializeTokens(): void {
     ]
   ))
 
-  // DAI - Chainlink first, then Curve
+  // DAI - Simplified: Chainlink only as it's consistently close to $1
   TOKENS.set("0xda10009cbd5d07dd0cecc66161fc93d7c9000da1", new TokenConfig(
     Address.fromString("0xda10009cbd5d07dd0cecc66161fc93d7c9000da1"),
     "DAI",
@@ -159,18 +143,12 @@ function initializeTokens(): void {
         "chainlink",
         1,
         99
-      ),
-      // Priority 2: Curve 3Pool
-      new PriceSourceConfig(
-        Address.fromString("0x1337bedc9d22ecbe766df105c9623922a27963ec"),
-        "curve_3pool",
-        2,
-        95
       )
+      // Removed secondary sources - stablecoin close to $1, don't need to track pools closely
     ]
   ))
 
-  // USDT - Chainlink first
+  // USDT - Simplified: Chainlink only as it's consistently close to $1
   TOKENS.set("0x94b008aa00579c1307b0ef2c499ad98a8ce58e58", new TokenConfig(
     Address.fromString("0x94b008aa00579c1307b0ef2c499ad98a8ce58e58"),
     "USDT",
@@ -182,44 +160,29 @@ function initializeTokens(): void {
         "chainlink",
         1,
         99
-      ),
-      // Priority 2: Curve 3Pool
-      new PriceSourceConfig(
-        Address.fromString("0x1337bedc9d22ecbe766df105c9623922a27963ec"),
-        "curve_3pool",
-        2,
-        95
       )
+      // Removed secondary sources - stablecoin close to $1, don't need to track pools closely
     ]
   ))
 
-  // USDC.e - No Chainlink, use pools only
+  // USDC.e - Simplified: Use USDC Chainlink reference as it's consistently close to $1
   TOKENS.set("0x7f5c764cbc14f9669b88837ca1490cca17c31607", new TokenConfig(
     Address.fromString("0x7f5c764cbc14f9669b88837ca1490cca17c31607"),
     "USDC.e",
     6,
     [
-      // Priority 1: Uniswap V3 USDC.e/USDT (high volume)
-      // TODO: VERIFY - Pool address needs verification on Optimism
-      new PriceSourceConfig(
-        Address.fromString("0xf1f199342687a7d78bcc16fce79fa2665ef870e1"), // VERIFY: USDC.e/USDT 0.01% pool
-        "uniswap_v3",
-        1,
-        85,
-        Address.fromString("0x94b008aa00579c1307b0ef2c499ad98a8ce58e58"), // USDT
-        1 // 0.01% fee
-      ),
-      // Priority 2: Reference USDC Chainlink (should be ~1:1)
+      // Priority 1: Reference USDC Chainlink (should be ~1:1)
       new PriceSourceConfig(
         Address.fromString(getChainlinkFeedSafe("USDC_USD")),
         "chainlink_reference",
-        2,
-        80
+        1,
+        95 // Increased confidence since it's a stablecoin
       )
+      // Removed secondary sources - stablecoin close to $1, don't need to track pools closely
     ]
   ))
 
-  // DOLA - Pool-based only
+  // DOLA - Track using DEX pools as price can vary from $1
   TOKENS.set("0x8ae125e8653821e851f12a49f7765db9a9ce7384", new TokenConfig(
     Address.fromString("0x8ae125e8653821e851f12a49f7765db9a9ce7384"),
     "DOLA",
@@ -230,13 +193,13 @@ function initializeTokens(): void {
         Address.fromString("0x6c5019d345ec05004a7e7b0623a91a0d9b8d590d"),
         "velodrome_v2",
         1,
-        80,
+        80, // Keeping original confidence
         Address.fromString("0x0b2c639c533813f4aa9d7837caf62653d097ff85") // USDC
       )
     ]
   ))
 
-  // BOLD - Velodrome V2 concentrated
+  // BOLD - Maintain both sources as we should monitor BOLD/LUSD
   TOKENS.set("0x087c440f251ff6cfe62b86dde1be558b95b4bb9b", new TokenConfig(
     Address.fromString("0x087c440f251ff6cfe62b86dde1be558b95b4bb9b"),
     "BOLD",
@@ -247,7 +210,7 @@ function initializeTokens(): void {
         Address.fromString("0xf5ce76b51a4d7f0242bb02b830a73abfa9792157"),
         "velodrome_v2",
         1,
-        85,
+        85, // Original confidence
         Address.fromString("0x0b2c639c533813f4aa9d7837caf62653d097ff85") // USDC
       ),
       // Priority 2: Velodrome BOLD/LUSD
@@ -255,13 +218,13 @@ function initializeTokens(): void {
         Address.fromString("0xfe09d5156c4d4ac3b57b192608a8423401bac186"),
         "velodrome_v2",
         2,
-        80,
+        80, // Original confidence
         Address.fromString("0xc40f949f8a4e094d1b49a23ea9241d289b7b2819") // LUSD
       )
     ]
   ))
 
-  // LUSD - Use Velodrome V2 instead of empty Uniswap pool
+  // LUSD - Use Velodrome V2 for monitoring as it's near $1 but should be tracked
   TOKENS.set("0xc40f949f8a4e094d1b49a23ea9241d289b7b2819", new TokenConfig(
     Address.fromString("0xc40f949f8a4e094d1b49a23ea9241d289b7b2819"),
     "LUSD",
@@ -272,13 +235,13 @@ function initializeTokens(): void {
         Address.fromString("0x4f3da11c5cadf644ae023dbad01008a934c993e2"),
         "velodrome_v2",
         1,
-        85,
+        85, // Original confidence
         Address.fromString("0x0b2c639c533813f4aa9d7837caf62653d097ff85") // USDC
       )
     ]
   ))
 
-  // FRAX - Multi-protocol
+  // FRAX - Multiple sources as price can vary from $1
   TOKENS.set("0x2e3d870790dc77a83dd1d18184acc7439a53f475", new TokenConfig(
     Address.fromString("0x2e3d870790dc77a83dd1d18184acc7439a53f475"),
     "FRAX",
@@ -289,9 +252,17 @@ function initializeTokens(): void {
         Address.fromString("0x98d9ae198f2018503791d1caf23c6807c135bb6b"),
         "uniswap_v3",
         1,
-        80,
+        80, // Original confidence
         Address.fromString("0x0b2c639c533813f4aa9d7837caf62653d097ff85"), // USDC
         5 // 0.05% fee
+      ),
+      // Priority 2: Backup using Velodrome if available
+      new PriceSourceConfig(
+        Address.fromString("0x7bbc5543f6c1a089e30a71b61d16c167310f764d"), // Velodrome V2 FRAX/USDC
+        "velodrome_v2",
+        2,
+        80,
+        Address.fromString("0x0b2c639c533813f4aa9d7837caf62653d097ff85") // USDC
       )
     ]
   ))

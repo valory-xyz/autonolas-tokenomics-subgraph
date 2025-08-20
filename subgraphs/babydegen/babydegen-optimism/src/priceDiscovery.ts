@@ -1,4 +1,4 @@
-import { Address, BigDecimal, BigInt, log, Bytes } from "@graphprotocol/graph-ts"
+import { Address, BigDecimal, BigInt, log, Bytes, ethereum } from "@graphprotocol/graph-ts"
 import { Token, PriceSource, PriceUpdate } from "../../../../generated/schema"
 import { getTokenConfig, TokenConfig, PriceSourceConfig } from "./tokenConfig"
 import { CRITICAL_STABLECOINS } from "./constants"
@@ -6,6 +6,10 @@ import { CRITICAL_STABLECOINS } from "./constants"
 // Cache duration: 5 minutes
 const PRICE_CACHE_DURATION = BigInt.fromI32(300)
 const MIN_CONFIDENCE_THRESHOLD = BigDecimal.fromString("0.5") // 50% minimum confidence
+
+// Stablecoin fallback constants
+const STABLECOIN_FALLBACK_PRICE = BigDecimal.fromString("1.0") // Default fallback for stablecoins
+const STABLECOIN_FALLBACK_CONFIDENCE = BigDecimal.fromString("0.95") // 95% confidence for stablecoin fallbacks
 
 // Simplified token validation without caching to avoid Map issues
 function isTokenValidated(address: Address): boolean {
@@ -73,15 +77,33 @@ export function getTokenPriceUSD(
   
   log.error("❌ PRICE: No reliable price found for {} (tried all sources)", [token.symbol])
 
-  // For critical stablecoins, try emergency fallback to prevent total failure
+  // Fallback strategy based on token type
   let tokenHex = token.id.toHexString().toLowerCase()
+  
+  // For critical stablecoins (USDC, USDT, DAI, LUSD), use $1.00 with high confidence
   for (let i = 0; i < CRITICAL_STABLECOINS.length; i++) {
     if (tokenHex == CRITICAL_STABLECOINS[i]) {
       log.warning("🚨 EMERGENCY: Using $1.00 fallback for critical stablecoin {}", [token.symbol])
-      return BigDecimal.fromString("1.0") // Emergency fallback for critical stablecoins only
+      
+      // Update token with fallback price
+      token.derivedUSD = STABLECOIN_FALLBACK_PRICE
+      token.priceConfidence = STABLECOIN_FALLBACK_CONFIDENCE
+      token.lastPriceUpdate = currentTimestamp
+      token.save()
+      
+      // Create fallback price update record
+      let fallbackResult = new PriceResult(
+        STABLECOIN_FALLBACK_PRICE,
+        STABLECOIN_FALLBACK_CONFIDENCE,
+        "fallback"
+      )
+      createPriceUpdate(token, fallbackResult, currentTimestamp)
+      
+      return STABLECOIN_FALLBACK_PRICE
     }
   }
 
+  // For all other tokens, no reliable fallback
   return BigDecimal.fromString("0") // Fail gracefully for non-critical tokens
 }
 
@@ -173,7 +195,8 @@ function getPriceFromSource(
   let baseConfidence = BigDecimal.fromString(sourceConfig.confidence.toString()).div(BigDecimal.fromString("100"))
   
   if (sourceType == "chainlink") {
-    let price = getChainlinkPrice(sourceConfig.address)
+    // Pass block timestamp for staleness checking
+    let price = getChainlinkPrice(sourceConfig.address, timestamp)
     if (price.gt(BigDecimal.fromString("0")) && isValidPriceResult(price, token.symbol)) {
       return new PriceResult(price, baseConfidence, "chainlink")
     }
@@ -181,17 +204,11 @@ function getPriceFromSource(
   
   if (sourceType == "chainlink_reference") {
     // Used for tokens without direct feeds (USDC.e referencing USDC)
-    let price = getChainlinkPrice(sourceConfig.address)
+    // Pass block timestamp for staleness checking
+    let price = getChainlinkPrice(sourceConfig.address, timestamp)
     if (price.gt(BigDecimal.fromString("0")) && isValidPriceResult(price, token.symbol)) {
       // Slightly lower confidence for reference prices
       return new PriceResult(price, baseConfidence.times(BigDecimal.fromString("0.9")), "chainlink_ref")
-    }
-  }
-  
-  if (sourceType == "curve_3pool") {
-    let price = getCurve3PoolPrice(Address.fromBytes(token.id))
-    if (price.gt(BigDecimal.fromString("0")) && isValidPriceResult(price, token.symbol)) {
-      return new PriceResult(price, baseConfidence, "curve")
     }
   }
   
@@ -259,9 +276,26 @@ function createPriceUpdate(
 }
 
 function isValidPriceResult(price: BigDecimal, tokenSymbol: string): boolean {
-  // Reasonable price bounds for most tokens
-  let minPrice = BigDecimal.fromString("0.0001")  // $0.0001
-  let maxPrice = BigDecimal.fromString("100000")   // $100,000
+  // Set price validation bounds based on token type
+  let minPrice: BigDecimal
+  let maxPrice: BigDecimal
+  
+  // Different bounds for stablecoins vs other tokens
+  if (tokenSymbol == "USDC" || tokenSymbol == "USDT" || 
+      tokenSymbol == "DAI" || tokenSymbol == "USDC.e") {
+    // Core stablecoins should be within a very tight range around $1
+    minPrice = BigDecimal.fromString("0.95")   // $0.95
+    maxPrice = BigDecimal.fromString("1.05")   // $1.05
+  } else if (tokenSymbol == "LUSD" || tokenSymbol == "FRAX" || 
+      tokenSymbol == "DOLA") {
+    // Variable stablecoins can have slightly more variation
+    minPrice = BigDecimal.fromString("0.5")    // $0.50
+    maxPrice = BigDecimal.fromString("1.5")    // $1.50
+  } else {
+    // Non-stablecoin tokens can have a wider range
+    minPrice = BigDecimal.fromString("0.0001") // $0.0001
+    maxPrice = BigDecimal.fromString("100000") // $100,000
+  }
   
   if (price.le(minPrice)) {
     log.warning("⚠️ PRICE: Price too low for {}: ${}", [tokenSymbol, price.toString()])
@@ -276,10 +310,9 @@ function isValidPriceResult(price: BigDecimal, tokenSymbol: string): boolean {
   return true
 }
 
-// Import price adapter functions (we'll create these next)
+// Import price adapter functions 
 import {
   getChainlinkPrice,
-  getCurve3PoolPrice,
   getUniswapV3Price,
   getVelodromePrice
 } from "./priceAdapters"
