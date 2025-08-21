@@ -1,7 +1,16 @@
 type Service @entity(immutable: false) {
-  id: ID! # service ID
-  multisig: Bytes
+  id: ID! # service ID (constant anchor)
+  currentMultisig: Bytes 
+  currentAgentIds: [Int!]!
+  multisigHistory: [ServiceMultisigHistory!]! @derivedFrom(field: "service")
+  agentHistory: [ServiceAgentHistory!]! @derivedFrom(field: "service")
+}
+
+type ServiceAgentHistory @entity(immutable: false) {
+  id: ID!
+  service: Service!
   agentIds: [Int!]!
+  timestamp: BigInt!
 }
 
 type AgentRegistration @entity(immutable: false) {
@@ -13,11 +22,27 @@ type AgentRegistration @entity(immutable: false) {
 
 type Multisig @entity(immutable: false) {
   id: Bytes! # multisig address
-  serviceId: Int!
+  currentServiceId: Int!
   creator: Bytes!
   creationTimestamp: BigInt!
   txHash: Bytes!
+  currentAgentIds: [Int!]!
+  serviceHistory: [ServiceMultisigHistory!]! @derivedFrom(field: "multisig")
+  agentHistory: [AgentMultisigHistory!]! @derivedFrom(field: "multisig")
+}
+
+type ServiceMultisigHistory @entity(immutable: false) {
+  id: ID! # serviceId-timestamp
+  service: Service!
+  multisig: Multisig!
+  timestamp: BigInt!
+}
+
+type AgentMultisigHistory @entity(immutable: false) {
+  id: ID! # multisig-timestamp
+  multisig: Multisig!
   agentIds: [Int!]!
+  timestamp: BigInt!
 }
 type DailyServiceActivity @entity(immutable: false) {
   id: ID!
