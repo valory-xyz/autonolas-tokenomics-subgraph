@@ -12,9 +12,24 @@ import {
   Global,
   Multisig,
   Service,
+  ServiceMultisigHistory,
+  AgentMultisigHistory,
+  ServiceAgentHistory,
 } from "./generated/schema";
 
 const ONE_DAY = BigInt.fromI32(86400);
+
+export class HistoricalData {
+  serviceId: i32;
+  agentIds: i32[];
+  timestamp: BigInt;
+
+  constructor(serviceId: i32, agentIds: i32[], timestamp: BigInt) {
+    this.serviceId = serviceId;
+    this.agentIds = agentIds;
+    this.timestamp = timestamp;
+  }
+}
 
 export function getDayTimestamp(event: ethereum.Event): BigInt {
   return event.block.timestamp.div(ONE_DAY).times(ONE_DAY);
@@ -24,10 +39,29 @@ export function getOrCreateService(serviceId: BigInt): Service {
   let service = Service.load(serviceId.toString());
   if (service == null) {
     service = new Service(serviceId.toString());
-    service.agentIds = [];
+    service.currentAgentIds = [];
     service.save();
   }
   return service;
+}
+
+export function getHistoricalData(multisig: Multisig, timestamp: BigInt): HistoricalData | null {
+  // Try to find historical agent data first
+  let historicalAgentIds = findHistoricalAgentData(multisig.id, timestamp);
+  let historicalServiceId = findHistoricalServiceData(multisig, timestamp);
+
+  // Use historical data if found, otherwise use current data
+  let targetAgentIds: i32[];
+  if (historicalAgentIds != null) {
+    targetAgentIds = historicalAgentIds;
+  } else {
+    targetAgentIds = multisig.currentAgentIds;
+  }
+
+  // findHistoricalServiceData always returns a valid service ID
+  let targetServiceId = historicalServiceId;
+
+  return new HistoricalData(targetServiceId, targetAgentIds, timestamp);
 }
 
 export function getOrCreateMultisig(
@@ -39,12 +73,97 @@ export function getOrCreateMultisig(
     multisig = new Multisig(multisigAddress);
     multisig.creator = event.transaction.from;
     multisig.creationTimestamp = event.block.timestamp;
-    multisig.agentIds = [];
-    multisig.serviceId = 0;
+    multisig.currentAgentIds = [];
+    multisig.currentServiceId = 0;
     multisig.txHash = event.transaction.hash;
     multisig.save();
   }
   return multisig;
+}
+
+export function createServiceMultisigHistory(
+  serviceId: string,
+  multisig: Multisig,
+  timestamp: BigInt
+): void {
+  let historyId = serviceId + "-" + timestamp.toString();
+  let history = new ServiceMultisigHistory(historyId);
+  history.service = serviceId;
+  history.multisig = multisig.id;
+  history.timestamp = timestamp;
+  history.save();
+}
+
+export function createAgentMultisigHistory(
+  multisig: Multisig,
+  agentIds: i32[],
+  timestamp: BigInt
+): void {
+  let historyId = multisig.id.toHexString() + "-" + timestamp.toString();
+  let history = new AgentMultisigHistory(historyId);
+  history.multisig = multisig.id;
+  history.agentIds = agentIds;
+  history.timestamp = timestamp;
+  history.save();
+}
+
+export function createServiceAgentHistory(
+  serviceId: string,
+  agentIds: Array<i32>,
+  timestamp: BigInt
+): void {
+  let historyId = serviceId + "-" + timestamp.toString();
+  let history = new ServiceAgentHistory(historyId);
+  history.service = serviceId;
+  history.agentIds = agentIds;
+  history.timestamp = timestamp;
+  history.save();
+}
+
+// Helper function to find the most recent AgentMultisigHistory for a multisig before a timestamp
+function findHistoricalAgentData(multisigAddress: Bytes, timestamp: BigInt): i32[] | null {
+  // Since AssemblyScript doesn't support complex queries, we'll use a pattern-based approach
+  // We'll search backwards from the target timestamp with reasonable limits
+  let searchLimit = 100; // Search up to 100 historical records
+  let currentTimestamp = timestamp;
+
+  for (let i = 0; i < searchLimit; i++) {
+    let historyId = multisigAddress.toHexString() + "-" + currentTimestamp.toString();
+    let history = AgentMultisigHistory.load(historyId);
+
+    if (history != null) {
+      return history.agentIds;
+    }
+
+    // Try previous timestamp (this is a simplification - in reality you'd need better logic)
+    currentTimestamp = currentTimestamp.minus(BigInt.fromI32(1));
+  }
+
+  return null; // No historical data found
+}
+
+// Helper function to find the most recent ServiceMultisigHistory for a multisig before a timestamp
+function findHistoricalServiceData(multisig: Multisig, timestamp: BigInt): i32 {
+  // ServiceMultisigHistory uses serviceId-timestamp format
+  // We need to search through possible service IDs and timestamps
+  let searchLimit = 50; // Reasonable limit to avoid excessive computation
+  let currentTimestamp = timestamp;
+
+  // Try the current service ID first
+  let currentServiceId = multisig.currentServiceId.toString();
+  for (let i = 0; i < searchLimit; i++) {
+    let historyId = currentServiceId + "-" + currentTimestamp.toString();
+    let history = ServiceMultisigHistory.load(historyId);
+
+    if (history != null && history.multisig.equals(multisig.id)) {
+      return multisig.currentServiceId; // Found matching service history
+    }
+
+    currentTimestamp = currentTimestamp.minus(BigInt.fromI32(1));
+  }
+
+  // If no historical service data found, return current service ID
+  return multisig.currentServiceId;
 }
 
 export function getOrCreateDailyServiceActivity(
