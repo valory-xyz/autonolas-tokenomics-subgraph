@@ -8,7 +8,7 @@ import {
 import { VELO_NFT_MANAGER, getServiceByAgent } from "./config"
 import { ensurePoolTemplate, refreshVeloCLPosition, refreshVeloCLPositionWithEventAmounts, refreshVeloCLPositionWithExitAmounts, handleNFTTransferForCache } from "./veloCLShared"
 import { isSafeOwnedNFT } from "./poolIndexCache"
-import { log, Address, Bytes } from "@graphprotocol/graph-ts"
+import { log, Address, Bytes, BigDecimal } from "@graphprotocol/graph-ts"
 import { ProtocolPosition } from "../../../../generated/schema"
 import { calculatePortfolioMetrics } from "./helpers"
 
@@ -33,15 +33,16 @@ export function handleNFTTransfer(ev: Transfer): void {
     let position = ProtocolPosition.load(id)
     
     if (position && position.isActive) {
+      // SIMPLIFIED: Only mark as inactive, never set exit amounts
+      // Exit amounts will always be set by DecreaseLiquidity events
       position.isActive = false
       position.exitTxHash = ev.transaction.hash
       position.exitTimestamp = ev.block.timestamp
-      // Keep current amounts as final amounts
-      position.exitAmount0 = position.amount0
-      position.exitAmount0USD = position.amount0USD
-      position.exitAmount1 = position.amount1
-      position.exitAmount1USD = position.amount1USD
-      position.exitAmountUSD = position.usdCurrent
+      
+      // Log for debugging
+      log.info("VELODROME: Position {} closed by NFT transfer/burn - exit amounts already set by DecreaseLiquidity", [
+        ev.params.tokenId.toString()
+      ])
       
       position.save()
     }

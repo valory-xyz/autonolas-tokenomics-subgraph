@@ -427,7 +427,10 @@ export function refreshVeloCLPositionWithExitAmounts(
   const isFullExit = remainingLiquidity.equals(BigInt.zero())
   
   if (isFullExit) {
-    log.info("VELODROME: Processing FULL EXIT for position {} - using event amounts", [tokenId.toString()])
+    log.info("VELODROME: Processing FULL EXIT for position {} - using event amounts from tx {}", [
+      tokenId.toString(),
+      txHash.toHexString()
+    ])
     
     // USD pricing for exit amounts
     const token0Price = getTokenPriceUSD(data.value2, block.timestamp, false)
@@ -441,6 +444,21 @@ export function refreshVeloCLPositionWithExitAmounts(
     const exitUsd1 = exitAmount1Human.times(token1Price)
     const exitUsd = exitUsd0.plus(exitUsd1)
     
+    // Log raw exit values before conversion
+    log.info("VELODROME: Raw exit amounts for position {} - amount0: {}, amount1: {}", [
+      tokenId.toString(),
+      eventAmount0.toString(),
+      eventAmount1.toString()
+    ])
+    
+    // Enhanced logging to track exit amount setting
+    log.info("VELODROME: Setting exit amounts for position {} - exitAmount0: {}, exitAmount1: {}, exitAmountUSD: {}", [
+      tokenId.toString(),
+      exitAmount0Human.toString(),
+      exitAmount1Human.toString(),
+      exitUsd.toString()
+    ])
+    
     // Set exit data using ACTUAL EVENT AMOUNTS
     pp.isActive = false
     pp.exitTxHash = txHash
@@ -450,6 +468,11 @@ export function refreshVeloCLPositionWithExitAmounts(
     pp.exitAmount1 = exitAmount1Human
     pp.exitAmount1USD = exitUsd1
     pp.exitAmountUSD = exitUsd
+    
+    // Log confirmation that exit amounts have been set
+    log.info("VELODROME: CONFIRMED exit amounts set for position {} - this record will be used when NFT is burned", [
+      tokenId.toString()
+    ])
     
     // Update current amounts to 0 (since position is closed)
     pp.amount0 = BigDecimal.zero()

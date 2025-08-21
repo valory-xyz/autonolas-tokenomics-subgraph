@@ -2,7 +2,8 @@ import { BigInt, BigDecimal, log } from "@graphprotocol/graph-ts"
 import {
   Safe,
   SafeReceived as SafeReceivedEvent,
-  ExecutionSuccess as ExecutionSuccessEvent
+  ExecutionSuccess as ExecutionSuccessEvent,
+  ExecutionFromModuleSuccess as ExecutionFromModuleSuccessEvent
 } from "../../../../generated/templates/Safe/Safe"
 import { isFundingSource, getEthUsd } from "./common"
 import { getServiceByAgent } from "./config"
@@ -125,4 +126,74 @@ export function handleExecutionSuccess(event: ExecutionSuccessEvent): void {
     txHash,
     payment.toString()
   ])
+}
+
+export function handleExecutionFromModuleSuccess(event: ExecutionFromModuleSuccessEvent): void {
+  // Get the safe that executed the transaction
+  let serviceSafe = event.address
+  let service = getServiceByAgent(serviceSafe)
+  
+  if (service === null) {
+    log.debug("ExecutionFromModuleSuccess for non-service safe: {}", [serviceSafe.toHexString()])
+    return // Not a service safe
+  }
+  
+  // Get the module address that executed the transaction
+  let moduleAddress = event.params.module
+  
+  // Get transaction details from the event transaction
+  let txHash = event.transaction.hash.toHexString()
+  
+  // For ETH transfers, we need the transaction information
+  let tx = event.transaction
+  let to = tx.to
+  let value = tx.value
+  
+  // Log the module execution
+  log.debug("ExecutionFromModuleSuccess: module: {}, safe: {}, txHash: {}", [
+    moduleAddress.toHexString(),
+    serviceSafe.toHexString(),
+    txHash
+  ])
+  
+  // Check if this is a direct ETH transfer (value > 0 and to is valid)
+  if (value.gt(BigInt.zero()) && to !== null) {
+    // Only proceed if 'to' is not the service safe itself
+    if (!to.equals(serviceSafe)) {
+      // Check if recipient is an operator or EOA
+      if (isFundingSource(to, serviceSafe, event.block, txHash)) {
+        log.info("ETH Transfer detected from module to operator/EOA: {} -> {}, value: {}, module: {}", [
+          serviceSafe.toHexString(),
+          to.toHexString(),
+          value.toString(),
+          moduleAddress.toHexString()
+        ])
+        
+        // 1. Update ETH balance
+        updateETHBalance(serviceSafe, value, false, event.block)
+        
+        // 2. Convert to USD for funding metrics
+        let ethPrice = getEthUsd(event.block)
+        let usdValue = value.toBigDecimal()
+          .times(ethPrice)
+          .div(BigDecimal.fromString("1e18"))
+        
+        // 3. Update funding balance (deposit=false for outflow)
+        updateFunding(serviceSafe, usdValue, false, event.block.timestamp)
+        
+        log.info("FUNDING: OUT {} USD (ETH) from {} to {} via module {}", [
+          usdValue.toString(),
+          serviceSafe.toHexString(),
+          to.toHexString(),
+          moduleAddress.toHexString()
+        ])
+      } else {
+        log.info("ETH transfer not to operator/EOA - not counting in funding: {} -> {}, module: {}", [
+          serviceSafe.toHexString(),
+          to.toHexString(),
+          moduleAddress.toHexString()
+        ])
+      }
+    }
+  }
 }
