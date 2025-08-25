@@ -28,6 +28,7 @@ import {
   createDailyActiveMultisig,
   createOrUpdateAgentRegistration,
   getMostRecentAgentId,
+  getOrCreateOperator,
 } from "../utils";
 
 function updateDailyAgentPerformance(
@@ -122,6 +123,9 @@ export function handleRegisterInstance(event: RegisterInstance): void {
     service.agentIds = agentIds;
   }
   service.save();
+
+  // Track unique operators
+  getOrCreateOperator(event.params.operator);
 }
 
 export function handleCreateMultisig(event: CreateMultisigWithAgents): void {
