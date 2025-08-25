@@ -12,6 +12,7 @@ import {
   Global,
   Multisig,
   Service,
+  Operator,
 } from "./generated/schema";
 
 const ONE_DAY = BigInt.fromI32(86400);
@@ -124,6 +125,7 @@ export function getGlobal(): Global {
     global = new Global("");
     global.txCount = BigInt.fromI32(0);
     global.lastUpdated = BigInt.fromI32(0);
+    global.totalOperators = 0;
     global.save();
   }
   return global;
@@ -139,6 +141,19 @@ export function getOrCreateAgentPerformance(
     agent.save();
   }
   return agent;
+}
+
+export function getOrCreateOperator(operatorAddress: Bytes): Operator {
+  let operator = Operator.load(operatorAddress);
+  if (operator == null) {
+    operator = new Operator(operatorAddress);
+    operator.save();
+
+    const global = getGlobal();
+    global.totalOperators = global.totalOperators + 1;
+    global.save();
+  }
+  return operator;
 }
 
 export function createDailyUniqueAgent(

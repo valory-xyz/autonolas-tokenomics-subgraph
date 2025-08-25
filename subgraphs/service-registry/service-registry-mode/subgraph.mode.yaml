@@ -23,6 +23,7 @@ dataSources:
         - DailyActiveMultisigs
         - Agent
         - GlobalMetrics
+        - Operator
       abis:
         - name: ServiceRegistryL2
           file: ../../../abis/ServiceRegistryL2.json
@@ -58,6 +59,7 @@ templates:
         - DailyActiveMultisigs
         - Agent
         - GlobalMetrics
+        - Operator
       abis:
         - name: GnosisSafe
           file: ../../../abis/GnosisSafe.json
