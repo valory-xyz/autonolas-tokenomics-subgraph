@@ -76,4 +76,9 @@ type Global @entity(immutable: false) {
   id: ID!
   txCount: BigInt!
   lastUpdated: BigInt!
+  totalOperators: Int!
+}
+
+type Operator @entity(immutable: false) {
+  id: ID! # operator address
 }
