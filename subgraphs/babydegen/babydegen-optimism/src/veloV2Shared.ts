@@ -206,8 +206,8 @@ export function refreshVeloV2PositionWithEventAmounts(
   ])
   
   // Get USD values
-  const token0Price = getTokenPriceUSD(Address.fromBytes(pp.token0!), block.timestamp, false)
-  const token1Price = getTokenPriceUSD(Address.fromBytes(pp.token1!), block.timestamp, false)
+  let token0Price = getTokenPriceUSD(Address.fromBytes(pp.token0!), block.timestamp, false)
+  let token1Price = getTokenPriceUSD(Address.fromBytes(pp.token1!), block.timestamp, false)
   
   log.info("VELO_V2[{}]: Token prices - {} price: {} USD, {} price: {} USD", [
     userAddress.toHexString(),
@@ -395,13 +395,16 @@ export function refreshVeloV2Position(
   if (userBalance.equals(BigInt.zero())) {
     log.info("VELO_V2[{}]: User has no LP tokens - marking position as inactive", [userAddress.toHexString()])
     pp.isActive = false
+    
+    // No fallback mechanism for exit data - we'll rely on Burn events only
+    
+    // Zero out current amounts
     pp.usdCurrent = BigDecimal.zero()
     pp.amount0 = BigDecimal.zero()
     pp.amount0USD = BigDecimal.zero()
     pp.amount1 = BigDecimal.zero()
     pp.amount1USD = BigDecimal.zero()
     pp.liquidity = BigInt.zero()
-    
   } else {
     // Calculate user's share of the pool
     const userShare = userBalance.toBigDecimal().div(totalSupply.toBigDecimal())
@@ -439,8 +442,8 @@ export function refreshVeloV2Position(
     ])
     
     // Calculate USD values
-    const token0Price = getTokenPriceUSD(Address.fromBytes(pp.token0!), block.timestamp, false)
-    const token1Price = getTokenPriceUSD(Address.fromBytes(pp.token1!), block.timestamp, false)
+    let token0Price = getTokenPriceUSD(Address.fromBytes(pp.token0!), block.timestamp, false)
+    let token1Price = getTokenPriceUSD(Address.fromBytes(pp.token1!), block.timestamp, false)
     
     pp.amount0USD = token0Price.times(pp.amount0!)
     pp.amount1USD = token1Price.times(pp.amount1!)
@@ -471,7 +474,6 @@ export function refreshVeloV2Position(
         pp.entryAmountUSD.toString()
       ])
     }
-    
   }
   
   log.info("VELO_V2[{}]: Saving position with final state - active: {}, USD: {}", [
@@ -516,8 +518,11 @@ export function refreshVeloV2PositionWithBurnAmounts(
   const eventAmount1Human = toHumanAmount(eventAmount1, token1Decimals)
   
   // Get USD values for exit tracking
-  const eventUsd0 = getTokenPriceUSD(Address.fromBytes(pp.token0!), block.timestamp, false).times(eventAmount0Human)
-  const eventUsd1 = getTokenPriceUSD(Address.fromBytes(pp.token1!), block.timestamp, false).times(eventAmount1Human)
+  let token0Price = getTokenPriceUSD(Address.fromBytes(pp.token0!), block.timestamp, false)
+  let token1Price = getTokenPriceUSD(Address.fromBytes(pp.token1!), block.timestamp, false)
+  
+  const eventUsd0 = token0Price.times(eventAmount0Human)
+  const eventUsd1 = token1Price.times(eventAmount1Human)
   const eventUsd = eventUsd0.plus(eventUsd1)
   
   // Update exit tracking

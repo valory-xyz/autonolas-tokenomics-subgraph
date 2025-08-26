@@ -199,15 +199,6 @@ export function handleVeloV2Mint(event: Mint): void {
 
 // Handle VelodromeV2 Pool Burn events (liquidity removals)
 export function handleVeloV2Burn(event: Burn): void {
-  // Only process if sender is a tracked agent
-  const senderService = getServiceByAgent(event.params.sender)
-  if (senderService == null) {
-    log.info("VELODROME V2 BURN: Sender {} is not a tracked agent, skipping", [
-      event.params.sender.toHexString()
-    ])
-    return
-  }
-  
   log.warning("===== VELODROME V2 BURN EVENT START =====", [])
   log.warning("VELODROME V2 BURN: Block: {}, TxHash: {}, Timestamp: {}", [
     event.block.number.toString(),
@@ -232,15 +223,11 @@ export function handleVeloV2Burn(event: Burn): void {
   // In VelodromeV2, the burn event's 'to' parameter indicates who receives the tokens
   const userAddress = event.params.to
   
+  // Check if the recipient is a tracked service
   const userService = getServiceByAgent(userAddress)
-  log.warning("VELODROME V2 BURN: Identified user address from burn event 'to' param: {} (Service: {})", [
+  log.warning("VELODROME V2 BURN: Checking 'to' address: {} (Is service: {})", [
     userAddress.toHexString(),
     userService != null ? "YES" : "NO"
-  ])
-  
-  log.warning("VELODROME V2 BURN: For reference - tx.from: {}, burn.to: {}", [
-    event.transaction.from.toHexString(),
-    event.params.to.toHexString()
   ])
   
   if (userService != null) {
@@ -256,10 +243,29 @@ export function handleVeloV2Burn(event: Burn): void {
     )
     
     log.warning("VELODROME V2 BURN: ✅ Burn processing completed successfully", [])
-  } else {
-    log.warning("VELODROME V2 BURN: ❌ Burn is not for a service - skipping burn processing", [])
+    return
   }
   
+  // If 'to' is not a service, check if 'sender' is a service (fallback)
+  // This handles cases where the service might be the sender instead of recipient
+  const senderService = getServiceByAgent(event.params.sender)
+  if (senderService != null) {
+    log.warning("VELODROME V2 BURN: ✅ Sender is a service - processing burn", [])
+    
+    refreshVeloV2PositionWithBurnAmounts(
+      event.params.sender,
+      event.address,
+      event.block,
+      event.params.amount0,
+      event.params.amount1,
+      event.transaction.hash
+    )
+    
+    log.warning("VELODROME V2 BURN: ✅ Burn processing completed successfully", [])
+    return
+  }
+  
+  log.warning("VELODROME V2 BURN: ❌ Neither recipient nor sender is a service - skipping burn processing", [])
   log.warning("===== VELODROME V2 BURN EVENT END =====", [])
 }
 

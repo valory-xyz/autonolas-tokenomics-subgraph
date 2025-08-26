@@ -1,5 +1,5 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts"
-import { ETH_USD_FEED, USDC_USD_FEED, USDT_USD_FEED, DAI_USD_FEED, USDC_NATIVE, WETH, DAI, USDT, USDC_BRIDGED } from "./constants"
+import { ETH_USD_FEED, USDC_USD_FEED, USDT_USD_FEED, DAI_USD_FEED, USDC_NATIVE, WETH, DAI, USDT, USDC_BRIDGED, USDT0, OUSDT, USDGLO } from "./constants"
 
 // Token configurations with Chainlink-first approach
 export const TOKENS = new Map<string, TokenConfig>()
@@ -98,7 +98,7 @@ function initializeTokens(): void {
     ]
   ))
 
-  // WETH - Chainlink first
+  // WETH - Chainlink only as per test script
   TOKENS.set(WETH.toHexString().toLowerCase(), new TokenConfig(
     WETH,
     "WETH",
@@ -110,23 +110,6 @@ function initializeTokens(): void {
         "chainlink",
         1,
         99
-      ),
-      // Priority 2: Velodrome Slipstream USDC/WETH (highest volume on OP)
-      new PriceSourceConfig(
-        Address.fromString("0x478946bcd4a5a22b316470f5486fafb928c0ba25"), // Velodrome Slipstream USDC/WETH
-        "velodrome_slipstream",
-        2,
-        90,
-        Address.fromString("0x0b2c639c533813f4aa9d7837caf62653d097ff85") // USDC
-      ),
-      // Priority 3: Uniswap V3 WETH/USDC (secondary fallback)
-      new PriceSourceConfig(
-        Address.fromString("0x85149247691df622eaf1a8bd0cafd40bc45154a9"), // WETH/USDC.e pool
-        "uniswap_v3",
-        3, // Changed from 2 to 3
-        85, // Slightly lower confidence than Velodrome
-        Address.fromString("0x0b2c639c533813f4aa9d7837caf62653d097ff85"), // USDC
-        5 // 0.05% fee
       )
     ]
   ))
@@ -241,26 +224,17 @@ function initializeTokens(): void {
     ]
   ))
 
-  // FRAX - Multiple sources as price can vary from $1
+  // FRAX - Updated to use new Velodrome V2 pool as per test script
   TOKENS.set("0x2e3d870790dc77a83dd1d18184acc7439a53f475", new TokenConfig(
     Address.fromString("0x2e3d870790dc77a83dd1d18184acc7439a53f475"),
     "FRAX",
     18,
     [
-      // Priority 1: Uniswap V3 FRAX/USDC
+      // Using new Velodrome V2 FRAX/USDC pool
       new PriceSourceConfig(
-        Address.fromString("0x98d9ae198f2018503791d1caf23c6807c135bb6b"),
-        "uniswap_v3",
-        1,
-        80, // Original confidence
-        Address.fromString("0x0b2c639c533813f4aa9d7837caf62653d097ff85"), // USDC
-        5 // 0.05% fee
-      ),
-      // Priority 2: Backup using Velodrome if available
-      new PriceSourceConfig(
-        Address.fromString("0x7bbc5543f6c1a089e30a71b61d16c167310f764d"), // Velodrome V2 FRAX/USDC
+        Address.fromString("0x8542DD4744edEa38b8a9306268b08F4D26d38581"), // New Velodrome V2 FRAX/USDC
         "velodrome_v2",
-        2,
+        1,
         80,
         Address.fromString("0x0b2c639c533813f4aa9d7837caf62653d097ff85") // USDC
       )
@@ -284,9 +258,59 @@ function initializeTokens(): void {
     ]
   ))
 
-  // Note: oUSDT, USDGLO, and USDT0 removed due to lack of reliable price sources
-  // These tokens had non-existent chainlink_reference feeds and no alternative pools
-  // They can be re-added when proper price sources are identified
+  // USDT0 - Use Velodrome Slipstream pool for price discovery
+  TOKENS.set("0x01bff41798a0bcf287b996046ca68b395dbc1071", new TokenConfig(
+    USDT0,
+    "USDT0",
+    6,
+    [
+      // Priority 1: Velodrome Slipstream (V3/CL) pool
+      new PriceSourceConfig(
+        Address.fromString("0x4da46c6aFe7322B66efEfdA1F702605cBE08E0bD"),
+        "velodrome_slipstream",
+        1,
+        80,
+        Address.fromString("0x0b2c639c533813f4aa9d7837caf62653d097ff85") // USDC as pair token
+      )
+    ]
+  ))
+
+  // oUSDT - Use Velodrome Slipstream pool for price discovery
+  TOKENS.set("0x1217bfe6c773eec6cc4a38b5dc45b92292b6e189", new TokenConfig(
+    OUSDT,
+    "oUSDT",
+    6,
+    [
+      // Priority 1: Velodrome Slipstream (V3/CL) pool
+      new PriceSourceConfig(
+        Address.fromString("0x5483484F876218908cA435F08222751f7F7B2A3B"),
+        "velodrome_slipstream",
+        1,
+        80,
+        Address.fromString("0x94b008aa00579c1307b0ef2c499ad98a8ce58e58") // USDT as pair token
+      )
+    ]
+  ))
+
+  // USDGLO - Use Velodrome V2 StableV2 sAMM for price discovery
+  TOKENS.set("0x4f604735c1cf31399c6e711d5962b2b3e0225ad3", new TokenConfig(
+    USDGLO,
+    "USDGLO",
+    18,
+    [
+      // Priority 1: Velodrome V2 StableV2 sAMM pool
+      new PriceSourceConfig(
+        Address.fromString("0xE25F3642Bd1FCeD37D35D0b38019B2A2F58ca1dc"),
+        "velodrome_v2",
+        1,
+        80,
+        Address.fromString("0x0b2c639c533813f4aa9d7837caf62653d097ff85") // USDC as pair token
+      )
+    ]
+  ))
+
+  // Note: These tokens now use pool-based price discovery similar to DOLA
+  // Pool addresses provided for accurate price tracking
 }
 
 // Call initialization

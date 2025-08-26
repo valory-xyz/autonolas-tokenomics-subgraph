@@ -57,13 +57,19 @@ export function isFundingSource(
 ): boolean {
   // Get the service
   let service = getServiceByAgent(serviceSafe)
-  if (service == null) return false
+  if (service == null) {
+    log.warning("[FUNDING_SOURCE] txHash: {} - No service found for safe {}", [txHash, serviceSafe.toHexString()])
+    return false
+  }
   
-  // Check if address is this service's operator or an EOA
+  // Check if address is this service's operator
   let isOperator = addr.equals(Address.fromBytes(service.operatorSafe))
+  
+  // Check if address is an EOA
   let eoa = isEOACached(addr, block, txHash)
   
-  return isOperator || eoa
+  let result = isOperator || eoa
+  return result
 }
 
 // Legacy isSafe function - now checks if address is any service safe

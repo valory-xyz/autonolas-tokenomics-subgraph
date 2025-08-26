@@ -6,13 +6,14 @@ import { UniswapV3Factory } from "../../../../generated/UniV3NFTManager/UniswapV
 // import { UniV3Pool } from "../../../../generated/templates" // Removed - using snapshot approach instead of real-time tracking
 import { LiquidityAmounts } from "./libraries/LiquidityAmounts"
 import { TickMath } from "./libraries/TickMath"
-import { ProtocolPosition } from "../../../../generated/schema"
+import { ProtocolPosition, Service } from "../../../../generated/schema"
 import { refreshPortfolio } from "./common"
 import { addAgentNFTToPool, removeAgentNFTFromPool, getCachedPoolAddress, cachePoolAddress } from "./poolIndexCache"
 import { getTokenPriceUSD } from "./priceDiscovery"
 import { UNI_V3_MANAGER, UNI_V3_FACTORY } from "./constants"
-import { isServiceAgent } from "./config"
+import { isServiceAgent, getServiceByAgent } from "./config"
 import { getTokenDecimals, getTokenSymbol } from "./tokenUtils"
+import { updateFirstTradingTimestamp } from "./helpers"
 
 // Helper function to convert token amount from wei to human readable
 function convertTokenAmount(amount: BigInt, tokenAddress: Address): BigDecimal {
@@ -173,6 +174,24 @@ export function refreshUniV3PositionWithEventAmounts(
     pp.pool = poolAddress
     pp.tokenId = tokenId
     pp.isActive = true
+    
+    // Add service tracking (same as Velodrome)
+    pp.service = nftOwner // Link to service
+    
+    // Update service positionIds array
+    let service = Service.load(nftOwner)
+    if (service != null) {
+      if (service.positionIds == null) {
+        service.positionIds = []
+      }
+      let positionIds = service.positionIds
+      positionIds.push(idString)
+      service.positionIds = positionIds
+      service.save()
+      
+      // Update first trading timestamp
+      updateFirstTradingTimestamp(nftOwner, block.timestamp)
+    }
     
     // Set static position metadata
     pp.tickLower = data.value5 as i32
@@ -477,7 +496,25 @@ export function refreshUniV3Position(tokenId: BigInt, block: ethereum.Block, txH
     pp.tokenId = tokenId
     pp.isActive = true
     
-    // Set static position metadata - NOTE: Use fee instead of tickSpacing for Uniswap V3
+    // Add service tracking (same as Velodrome)
+    pp.service = nftOwner // Link to service
+    
+    // Update service positionIds array
+    let service = Service.load(nftOwner)
+    if (service != null) {
+      if (service.positionIds == null) {
+        service.positionIds = []
+      }
+      let positionIds = service.positionIds
+      positionIds.push(idString)
+      service.positionIds = positionIds
+      service.save()
+      
+      // Update first trading timestamp
+      updateFirstTradingTimestamp(nftOwner, block.timestamp)
+    }
+    
+    // Set static position metadata
     pp.tickLower = tickLower
     pp.tickUpper = tickUpper
     pp.fee = data.value4 // Uniswap V3 uses fee (500, 3000, 10000)

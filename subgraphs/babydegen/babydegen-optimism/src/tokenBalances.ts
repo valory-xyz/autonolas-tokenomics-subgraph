@@ -7,8 +7,8 @@ import { isFundingSource } from "./common"
 import { getTokenPriceUSD } from "./priceDiscovery"
 import { WETH, WHITELISTED_TOKENS, USDC_NATIVE, USDC_BRIDGED } from "./constants"
 
-// NOTE: This subgraph is configured to ONLY track USDC transfers out for funding balance calculations.
-// While all token transfers are tracked for token balance purposes, only USDC outflows affect
+// NOTE: This subgraph is configured to track USDC Native and ETH transfers for funding balance calculations.
+// While all token transfers are tracked for token balance purposes, only USDC Native and ETH flows affect
 // the funding metrics. Other token outflows are logged but do not affect funding calculations.
 
 // Calculate the total USD value of uninvested funds (tokens held in the safe)
@@ -22,10 +22,6 @@ export function calculateUninvestedValue(serviceSafe: Address): BigDecimal {
   
   if (ethBalance != null && ethBalance.balance.gt(BigDecimal.zero())) {
     totalUSD = totalUSD.plus(ethBalance.balanceUSD)
-    log.info("calculateUninvestedValue: ETH balance {} USD for safe {}", [
-      ethBalance.balanceUSD.toString(),
-      serviceSafe.toHexString()
-    ])
   }
   
   // Check whitelisted token balances from tokenConfig
@@ -41,24 +37,9 @@ export function calculateUninvestedValue(serviceSafe: Address): BigDecimal {
     
     if (balance != null && balance.balance.gt(BigDecimal.zero())) {
       totalUSD = totalUSD.plus(balance.balanceUSD)
-      log.info("calculateUninvestedValue: {} balance {} USD for safe {} (tokenAddr: {})", [
-        balance.symbol,
-        balance.balanceUSD.toString(),
-        serviceSafe.toHexString(),
-        tokenAddress.toHexString()
-      ])
-    } else {
-      log.info("calculateUninvestedValue: No balance found for token {} (balanceId: {})", [
-        tokenAddressString,
-        balanceId
-      ])
     }
   }
   
-  log.info("calculateUninvestedValue: Total uninvested value {} USD for safe {}", [
-    totalUSD.toString(),
-    serviceSafe.toHexString()
-  ])
   
   return totalUSD
 }
@@ -70,6 +51,7 @@ export function updateETHBalance(
   isIncrease: boolean,
   block: ethereum.Block
 ): void {
+  
   let service = getServiceByAgent(serviceSafe)
   if (service == null) {
     log.warning("updateETHBalance: Service not found for safe {}", [serviceSafe.toHexString()])
@@ -92,10 +74,12 @@ export function updateETHBalance(
   
   // Update balance
   let amountDecimal = amount.toBigDecimal().div(BigDecimal.fromString("1e18"))
+  
   if (isIncrease) {
     balance.balance = balance.balance.plus(amountDecimal)
   } else {
     balance.balance = balance.balance.minus(amountDecimal)
+    
     if (balance.balance.lt(BigDecimal.zero())) {
       balance.balance = BigDecimal.zero()
     }
@@ -108,12 +92,6 @@ export function updateETHBalance(
   balance.lastUpdated = block.timestamp
   balance.lastBlock = block.number
   balance.save()
-  
-  log.info("updateETHBalance: Updated ETH balance for safe {} to {} ETH ({} USD)", [
-    serviceSafe.toHexString(),
-    balance.balance.toString(),
-    balance.balanceUSD.toString()
-  ])
 }
 
 // Update token balance for a service safe
@@ -185,6 +163,7 @@ export function handleERC20Transfer(event: TransferEvent): void {
   let to = event.params.to
   let value = event.params.value
   let tokenAddress = event.address
+  let txHash = event.transaction.hash.toHexString()
   
   // Check if this is a whitelisted token
   let tokenConfig = TOKENS.get(tokenAddress.toHexString().toLowerCase())
@@ -192,19 +171,67 @@ export function handleERC20Transfer(event: TransferEvent): void {
     return // Not a whitelisted token
   }
   
+  // Log base transfer information
+  let isNativeUSDC = tokenAddress.equals(USDC_NATIVE)
+  let isBridgedUSDC = tokenAddress.equals(USDC_BRIDGED)
+  
+  // Format token amount with correct decimals
+  let divisor = BigDecimal.fromString("1" + "0".repeat(tokenConfig.decimals))
+  let formattedAmount = value.toBigDecimal().div(divisor)
+  
+  log.info("TOKEN_TRANSFER: {} {} from {} to {} in tx {}", [
+    formattedAmount.toString(),
+    tokenConfig.symbol,
+    from.toHexString(),
+    to.toHexString(),
+    txHash
+  ])
+  
+  if (isNativeUSDC) {
+    log.info("USDC_NATIVE_TRANSFER: {} USDC from {} to {} in tx {}", [
+      formattedAmount.toString(),
+      from.toHexString(),
+      to.toHexString(),
+      txHash
+    ])
+  } else if (isBridgedUSDC) {
+    log.info("USDC_BRIDGED_TRANSFER: {} USDC.e from {} to {} in tx {}", [
+      formattedAmount.toString(),
+      from.toHexString(),
+      to.toHexString(),
+      txHash
+    ])
+  }
+  
   // Handle transfers TO service safes (deposits)
   let toService = getServiceByAgent(to)
   if (toService != null) {
     updateTokenBalance(to, tokenAddress, value, true, event.block)
     
+    // Check if sender is a valid funding source
+    let isValidSource = isFundingSource(from, to, event.block, event.transaction.hash.toHexString())
+    
+    log.info("USDC_FUNDING_CHECK: Checking if {} is valid funding source for {} (result: {})", [
+      from.toHexString(),
+      to.toHexString(),
+      isValidSource ? "YES" : "NO"
+    ])
+    
     // Check if it's a funding deposit AND is NATIVE USDC (explicitly excluding bridged USDC)
-    if (isFundingSource(from, to, event.block, event.transaction.hash.toHexString()) && 
-        tokenAddress.equals(USDC_NATIVE)) {
+    if (isValidSource && tokenAddress.equals(USDC_NATIVE)) {
       // Calculate USD value using price discovery
       let divisor = BigDecimal.fromString("1" + "0".repeat(tokenConfig.decimals))
       let amountDecimal = value.toBigDecimal().div(divisor)
       let tokenPrice = getTokenPriceUSD(tokenAddress, event.block.timestamp, false)
       let usdValue = amountDecimal.times(tokenPrice)
+      
+      log.info("USDC_FUNDING_IN: {} USDC ({} USD at price {}) to service {} from {}", [
+        amountDecimal.toString(),
+        usdValue.toString(),
+        tokenPrice.toString(),
+        to.toHexString(),
+        from.toHexString()
+      ])
       
       log.info("FUNDING: IN {} USD ({}) to {} from {}", [
         usdValue.toString(),
@@ -215,8 +242,31 @@ export function handleERC20Transfer(event: TransferEvent): void {
       
       // Update funding balance directly to avoid circular dependency
       updateFundingBalance(to, usdValue, true, event.block.timestamp)
-    } else if (isFundingSource(from, to, event.block, event.transaction.hash.toHexString())) {
+    } else if (isValidSource) {
+      // Calculate values for better logging
+      let divisor = BigDecimal.fromString("1" + "0".repeat(tokenConfig.decimals))
+      let amountDecimal = value.toBigDecimal().div(divisor)
+      let tokenPrice = getTokenPriceUSD(tokenAddress, event.block.timestamp, false)
+      let usdValue = amountDecimal.times(tokenPrice)
+      
       // Log non-USDC token transfers that would have been funding but are excluded
+      if (tokenAddress.equals(USDC_BRIDGED)) {
+        log.info("USDC_BRIDGED_EXCLUDED: {} USDC.e ({} USD) from {} to {} NOT counted as funding", [
+          amountDecimal.toString(),
+          usdValue.toString(),
+          from.toHexString(),
+          to.toHexString()
+        ])
+      } else {
+        log.info("TOKEN_NON_FUNDING_IN: {} {} ({} USD) from {} to {} NOT counted as funding", [
+          amountDecimal.toString(),
+          tokenConfig.symbol,
+          usdValue.toString(),
+          from.toHexString(),
+          to.toHexString()
+        ])
+      }
+      
       log.info("TOKEN IN (not counted in funding): {} {} from {} to {}", [
         tokenConfig.symbol,
         value.toString(),
@@ -234,12 +284,28 @@ export function handleERC20Transfer(event: TransferEvent): void {
     // For outflows, only update funding if it's NATIVE USDC (explicitly excluding bridged USDC)
     if (tokenAddress.equals(USDC_NATIVE)) {
       // Check if receiver is valid funding source for this service
-      if (isFundingSource(to, from, event.block, event.transaction.hash.toHexString())) {
+      let isValidTarget = isFundingSource(to, from, event.block, event.transaction.hash.toHexString())
+      
+      log.info("USDC_FUNDING_CHECK: Checking if {} is valid funding target for {} (result: {})", [
+        to.toHexString(),
+        from.toHexString(),
+        isValidTarget ? "YES" : "NO"
+      ])
+      
+      if (isValidTarget) {
         // Calculate USD value 
         let divisor = BigDecimal.fromString("1" + "0".repeat(tokenConfig.decimals))
         let amountDecimal = value.toBigDecimal().div(divisor)
         let tokenPrice = getTokenPriceUSD(tokenAddress, event.block.timestamp, false)
         let usdValue = amountDecimal.times(tokenPrice)
+        
+        log.info("USDC_FUNDING_OUT: {} USDC ({} USD at price {}) from service {} to {}", [
+          amountDecimal.toString(),
+          usdValue.toString(),
+          tokenPrice.toString(),
+          from.toHexString(),
+          to.toHexString()
+        ])
         
         log.info("FUNDING: OUT {} USD ({}) from {} to {}", [
           usdValue.toString(),
@@ -257,6 +323,23 @@ export function handleERC20Transfer(event: TransferEvent): void {
       let amountDecimal = value.toBigDecimal().div(divisor)
       let tokenPrice = getTokenPriceUSD(tokenAddress, event.block.timestamp, false)
       let usdValue = amountDecimal.times(tokenPrice)
+      
+      if (tokenAddress.equals(USDC_BRIDGED)) {
+        log.info("USDC_BRIDGED_OUT: {} USDC.e ({} USD) from service {} to {} NOT counted as funding", [
+          amountDecimal.toString(),
+          usdValue.toString(),
+          from.toHexString(),
+          to.toHexString()
+        ])
+      } else {
+        log.info("TOKEN_NON_FUNDING_OUT: {} {} ({} USD) from service {} to {}", [
+          amountDecimal.toString(),
+          tokenConfig.symbol,
+          usdValue.toString(),
+          from.toHexString(),
+          to.toHexString()
+        ])
+      }
       
       log.info("TOKEN OUT (not counted in funding): {} USD ({}) from {} to {}", [
         usdValue.toString(),
@@ -286,15 +369,39 @@ export function updateFundingBalance(
     fb.totalOutUsd = BigDecimal.zero()
     fb.netUsd = BigDecimal.zero()
     fb.firstInTimestamp = ts
+    
+    log.info("FUNDING_INIT: Created new funding balance tracking for service safe {}", [
+      serviceSafe.toHexString()
+    ])
   }
+  
+  let oldTotalIn = fb.totalInUsd
+  let oldTotalOut = fb.totalOutUsd
   
   if (deposit) {
     fb.totalInUsd = fb.totalInUsd.plus(usd)
+    log.info("FUNDING_DETAIL: Adding {} USD to totalIn for service {}", [
+      usd.toString(),
+      serviceSafe.toHexString()
+    ])
   } else {
     fb.totalOutUsd = fb.totalOutUsd.plus(usd)
+    log.info("FUNDING_DETAIL: Adding {} USD to totalOut for service {}", [
+      usd.toString(),
+      serviceSafe.toHexString()
+    ])
   }
   
   fb.netUsd = fb.totalInUsd.minus(fb.totalOutUsd)
   fb.lastChangeTs = ts
   fb.save()
+  
+  log.info("FUNDING_SUMMARY: Updated funding balance for {} - totalIn: {} → {} USD, totalOut: {} → {} USD, net: {} USD", [
+    serviceSafe.toHexString(),
+    oldTotalIn.toString(),
+    fb.totalInUsd.toString(),
+    oldTotalOut.toString(), 
+    fb.totalOutUsd.toString(),
+    fb.netUsd.toString()
+  ])
 }

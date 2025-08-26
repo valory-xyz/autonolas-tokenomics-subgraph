@@ -287,14 +287,27 @@ function getPriceFromSource(
     }
   }
   
-  if (sourceType == "velodrome_v2" || sourceType == "velodrome_slipstream") {
+  if (sourceType == "velodrome_slipstream") {
+    // For Velodrome Slipstream/CL (Concentrated Liquidity) pools
     let price = getVelodromePrice(
       Address.fromBytes(token.id),
       sourceConfig.address,
       sourceConfig.pairToken!
     )
     if (price.gt(BigDecimal.fromString("0")) && isValidPriceResult(price, token.symbol)) {
-      return new PriceResult(price, baseConfidence, "velodrome")
+      return new PriceResult(price, baseConfidence, "velodrome_cl")
+    }
+  }
+  
+  if (sourceType == "velodrome_v2") {
+    // For standard Velodrome V2 pools using getReserves
+    let price = getVelodromeV2Price(
+      Address.fromBytes(token.id),
+      sourceConfig.address,
+      sourceConfig.pairToken!
+    )
+    if (price.gt(BigDecimal.fromString("0")) && isValidPriceResult(price, token.symbol)) {
+      return new PriceResult(price, baseConfidence, "velodrome_v2")
     }
   }
   
@@ -389,5 +402,6 @@ function isValidPriceResult(price: BigDecimal, tokenSymbol: string): boolean {
 import {
   getChainlinkPrice,
   getUniswapV3Price,
-  getVelodromePrice
+  getVelodromePrice,
+  getVelodromeV2Price
 } from "./priceAdapters"

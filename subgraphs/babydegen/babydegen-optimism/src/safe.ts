@@ -7,7 +7,7 @@ import {
 } from "../../../../generated/templates/Safe/Safe"
 import { isFundingSource, getEthUsd } from "./common"
 import { getServiceByAgent } from "./config"
-import { updateFunding } from "./helpers"
+import { updateFundingBalance } from "./tokenBalances"
 import { updateETHBalance } from "./tokenBalances"
 
 // NOTE: This subgraph is configured to ONLY track USDC and ETH transfers for funding balance calculations.
@@ -15,52 +15,109 @@ import { updateETHBalance } from "./tokenBalances"
 // ETH transfers in are tracked via SafeReceived events.
 
 export function handleSafeReceived(event: SafeReceivedEvent): void {
+  
   // Handle funding balance update for ETH received
   let from = event.params.sender
   let to = event.address // The safe that received ETH (emitted the event)
   let value = event.params.value
   let txHash = event.transaction.hash.toHexString()
   
-  // Debug log
-  log.debug("FUNDING: ETH SafeReceived - from: {}, to: {}, value: {}, block: {}", [
-    from.toHexString(),
+  log.info("ETH_RECEIVED: {} ETH received by {} from {} in tx {}", [
+    value.toBigDecimal().div(BigDecimal.fromString("1e18")).toString(),
     to.toHexString(),
-    value.toString(),
-    event.block.number.toString()
+    from.toHexString(),
+    txHash
   ])
   
   // Check if the receiving safe is a service safe
   let toService = getServiceByAgent(to)
   
   if (toService !== null) {
+    // This is an inflow TO a service safe
     // Check if sender is valid funding source for this service
-    if (isFundingSource(from, to, event.block, txHash)) {
+    let isValidFundingSource = isFundingSource(from, to, event.block, txHash)
+    
+    log.info("ETH_FUNDING_CHECK: Checking if {} is valid funding source for {} (result: {})", [
+      from.toHexString(),
+      to.toHexString(),
+      isValidFundingSource ? "YES" : "NO"
+    ])
+    
+    if (isValidFundingSource) {
       // Convert ETH to USD
       let ethPrice = getEthUsd(event.block)
       let usd = value.toBigDecimal()
         .times(ethPrice)
         .div(BigDecimal.fromString("1e18")) // ETH has 18 decimals
       
-      log.info("FUNDING: IN {} USD (ETH) to {} from {}", [
+      log.info("ETH_FUNDING_IN: {} ETH ({} USD at price {}) to service {}", [
+        value.toBigDecimal().div(BigDecimal.fromString("1e18")).toString(),
         usd.toString(),
-        to.toHexString(),
-        from.toHexString()
+        ethPrice.toString(),
+        to.toHexString()
       ])
       
-      updateFunding(to, usd, true, event.block.timestamp)
+      // Update funding balance
+      updateFundingBalance(to, usd, true, event.block.timestamp)
       
       // Also update ETH balance in TokenBalance
       updateETHBalance(to, value, true, event.block)
     } else {
-      log.info("FUNDING: ETH received but sender {} is not a valid funding source for safe {}", [
-        from.toHexString(),
-        to.toHexString()
+      log.info("ETH_NON_FUNDING_IN: {} ETH received by service {} from non-funding source {}", [
+        value.toBigDecimal().div(BigDecimal.fromString("1e18")).toString(),
+        to.toHexString(),
+        from.toHexString()
       ])
+      
+      // Still update ETH balance even if not from a funding source
+      updateETHBalance(to, value, true, event.block)
     }
   } else {
-    log.warning("FUNDING: ETH SafeReceived for non-service safe: {}", [
-      to.toHexString()
-    ])
+    // Receiver is NOT a service safe
+    // Check if the sender is a service safe (this would be an ETH outflow from service safe to external address)
+    let fromService = getServiceByAgent(from)
+    
+    if (fromService !== null) {
+      // This is an ETH outflow from service safe to external address
+      
+      // Convert ETH to USD
+      let ethPrice = getEthUsd(event.block)
+      let usd = value.toBigDecimal()
+        .times(ethPrice)
+        .div(BigDecimal.fromString("1e18")) // ETH has 18 decimals
+      
+      // Check if receiver is valid funding target for this service (for funding balance tracking)
+      let isValidFundingTarget = isFundingSource(to, from, event.block, txHash)
+      
+      log.info("ETH_FUNDING_CHECK: Checking if {} is valid funding target for {} (result: {})", [
+        to.toHexString(),
+        from.toHexString(),
+        isValidFundingTarget ? "YES" : "NO"
+      ])
+      
+      if (isValidFundingTarget) {
+        log.info("ETH_FUNDING_OUT: {} ETH ({} USD at price {}) from service {} to {}", [
+          value.toBigDecimal().div(BigDecimal.fromString("1e18")).toString(),
+          usd.toString(),
+          ethPrice.toString(),
+          from.toHexString(),
+          to.toHexString()
+        ])
+        
+        // Update the funding balance for the SERVICE safe (outflow)
+        updateFundingBalance(from, usd, false, event.block.timestamp)
+      } else {
+        log.info("ETH_NON_FUNDING_OUT: {} ETH ({} USD) from service {} to non-funding target {}", [
+          value.toBigDecimal().div(BigDecimal.fromString("1e18")).toString(),
+          usd.toString(),
+          from.toHexString(),
+          to.toHexString()
+        ])
+      }
+      
+      // Always update ETH balance for the service safe (outflow)
+      updateETHBalance(from, value, false, event.block)
+    }
   }
 }
 
@@ -86,99 +143,76 @@ function handleSafeEthTransfer(
   let service = getServiceByAgent(serviceSafe)
   
   if (service === null) {
-    log.debug("{} for non-service safe: {}", [eventType, serviceSafe.toHexString()])
+    log.info("ETH_EXECUTION_SKIP: {} is not a service safe (event: {})", [
+      serviceSafe.toHexString(),
+      eventType
+    ])
     return // Not a service safe
   }
+  
+  log.info("ETH_EXECUTION: {} event from service {} with tx {}", [
+    eventType,
+    serviceSafe.toHexString(),
+    txHash
+  ])
   
   // For ETH transfers, we need the transaction information
   let to = tx.to
   let value = tx.value
   
-  // Log specific info based on event type
-  if (eventType == "ExecutionFromModuleSuccess" && moduleAddress) {
-    log.debug("{}: module: {}, safe: {}, txHash: {}", [
-      eventType,
-      moduleAddress.toHexString(),
-      serviceSafe.toHexString(),
-      txHash
-    ])
-  } else if (extraInfo) {
-    log.debug("Safe {}: txHash: {}, {}", [
-      eventType,
-      txHash,
-      extraInfo
-    ])
-  }
-  
   // Check if this is a direct ETH transfer (value > 0 and to is valid)
   if (value.gt(BigInt.zero()) && to !== null) {
-    // Only proceed if 'to' is not the service safe itself
-    if (!to.equals(serviceSafe)) {
-      // Check if recipient is an operator or EOA
-      if (isFundingSource(to, serviceSafe, block, txHash)) {
-        // Construct appropriate log message based on event type
-        if (eventType == "ExecutionFromModuleSuccess" && moduleAddress) {
-          log.info("ETH Transfer detected from module to operator/EOA: {} -> {}, value: {}, module: {}", [
-            serviceSafe.toHexString(),
-            to.toHexString(),
-            value.toString(),
-            moduleAddress.toHexString()
-          ])
-        } else {
-          log.info("ETH Transfer detected from service safe to operator/EOA: {} -> {}, value: {}", [
-            serviceSafe.toHexString(),
-            to.toHexString(),
-            value.toString()
-          ])
-        }
-        
-        // 1. Update ETH balance
-        updateETHBalance(serviceSafe, value, false, block)
-        
-        // 2. Convert to USD for funding metrics
-        let ethPrice = getEthUsd(block)
-        let usdValue = value.toBigDecimal()
-          .times(ethPrice)
-          .div(BigDecimal.fromString("1e18"))
-        
-        // 3. Update funding balance (deposit=false for outflow)
-        updateFunding(serviceSafe, usdValue, false, block.timestamp)
-        
-        // Log with appropriate message based on event type
-        if (eventType == "ExecutionFromModuleSuccess" && moduleAddress) {
-          log.info("FUNDING: OUT {} USD (ETH) from {} to {} via module {}", [
-            usdValue.toString(),
-            serviceSafe.toHexString(),
-            to.toHexString(),
-            moduleAddress.toHexString()
-          ])
-        } else {
-          log.info("FUNDING: OUT {} USD (ETH) from {} to {}", [
-            usdValue.toString(),
-            serviceSafe.toHexString(),
-            to.toHexString()
-          ])
-        }
-      } else {
-        // Log with appropriate message based on event type
-        if (eventType == "ExecutionFromModuleSuccess" && moduleAddress) {
-          log.info("ETH transfer not to operator/EOA - not counting in funding: {} -> {}, module: {}", [
-            serviceSafe.toHexString(),
-            to.toHexString(),
-            moduleAddress.toHexString()
-          ])
-        } else {
-          log.info("ETH transfer not to operator/EOA - not counting in funding: {} -> {}", [
-            serviceSafe.toHexString(),
-            to.toHexString()
-          ])
-        }
-      }
+    log.info("ETH_EXECUTION_TRANSFER: {} ETH sent from {} to {} in tx {}", [
+      value.toBigDecimal().div(BigDecimal.fromString("1e18")).toString(),
+      serviceSafe.toHexString(),
+      to ? to.toHexString() : "null",
+      txHash
+    ])
+    
+    // Always update ETH balance for outflows from service safe
+    updateETHBalance(serviceSafe, value, false, block)
+    
+    // Check if receiver is valid funding source for this service
+    let isValidFundingTarget = isFundingSource(to, serviceSafe, block, txHash)
+    
+    log.info("ETH_FUNDING_CHECK: Checking if {} is valid funding target for {} (result: {})", [
+      to ? to.toHexString() : "null",
+      serviceSafe.toHexString(),
+      isValidFundingTarget ? "YES" : "NO"
+    ])
+    
+    if (isValidFundingTarget) {
+      // Convert ETH to USD for funding balance
+      let ethPrice = getEthUsd(block)
+      let usd = value.toBigDecimal()
+        .times(ethPrice)
+        .div(BigDecimal.fromString("1e18")) // ETH has 18 decimals
+      
+      log.info("ETH_EXECUTION_FUNDING_OUT: {} ETH ({} USD at price {}) from service {} to {}", [
+        value.toBigDecimal().div(BigDecimal.fromString("1e18")).toString(),
+        usd.toString(),
+        ethPrice.toString(),
+        serviceSafe.toHexString(),
+        to ? to.toHexString() : "null"
+      ])
+      
+      // Update funding balance for ETH outflow
+      updateFundingBalance(serviceSafe, usd, false, block.timestamp)
+    } else {
+      log.info("ETH_EXECUTION_NON_FUNDING: {} ETH from service {} to non-funding target {}", [
+        value.toBigDecimal().div(BigDecimal.fromString("1e18")).toString(),
+        serviceSafe.toHexString(),
+        to ? to.toHexString() : "null"
+      ])
     }
   }
+    
+  // For complex transactions (like swaps), ETH might leave through internal calls
+  // These are tracked via SafeReceived events on the receiving contracts
 }
 
 export function handleExecutionSuccess(event: ExecutionSuccessEvent): void {
+  
   let serviceSafe = event.address
   let txHash = event.params.txHash.toHexString()
   let payment = event.params.payment
@@ -188,13 +222,14 @@ export function handleExecutionSuccess(event: ExecutionSuccessEvent): void {
     "ExecutionSuccess",
     event.block,
     event.transaction,
-    txHash,
+    event.transaction.hash.toHexString(), // Use actual transaction hash
     null,
     "payment: " + payment.toString()
   )
 }
 
 export function handleExecutionFromModuleSuccess(event: ExecutionFromModuleSuccessEvent): void {
+  
   let serviceSafe = event.address
   let moduleAddress = event.params.module
   let txHash = event.transaction.hash.toHexString()

@@ -1,8 +1,9 @@
 import { Address, BigDecimal, BigInt, log, ethereum } from "@graphprotocol/graph-ts"
 import { VelodromeCLPool } from "../../../../generated/VeloNFTManager/VelodromeCLPool"
+import { VelodromeV2Pool } from "../../../../generated/templates/VeloV2Pool/VelodromeV2Pool"
 import { AggregatorV3Interface } from "../../../../generated/templates/Safe/AggregatorV3Interface"
 import { getTokenConfig } from "./tokenConfig"
-import { USDC_NATIVE, USDT, DAI, LUSD, WETH, Q96 } from "./constants"
+import { USDC_NATIVE, USDT, DAI, LUSD, DOLA, WETH, Q96 } from "./constants"
 
 // Chainlink price adapter with validation
 export function getChainlinkPrice(feedAddress: Address, blockTimestamp: BigInt = BigInt.fromI32(0)): BigDecimal {
@@ -181,6 +182,169 @@ export function getVelodromePrice(
 }
 
 // Helper functions
+// Velodrome V2 (standard) price adapter - using getReserves instead of slot0
+export function getVelodromeV2Price(
+  token: Address,
+  poolAddress: Address,
+  pairToken: Address
+): BigDecimal {
+  
+  log.info("📊 VELODROME V2: Getting {} price from pool {}", [
+    token.toHexString(), 
+    poolAddress.toHexString()
+  ])
+  
+  let pool = VelodromeV2Pool.bind(poolAddress)
+  
+  // Get token order
+  let token0Result = pool.try_token0()
+  let token1Result = pool.try_token1()
+  
+  if (token0Result.reverted || token1Result.reverted) {
+    log.warning("❌ VELODROME V2: Failed to get tokens from pool {}", [poolAddress.toHexString()])
+    return BigDecimal.fromString("0")
+  }
+  
+  let token0 = token0Result.value
+  let token1 = token1Result.value
+  
+  // Get token info
+  let targetTokenConfig = getTokenConfig(token)
+  let pairTokenConfig = getTokenConfig(pairToken)
+  
+  if (targetTokenConfig == null || pairTokenConfig == null) {
+    log.warning("❌ VELODROME V2: Missing token config for {} or {}", [
+      token.toHexString(), 
+      pairToken.toHexString()
+    ])
+    return BigDecimal.fromString("0")
+  }
+  
+  // Get reserves
+  let reservesResult = pool.try_getReserves()
+  
+  if (reservesResult.reverted) {
+    log.warning("❌ VELODROME V2: Failed to get reserves from pool {}", [poolAddress.toHexString()])
+    return BigDecimal.fromString("0")
+  }
+  
+  let reserves = reservesResult.value
+  let reserve0 = reserves.value0
+  let reserve1 = reserves.value1
+  let blockTimestampLast = BigInt.fromI32(reserves.value2.toI32())
+  
+  log.info("📊 VELODROME V2: Pool tokens - token0: {}, token1: {}", [
+    token0.toHexString(),
+    token1.toHexString()
+  ])
+  log.info("📊 VELODROME V2: Reserves - reserve0: {}, reserve1: {}", [
+    reserve0.toString(),
+    reserve1.toString()
+  ])
+  
+  // Get token decimals
+  let token0Decimals: number
+  let token1Decimals: number
+  
+  // Calculate price based on token position
+  if (token.equals(token0)) {
+    // Target token is token0
+    token0Decimals = targetTokenConfig.decimals
+    token1Decimals = pairTokenConfig.decimals
+    
+    log.info("📊 VELODROME V2: Target token is token0, decimals: {} / {}", [
+      token0Decimals.toString(),
+      token1Decimals.toString()
+    ])
+    
+    // Calculate price in terms of token1
+    if (reserve0.equals(BigInt.fromI32(0))) {
+      log.warning("❌ VELODROME V2: Zero reserve for token0", [])
+      return BigDecimal.fromString("0")
+    }
+    
+    // Price = reserve1 / reserve0 adjusted for decimals
+    let rawPrice = reserve1.toBigDecimal().div(reserve0.toBigDecimal())
+    
+    // Adjust for decimal differences
+    let decimalAdjustment = BigDecimal.fromString("1")
+    let decimalDiff = token1Decimals - token0Decimals
+    
+    if (decimalDiff > 0) {
+      for (let i = 0; i < decimalDiff; i++) {
+        decimalAdjustment = decimalAdjustment.times(BigDecimal.fromString("10"))
+      }
+      rawPrice = rawPrice.div(decimalAdjustment)
+    } else if (decimalDiff < 0) {
+      for (let i = 0; i < -decimalDiff; i++) {
+        decimalAdjustment = decimalAdjustment.times(BigDecimal.fromString("10"))
+      }
+      rawPrice = rawPrice.times(decimalAdjustment)
+    }
+    
+    // Multiply by pair token price to get USD value
+    let pairPrice = getPairTokenPrice(pairToken, blockTimestampLast)
+    let finalPrice = rawPrice.times(pairPrice)
+    
+    log.info("📊 VELODROME V2: Raw price: {}, pair price: {}, final price: {}", [
+      rawPrice.toString(),
+      pairPrice.toString(),
+      finalPrice.toString()
+    ])
+    
+    return finalPrice
+  } else if (token.equals(token1)) {
+    // Target token is token1
+    token0Decimals = pairTokenConfig.decimals
+    token1Decimals = targetTokenConfig.decimals
+    
+    log.info("📊 VELODROME V2: Target token is token1, decimals: {} / {}", [
+      token0Decimals.toString(),
+      token1Decimals.toString()
+    ])
+    
+    // Calculate price in terms of token0
+    if (reserve1.equals(BigInt.fromI32(0))) {
+      log.warning("❌ VELODROME V2: Zero reserve for token1", [])
+      return BigDecimal.fromString("0")
+    }
+    
+    // Price = reserve0 / reserve1 adjusted for decimals
+    let rawPrice = reserve0.toBigDecimal().div(reserve1.toBigDecimal())
+    
+    // Adjust for decimal differences
+    let decimalAdjustment = BigDecimal.fromString("1")
+    let decimalDiff = token0Decimals - token1Decimals
+    
+    if (decimalDiff > 0) {
+      for (let i = 0; i < decimalDiff; i++) {
+        decimalAdjustment = decimalAdjustment.times(BigDecimal.fromString("10"))
+      }
+      rawPrice = rawPrice.div(decimalAdjustment)
+    } else if (decimalDiff < 0) {
+      for (let i = 0; i < -decimalDiff; i++) {
+        decimalAdjustment = decimalAdjustment.times(BigDecimal.fromString("10"))
+      }
+      rawPrice = rawPrice.times(decimalAdjustment)
+    }
+    
+    // Multiply by pair token price to get USD value
+    let pairPrice = getPairTokenPrice(pairToken, blockTimestampLast)
+    let finalPrice = rawPrice.times(pairPrice)
+    
+    log.info("📊 VELODROME V2: Raw price: {}, pair price: {}, final price: {}", [
+      rawPrice.toString(),
+      pairPrice.toString(),
+      finalPrice.toString()
+    ])
+    
+    return finalPrice
+  }
+  
+  log.warning("❌ VELODROME V2: Token not found in pool", [])
+  return BigDecimal.fromString("0")
+}
+
 function getPairTokenPrice(pairToken: Address, blockTimestamp: BigInt = BigInt.fromI32(0)): BigDecimal {
   let tokenHex = pairToken.toHexString().toLowerCase()
   
@@ -189,7 +353,8 @@ function getPairTokenPrice(pairToken: Address, blockTimestamp: BigInt = BigInt.f
     USDC_NATIVE.toHexString().toLowerCase(),
     USDT.toHexString().toLowerCase(),
     DAI.toHexString().toLowerCase(),
-    LUSD.toHexString().toLowerCase()
+    LUSD.toHexString().toLowerCase(),
+    DOLA.toHexString().toLowerCase()  // Add DOLA to direct stablecoin list
   ]
   
   for (let i = 0; i < stablecoins.length; i++) {

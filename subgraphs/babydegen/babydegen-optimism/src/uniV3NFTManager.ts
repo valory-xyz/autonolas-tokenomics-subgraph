@@ -5,7 +5,16 @@ import {
   Collect, 
   Transfer 
 } from "../../../../generated/UniV3NFTManager/NonfungiblePositionManager"
-import { ensureUniV3PoolTemplate, refreshUniV3Position, refreshUniV3PositionWithEventAmounts, refreshUniV3PositionWithExitAmounts } from "./uniV3Shared"
+import { 
+  ensureUniV3PoolTemplate, 
+  refreshUniV3Position, 
+  refreshUniV3PositionWithEventAmounts, 
+  refreshUniV3PositionWithExitAmounts,
+  handleUniV3NFTTransferForCache
+} from "./uniV3Shared"
+import { getServiceByAgent } from "./config"
+import { ProtocolPosition } from "../../../../generated/schema"
+import { log, Bytes } from "@graphprotocol/graph-ts"
 
 export function handleUniV3IncreaseLiquidity(event: IncreaseLiquidity): void {
   ensureUniV3PoolTemplate(event.params.tokenId)
@@ -38,5 +47,45 @@ export function handleUniV3Collect(event: Collect): void {
 }
 
 export function handleUniV3Transfer(event: Transfer): void {
+  const toService = getServiceByAgent(event.params.to)
+  const fromService = getServiceByAgent(event.params.from)
+
+  if (!toService && !fromService) {
+    return
+  }
+
+  if (toService) {
+    ensureUniV3PoolTemplate(event.params.tokenId)
+  }
+  
+  if (fromService) {
+    // Mark position as closed when NFT is transferred out
+    const positionId = event.params.from.toHex() + "-" + event.params.tokenId.toString()
+    const id = Bytes.fromUTF8(positionId)
+    let position = ProtocolPosition.load(id)
+    
+    if (position && position.isActive) {
+      // SIMPLIFIED: Only mark as inactive, never set exit amounts
+      // Exit amounts will always be set by DecreaseLiquidity events
+      position.isActive = false
+      position.exitTxHash = event.transaction.hash
+      position.exitTimestamp = event.block.timestamp
+      
+      // Log for debugging
+      log.info("UNISWAP V3: Position {} closed by NFT transfer/burn - exit amounts already set by DecreaseLiquidity", [
+        event.params.tokenId.toString()
+      ])
+      
+      position.save()
+    }
+  }
+  
+  // Update cache
+  handleUniV3NFTTransferForCache(event.params.tokenId, event.params.from, event.params.to)
+  
+  // Call refresh with basic error logging
+  log.info("UNISWAP V3: Calling refreshUniV3Position for tokenId: {} in handleUniV3Transfer", [
+    event.params.tokenId.toString()
+  ])
   refreshUniV3Position(event.params.tokenId, event.block, event.transaction.hash)
 }

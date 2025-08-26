@@ -24,6 +24,9 @@ export const FRAX = Address.fromString("0x2e3d870790dc77a83dd1d18184acc7439a53f4
 export const DOLA = Address.fromString("0x8ae125e8653821e851f12a49f7765db9a9ce7384") // DOLA
 export const BOLD = Address.fromString("0x087c440f251ff6cfe62b86dde1be558b95b4bb9b") // BOLD
 export const SDAI = Address.fromString("0x2218a117083f5b482b0bb821d27056ba9c04b1d3") // sDAI
+export const USDT0 = Address.fromString("0x01bff41798a0bcf287b996046ca68b395dbc1071") // USDT0
+export const OUSDT = Address.fromString("0x1217bfe6c773eec6cc4a38b5dc45b92292b6e189") // oUSDT
+export const USDGLO = Address.fromString("0x4f604735c1cf31399c6e711d5962b2b3e0225ad3") // USDGLO
 
 // Chainlink price feeds (Optimism mainnet)
 export const ETH_USD_FEED = Address.fromString("0x13e3Ee699D1909E989722E753853AE30b17e08c5")
@@ -60,7 +63,10 @@ export const WHITELISTED_TOKENS: string[] = [
   WBTC.toHexString(),
   SUSD.toHexString(),
   DAI.toHexString(),
-  DOLA.toHexString()
+  DOLA.toHexString(),
+  USDT0.toHexString(),
+  OUSDT.toHexString(),
+  USDGLO.toHexString()
 ]
 
 // Stablecoin addresses (for price fallbacks)
@@ -70,7 +76,10 @@ export const STABLECOINS: string[] = [
   USDT.toHexString(),
   DAI.toHexString(),
   LUSD.toHexString(),
-  DOLA.toHexString()  // DOLA is a stablecoin pegged to USD
+  DOLA.toHexString(),  // DOLA is a stablecoin pegged to USD
+  USDT0.toHexString(),
+  OUSDT.toHexString(),
+  USDGLO.toHexString()
 ]
 
 // Critical stablecoins (for emergency fallbacks)
@@ -78,5 +87,10 @@ export const CRITICAL_STABLECOINS: string[] = [
   USDC_NATIVE.toHexString(),
   USDT.toHexString(),
   DAI.toHexString(),
-  LUSD.toHexString()
+  LUSD.toHexString(),
+  DOLA.toHexString(),  // Add DOLA to critical stablecoins for fallback
+  USDT0.toHexString(),
+  OUSDT.toHexString(),
+  SDAI.toHexString(),
+  USDGLO.toHexString()
 ]
