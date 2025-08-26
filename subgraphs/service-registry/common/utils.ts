@@ -148,12 +148,19 @@ export function getOrCreateOperator(operatorAddress: Bytes): Operator {
   if (operator == null) {
     operator = new Operator(operatorAddress);
     operator.save();
+  }
+  return operator;
+}
 
+export function updateUniqueOperators(operatorAddress: Bytes): void {
+  let existed = Operator.load(operatorAddress);
+  if (existed == null) {
+    // Create then increment global unique operators
+    getOrCreateOperator(operatorAddress);
     const global = getGlobal();
     global.totalOperators = global.totalOperators + 1;
     global.save();
   }
-  return operator;
 }
 
 export function createDailyUniqueAgent(
