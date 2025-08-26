@@ -79,11 +79,6 @@ export function ensureUniV3PoolTemplate(tokenId: BigInt): void {
   
   // Still maintain the NFT-to-pool mapping for cache purposes
   addAgentNFTToPool("uniswap-v3", poolAddress, tokenId)
-  
-  log.info("UNISWAP V3: Registered NFT {} to pool {} (snapshot-based tracking)", [
-    tokenId.toString(),
-    poolAddress.toHexString()
-  ])
 }
 
 // Helper function to check if position is closed
@@ -115,10 +110,6 @@ export function refreshUniV3PositionWithEventAmounts(
 
   // AGENT FILTERING: Only process positions owned by a service
   if (!isServiceAgent(nftOwner)) {
-    log.info("UNISWAP V3: Skipping position {} - not owned by a service (owner: {})", [
-      tokenId.toString(),
-      nftOwner.toHexString()
-    ])
     return
   }
 
@@ -147,15 +138,6 @@ export function refreshUniV3PositionWithEventAmounts(
   const eventAmount0Human = convertTokenAmount(eventAmount0, data.value2) // token0
   const eventAmount1Human = convertTokenAmount(eventAmount1, data.value3) // token1
   
-  // Log the actual event amounts with transaction hash
-  log.info("UNISWAP V3: Position {} event amounts from tx {} - amount0: {} ({}), amount1: {} ({})", [
-    tokenId.toString(),
-    txHash.toHexString(),
-    eventAmount0.toString(),
-    eventAmount0Human.toString(),
-    eventAmount1.toString(), 
-    eventAmount1Human.toString()
-  ])
   
   const eventUsd0 = eventAmount0Human.times(token0Price)
   const eventUsd1 = eventAmount1Human.times(token1Price)
@@ -207,13 +189,6 @@ export function refreshUniV3PositionWithEventAmounts(
     pp.entryAmount1USD = eventUsd1       // Use actual event amount
     pp.entryAmountUSD = eventUsd
     
-    // DEBUG: Log what we're setting as entry amounts
-    log.info("UNISWAP V3: Position {} ENTRY AMOUNTS BEING SET - entryAmount0: {}, entryAmount1: {}, entryAmountUSD: {}", [
-      tokenId.toString(),
-      pp.entryAmount0.toString(),
-      pp.entryAmount1.toString(),
-      pp.entryAmountUSD.toString()
-    ])
     
     // For new positions, calculate current amounts using liquidity math (not event amounts)
     // Call refreshUniV3Position to get current calculated amounts
@@ -221,13 +196,6 @@ export function refreshUniV3PositionWithEventAmounts(
     refreshUniV3Position(tokenId, block, txHash) // This will update current amounts
     return // Exit early since refreshUniV3Position will save the entity
   } else {
-    // DEBUG: Log the BEFORE values to track accumulation
-    log.info("UNISWAP V3: Position {} BEFORE UPDATE - entryAmount0: {}, entryAmount1: {}, entryAmountUSD: {}", [
-      tokenId.toString(),
-      pp.entryAmount0.toString(),
-      pp.entryAmount1.toString(),
-      pp.entryAmountUSD.toString()
-    ])
     
     // For existing positions, update entry amounts if this is an IncreaseLiquidity event
     // Add to existing entry amounts
@@ -237,13 +205,6 @@ export function refreshUniV3PositionWithEventAmounts(
     pp.entryAmount1USD = pp.entryAmount1USD.plus(eventUsd1)
     pp.entryAmountUSD = pp.entryAmountUSD.plus(eventUsd)
     
-    // DEBUG: Log what we're setting as entry amounts for existing positions
-    log.info("UNISWAP V3: Position {} AFTER UPDATE - entryAmount0: {}, entryAmount1: {}, entryAmountUSD: {}", [
-      tokenId.toString(),
-      pp.entryAmount0.toString(),
-      pp.entryAmount1.toString(),
-      pp.entryAmountUSD.toString()
-    ])
     
     // Save the updated entry amounts first
     pp.save()
@@ -276,10 +237,6 @@ export function refreshUniV3PositionWithExitAmounts(
 
   // AGENT FILTERING: Only process positions owned by a service
   if (!isServiceAgent(nftOwner)) {
-    log.info("UNISWAP V3: Skipping position {} - not owned by a service (owner: {})", [
-      tokenId.toString(),
-      nftOwner.toHexString()
-    ])
     return
   }
 
@@ -307,7 +264,6 @@ export function refreshUniV3PositionWithExitAmounts(
   const isFullExit = remainingLiquidity.equals(BigInt.zero())
   
   if (isFullExit) {
-    log.info("UNISWAP V3: Processing FULL EXIT for position {} - using event amounts", [tokenId.toString()])
     
     // USD pricing for exit amounts
     const token0Price = getTokenPriceUSD(data.value2, block.timestamp, false)
@@ -339,12 +295,6 @@ export function refreshUniV3PositionWithExitAmounts(
     pp.usdCurrent = BigDecimal.zero()
     pp.liquidity = BigInt.zero()
     
-    log.info("UNISWAP V3: Position {} EXIT AMOUNTS SET - exitAmount0: {}, exitAmount1: {}, exitAmountUSD: {}", [
-      tokenId.toString(),
-      exitAmount0Human.toString(),
-      exitAmount1Human.toString(),
-      exitUsd.toString()
-    ])
     
     // Remove from cache
     const poolAddress = getUniV3PoolAddress(data.value2, data.value3, data.value4, tokenId)
@@ -354,7 +304,6 @@ export function refreshUniV3PositionWithExitAmounts(
     refreshPortfolio(nftOwner, block)
   } else {
     // Partial withdrawal - just update current amounts normally
-    log.info("UNISWAP V3: Processing partial withdrawal for position {}", [tokenId.toString()])
     refreshUniV3Position(tokenId, block, txHash)
   }
 }
@@ -374,10 +323,6 @@ export function refreshUniV3Position(tokenId: BigInt, block: ethereum.Block, txH
 
   // AGENT FILTERING: Only process positions owned by a service
   if (!isServiceAgent(nftOwner)) {
-    log.info("UNISWAP V3: Skipping position {} - not owned by a service (owner: {})", [
-      tokenId.toString(),
-      nftOwner.toHexString()
-    ])
     return
   }
 
@@ -422,39 +367,12 @@ export function refreshUniV3Position(tokenId: BigInt, block: ethereum.Block, txH
   const tickLower = data.value5 as i32
   const tickUpper = data.value6 as i32
   
-  // Add comprehensive debugging logs
-  log.info("UNISWAP V3: Position {} calculation inputs - liquidity: {}, tickLower: {}, tickUpper: {}", [
-    tokenId.toString(),
-    data.value7.toString(),
-    tickLower.toString(),
-    tickUpper.toString()
-  ])
-  
-  log.info("UNISWAP V3: Position {} pool state - sqrtPriceX96: {}, currentTick: {}", [
-    tokenId.toString(),
-    slot0.value0.toString(),
-    slot0.value1.toString()
-  ])
-  
   const sqrtPa = TickMath.getSqrtRatioAtTick(tickLower)
   const sqrtPb = TickMath.getSqrtRatioAtTick(tickUpper)
-  
-  log.info("UNISWAP V3: Position {} sqrt prices - sqrtPa: {}, sqrtPb: {}, current: {}", [
-    tokenId.toString(),
-    sqrtPa.toString(),
-    sqrtPb.toString(),
-    slot0.value0.toString()
-  ])
   
   const amounts = LiquidityAmounts.getAmountsForLiquidity(
                     slot0.value0, sqrtPa, sqrtPb, data.value7)
 
-  // Log raw amounts from LiquidityAmounts calculation
-  log.info("UNISWAP V3: Position {} raw amounts from LiquidityAmounts - amount0: {}, amount1: {}", [
-    tokenId.toString(),
-    amounts.amount0.toString(),
-    amounts.amount1.toString()
-  ])
 
   // USD pricing
   const token0Price = getTokenPriceUSD(data.value2, block.timestamp, false)
@@ -463,22 +381,6 @@ export function refreshUniV3Position(tokenId: BigInt, block: ethereum.Block, txH
   // Convert amounts from wei to human readable using proper decimals
   const amount0Human = convertTokenAmount(amounts.amount0, data.value2) // token0
   const amount1Human = convertTokenAmount(amounts.amount1, data.value3) // token1
-  
-  // Log token addresses and decimals used
-  log.info("UNISWAP V3: Position {} tokens - token0: {} (decimals: {}), token1: {} (decimals: {})", [
-    tokenId.toString(),
-    data.value2.toHexString(),
-    getTokenDecimals(data.value2).toString(),
-    data.value3.toHexString(),
-    getTokenDecimals(data.value3).toString()
-  ])
-  
-  // Final converted amounts
-  log.info("UNISWAP V3: Position {} final amounts - amount0Human: {}, amount1Human: {}", [
-    tokenId.toString(),
-    amount0Human.toString(),
-    amount1Human.toString()
-  ])
   
   const usd0 = amount0Human.times(token0Price)
   const usd1 = amount1Human.times(token1Price)
@@ -530,9 +432,6 @@ export function refreshUniV3Position(tokenId: BigInt, block: ethereum.Block, txH
     pp.entryAmount1USD = BigDecimal.zero()
     pp.entryAmountUSD = BigDecimal.zero()
     
-    log.info("UNISWAP V3: Position {} created with ZERO entry amounts - will be set by event processing", [
-      tokenId.toString()
-    ])
   }
   // For existing positions, DO NOT overwrite entry data - it should be set by refreshUniV3PositionWithEventAmounts
   

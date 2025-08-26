@@ -3,8 +3,7 @@ import {
   BigDecimal, 
   Address, 
   Bytes,
-  ethereum,
-  log
+  ethereum
 } from "@graphprotocol/graph-ts"
 
 import { ProtocolPosition, Service } from "../../../../generated/schema"
@@ -36,7 +35,6 @@ export function ensureVeloV2PoolTemplate(poolAddress: Address): void {
   const poolKey = poolAddress.toHexString()
   
   if (!poolCache.has(poolKey)) {
-    log.info("VELO V2: Creating pool template {}", [poolKey])
     VeloV2PoolTemplate.create(poolAddress)
     poolCache.set(poolKey, true)
   }
@@ -58,37 +56,13 @@ export function refreshVeloV2PositionWithEventAmounts(
   eventAmount1: BigInt,
   txHash: Bytes
 ): void {
-  // Comprehensive entry logging
-  log.info("VELO_V2[{}]: === ENTERING refreshVeloV2PositionWithEventAmounts ===", [userAddress.toHexString()])
-  log.info("VELO_V2[{}]: Pool: {}, Block: {}, TxHash: {}", [
-    userAddress.toHexString(),
-    poolAddress.toHexString(), 
-    block.number.toString(),
-    txHash.toHexString()
-  ])
-  log.info("VELO_V2[{}]: Raw event amounts - amount0: {}, amount1: {}", [
-    userAddress.toHexString(),
-    eventAmount0.toString(),
-    eventAmount1.toString()
-  ])
-  
   const positionId = getVeloV2PositionId(userAddress, poolAddress)
-  log.info("VELO_V2[{}]: Generated position ID: {}", [
-    userAddress.toHexString(),
-    positionId.toHexString()
-  ])
   
-  // Service validation logging
+  // Service validation - early return if not a service
   const service = getServiceByAgent(userAddress)
   if (service == null) {
-    log.info("VELO_V2[{}]: Service lookup returned null - not a tracked service", [userAddress.toHexString()])
     return
   }
-  log.info("VELO_V2[{}]: Service found - ID: {}, Safe: {}", [
-    userAddress.toHexString(),
-    service.serviceId.toString(),
-    service.serviceSafe.toHexString()
-  ])
   
   let pp = ProtocolPosition.load(positionId)
   if (!pp) {
@@ -186,47 +160,16 @@ export function refreshVeloV2PositionWithEventAmounts(
   const token0Decimals = getTokenDecimals(Address.fromBytes(pp.token0!))
   const token1Decimals = getTokenDecimals(Address.fromBytes(pp.token1!))
   
-  log.info("VELO_V2[{}]: Token decimals - token0: {} ({}), token1: {} ({})", [
-    userAddress.toHexString(),
-    token0Decimals.toString(),
-    pp.token0Symbol ? pp.token0Symbol! : "Unknown",
-    token1Decimals.toString(),
-    pp.token1Symbol ? pp.token1Symbol! : "Unknown"
-  ])
-  
   const eventAmount0Human = toHumanAmount(eventAmount0, token0Decimals)
   const eventAmount1Human = toHumanAmount(eventAmount1, token1Decimals)
-  
-  log.info("VELO_V2[{}]: Human amounts - amount0: {} {}, amount1: {} {}", [
-    userAddress.toHexString(),
-    eventAmount0Human.toString(),
-    pp.token0Symbol ? pp.token0Symbol! : "Unknown",
-    eventAmount1Human.toString(),
-    pp.token1Symbol ? pp.token1Symbol! : "Unknown"
-  ])
   
   // Get USD values
   let token0Price = getTokenPriceUSD(Address.fromBytes(pp.token0!), block.timestamp, false)
   let token1Price = getTokenPriceUSD(Address.fromBytes(pp.token1!), block.timestamp, false)
   
-  log.info("VELO_V2[{}]: Token prices - {} price: {} USD, {} price: {} USD", [
-    userAddress.toHexString(),
-    pp.token0Symbol ? pp.token0Symbol! : "Unknown",
-    token0Price.toString(),
-    pp.token1Symbol ? pp.token1Symbol! : "Unknown",
-    token1Price.toString()
-  ])
-  
   const eventUsd0 = token0Price.times(eventAmount0Human)
   const eventUsd1 = token1Price.times(eventAmount1Human)
   const eventUsd = eventUsd0.plus(eventUsd1)
-  
-  log.info("VELO_V2[{}]: USD values - amount0: {} USD, amount1: {} USD, total: {} USD", [
-    userAddress.toHexString(),
-    eventUsd0.toString(),
-    eventUsd1.toString(),
-    eventUsd.toString()
-  ])
   
   // Check if this is the first time adding liquidity (new position)
   if (pp.entryAmountUSD.equals(BigDecimal.zero()) && pp.entryTimestamp.equals(BigInt.zero())) {
@@ -238,11 +181,6 @@ export function refreshVeloV2PositionWithEventAmounts(
     pp.entryAmount1 = eventAmount1Human
     pp.entryAmount1USD = eventUsd1
     pp.entryAmountUSD = eventUsd
-    
-    log.info("VELO V2: Position {} initial entry - {} USD", [
-      positionId.toHexString(),
-      pp.entryAmountUSD.toString()
-    ])
   } else {
     // This is a subsequent Mint event - add to existing entry amounts
     pp.entryAmount0 = pp.entryAmount0.plus(eventAmount0Human)
@@ -250,11 +188,6 @@ export function refreshVeloV2PositionWithEventAmounts(
     pp.entryAmount1 = pp.entryAmount1.plus(eventAmount1Human)
     pp.entryAmount1USD = pp.entryAmount1USD.plus(eventUsd1)
     pp.entryAmountUSD = pp.entryAmountUSD.plus(eventUsd)
-    
-    log.info("VELO V2: Position {} entry increased - {} USD", [
-      positionId.toHexString(),
-      pp.entryAmountUSD.toString()
-    ])
   }
   
   // Save the updated entry amounts first
@@ -271,19 +204,11 @@ export function refreshVeloV2Position(
   block: ethereum.Block,
   txHash: Bytes
 ): void {
-  log.info("VELO_V2[{}]: === ENTERING refreshVeloV2Position ===", [userAddress.toHexString()])
-  log.info("VELO_V2[{}]: Pool: {}, Block: {}", [
-    userAddress.toHexString(),
-    poolAddress.toHexString(),
-    block.number.toString()
-  ])
-  
   const positionId = getVeloV2PositionId(userAddress, poolAddress)
   
   // Only track positions owned by a service
   const service = getServiceByAgent(userAddress)
   if (service == null) {
-    log.info("VELO_V2[{}]: Service not found for position refresh", [userAddress.toHexString()])
     return
   }
   
@@ -358,7 +283,6 @@ export function refreshVeloV2Position(
         pp.fee = stableResult.value ? 5 : 30 // 0.05% for stable, 0.30% for volatile
       }
     } else {
-      log.error("VELO V2: Failed to get pool tokens {}", [poolAddress.toHexString()])
       return
     }
   }
@@ -371,7 +295,6 @@ export function refreshVeloV2Position(
   const reservesResult = poolContract.try_getReserves()
   
   if (balanceResult.reverted || totalSupplyResult.reverted || reservesResult.reverted) {
-    log.error("VELO V2: Failed to get pool data {}", [poolAddress.toHexString()])
     return
   }
   
@@ -379,21 +302,10 @@ export function refreshVeloV2Position(
   const totalSupply = totalSupplyResult.value
   const reserves = reservesResult.value
   
-  log.info("VELO_V2[{}]: LP Token data - User balance: {}, Total supply: {}", [
-    userAddress.toHexString(),
-    userBalance.toString(),
-    totalSupply.toString()
-  ])
-  
-  log.info("VELO_V2[{}]: Pool reserves - reserve0: {}, reserve1: {}", [
-    userAddress.toHexString(),
-    reserves.value0.toString(),
-    reserves.value1.toString()
-  ])
+  // User balance and total supply data retrieved successfully
   
   // If user has no LP tokens, mark position as inactive
   if (userBalance.equals(BigInt.zero())) {
-    log.info("VELO_V2[{}]: User has no LP tokens - marking position as inactive", [userAddress.toHexString()])
     pp.isActive = false
     
     // No fallback mechanism for exit data - we'll rely on Burn events only
@@ -410,11 +322,6 @@ export function refreshVeloV2Position(
     const userShare = userBalance.toBigDecimal().div(totalSupply.toBigDecimal())
     const userSharePercent = userShare.times(BigDecimal.fromString("100"))
     
-    log.info("VELO_V2[{}]: User share of pool: {}%", [
-      userAddress.toHexString(),
-      userSharePercent.toString()
-    ])
-    
     // Calculate current token amounts based on reserves and user's share
     const token0Decimals = getTokenDecimals(Address.fromBytes(pp.token0!))
     const token1Decimals = getTokenDecimals(Address.fromBytes(pp.token1!))
@@ -422,24 +329,8 @@ export function refreshVeloV2Position(
     const reserve0Human = toHumanAmount(reserves.value0, token0Decimals)
     const reserve1Human = toHumanAmount(reserves.value1, token1Decimals)
     
-    log.info("VELO_V2[{}]: Pool reserves (human) - reserve0: {} {}, reserve1: {} {}", [
-      userAddress.toHexString(),
-      reserve0Human.toString(),
-      pp.token0Symbol ? pp.token0Symbol! : "Unknown",
-      reserve1Human.toString(),
-      pp.token1Symbol ? pp.token1Symbol! : "Unknown"
-    ])
-    
     pp.amount0 = reserve0Human.times(userShare)
     pp.amount1 = reserve1Human.times(userShare)
-    
-    log.info("VELO_V2[{}]: User token amounts - amount0: {} {}, amount1: {} {}", [
-      userAddress.toHexString(),
-      pp.amount0!.toString(),
-      pp.token0Symbol ? pp.token0Symbol! : "Unknown",
-      pp.amount1!.toString(),
-      pp.token1Symbol ? pp.token1Symbol! : "Unknown"
-    ])
     
     // Calculate USD values
     let token0Price = getTokenPriceUSD(Address.fromBytes(pp.token0!), block.timestamp, false)
@@ -449,13 +340,6 @@ export function refreshVeloV2Position(
     pp.amount1USD = token1Price.times(pp.amount1!)
     pp.usdCurrent = pp.amount0USD.plus(pp.amount1USD)
     pp.liquidity = userBalance // Store LP token balance as liquidity
-    
-    log.info("VELO_V2[{}]: Current USD values - amount0: {} USD, amount1: {} USD, total: {} USD", [
-      userAddress.toHexString(),
-      pp.amount0USD.toString(),
-      pp.amount1USD.toString(),
-      pp.usdCurrent.toString()
-    ])
     
     pp.isActive = true
     
@@ -468,23 +352,10 @@ export function refreshVeloV2Position(
       pp.entryAmount1 = pp.amount1!
       pp.entryAmount1USD = pp.amount1USD
       pp.entryAmountUSD = pp.usdCurrent
-      
-      log.info("VELO V2: Position {} entry set - {} USD", [
-        positionId.toHexString(),
-        pp.entryAmountUSD.toString()
-      ])
     }
   }
   
-  log.info("VELO_V2[{}]: Saving position with final state - active: {}, USD: {}", [
-    userAddress.toHexString(),
-    pp.isActive ? "true" : "false",
-    pp.usdCurrent.toString()
-  ])
-  
   pp.save()
-  
-  log.info("VELO_V2[{}]: === EXITING refreshVeloV2Position ===", [userAddress.toHexString()])
 }
 
 // Handle VelodromeV2 Burn events (liquidity removal)
@@ -506,7 +377,6 @@ export function refreshVeloV2PositionWithBurnAmounts(
   
   let pp = ProtocolPosition.load(positionId)
   if (!pp) {
-    log.error("VELO V2: Position {} not found for burn", [positionId.toHexString()])
     return
   }
   
@@ -534,14 +404,8 @@ export function refreshVeloV2PositionWithBurnAmounts(
   pp.exitAmount1USD = eventUsd1
   pp.exitAmountUSD = eventUsd
   
-  // Calculate PnL for logging
+  // Calculate PnL
   const pnlUSD = pp.exitAmountUSD!.minus(pp.entryAmountUSD)
-  
-  log.info("VELO V2: Position {} burn - {} USD (PnL: {} USD)", [
-    positionId.toHexString(),
-    eventUsd.toString(),
-    pnlUSD.toString()
-  ])
   
   // Save and refresh current state
   pp.save()

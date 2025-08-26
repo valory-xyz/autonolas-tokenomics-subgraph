@@ -18,9 +18,6 @@ export function handleRegisterInstance(event: RegisterInstance): void {
     return
   }
   
-  log.info("SERVICE: Optimus service registered - ID: {}", [
-    event.params.serviceId.toString()
-  ])
   
   let serviceId = event.params.serviceId
   let tempId = Bytes.fromUTF8(serviceId.toString())
@@ -115,10 +112,6 @@ export function handleCreateMultisigWithAgents(event: CreateMultisigWithAgents):
   serviceIndex.currentServiceSafe = multisig
   serviceIndex.save()
   
-  log.info("SERVICE: Multisig created - ID: {}, Safe: {}", [
-    serviceId.toString(),
-    multisig.toHexString()
-  ])
   
   // Register service for portfolio snapshots
   registerServiceForSnapshots(multisig)

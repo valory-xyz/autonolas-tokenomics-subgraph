@@ -52,9 +52,6 @@ export function handleBlock(block: ethereum.Block): void {
     return
   }
   
-  log.info("Portfolio scheduler: Checking for due snapshots at block {}", [
-    block.number.toString()
-  ])
   
   // Check all services for snapshot requirements
   checkServicesForSnapshot(block)
@@ -76,22 +73,16 @@ function checkServicesForSnapshot(block: ethereum.Block): void {
   let registry = ServiceRegistry.load(registryId)
   
   if (registry == null || registry.serviceAddresses == null) {
-    log.info("Portfolio scheduler: No services registered yet", [])
     return
   }
   
   let serviceAddresses = registry.serviceAddresses
-  log.info("Portfolio scheduler: Checking {} services", [serviceAddresses.length.toString()])
   
   for (let i = 0; i < serviceAddresses.length; i++) {
     let serviceAddress = serviceAddresses[i]
     
     // Check if snapshot is due for this service
     if (isSnapshotDue(serviceAddress, block)) {
-      log.info("Portfolio scheduler: Creating UTC midnight snapshot for service {} at block {}", [
-        serviceAddress.toHexString(),
-        block.number.toString()
-      ])
       
       // Trigger portfolio calculation which will create snapshot
       // Convert Bytes to Address for calculatePortfolioMetrics
@@ -132,25 +123,8 @@ function isSnapshotDue(serviceAddress: Bytes, block: ethereum.Block): boolean {
   let currentDayTimestamp = getDayTimestamp(block.timestamp)
   let lastSnapshotDayTimestamp = getDayTimestamp(portfolio.lastSnapshotTimestamp)
   
-  // Log the day timestamps for debugging
-  log.debug(
-    "Portfolio scheduler: Service {} - Current day timestamp: {}, Last snapshot day timestamp: {}", 
-    [
-      serviceAddress.toHexString(),
-      currentDayTimestamp.toString(),
-      lastSnapshotDayTimestamp.toString()
-    ]
-  )
-  
   // Only take a snapshot if we've crossed into a new UTC day
   let isDue = currentDayTimestamp.gt(lastSnapshotDayTimestamp)
-  
-  if (!isDue) {
-    log.debug(
-      "Portfolio scheduler: Skipping snapshot for service {} - still in same UTC day", 
-      [serviceAddress.toHexString()]
-    )
-  }
   
   return isDue
 }
@@ -179,14 +153,6 @@ function updateSnapshotTracking(serviceAddress: Bytes, block: ethereum.Block): v
     portfolio.lastSnapshotBlock = block.number
     portfolio.save()
     
-    log.info(
-      "Portfolio scheduler: Updated snapshot tracking for service {} - UTC day changed from {} to {}", 
-      [
-        serviceAddress.toHexString(),
-        oldDayTimestamp.toString(),
-        newDayTimestamp.toString()
-      ]
-    )
   }
 }
 
@@ -224,8 +190,5 @@ export function registerServiceForSnapshots(serviceAddress: Bytes): void {
     registry.serviceAddresses = addresses
     registry.save()
     
-    log.info("Portfolio scheduler: Registered service {} for snapshots", [
-      serviceAddress.toHexString()
-    ])
   }
 }

@@ -71,11 +71,7 @@ export function handleUniV3Transfer(event: Transfer): void {
       position.exitTxHash = event.transaction.hash
       position.exitTimestamp = event.block.timestamp
       
-      // Log for debugging
-      log.info("UNISWAP V3: Position {} closed by NFT transfer/burn - exit amounts already set by DecreaseLiquidity", [
-        event.params.tokenId.toString()
-      ])
-      
+      // Position closed by NFT transfer
       position.save()
     }
   }
@@ -83,9 +79,6 @@ export function handleUniV3Transfer(event: Transfer): void {
   // Update cache
   handleUniV3NFTTransferForCache(event.params.tokenId, event.params.from, event.params.to)
   
-  // Call refresh with basic error logging
-  log.info("UNISWAP V3: Calling refreshUniV3Position for tokenId: {} in handleUniV3Transfer", [
-    event.params.tokenId.toString()
-  ])
+  // Call refresh
   refreshUniV3Position(event.params.tokenId, event.block, event.transaction.hash)
 }

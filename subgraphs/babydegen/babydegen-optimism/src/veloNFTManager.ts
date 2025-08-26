@@ -39,11 +39,7 @@ export function handleNFTTransfer(ev: Transfer): void {
       position.exitTxHash = ev.transaction.hash
       position.exitTimestamp = ev.block.timestamp
       
-      // Log for debugging
-      log.info("VELODROME: Position {} closed by NFT transfer/burn - exit amounts already set by DecreaseLiquidity", [
-        ev.params.tokenId.toString()
-      ])
-      
+      // Position closed by NFT transfer
       position.save()
     }
   }
@@ -51,10 +47,7 @@ export function handleNFTTransfer(ev: Transfer): void {
   // Update cache
   handleNFTTransferForCache(ev.params.tokenId, ev.params.from, ev.params.to)
   
-  // Call refresh with basic error logging - no try/catch since it's not supported
-  log.info("VELODROME: Calling refreshVeloCLPosition for tokenId: {} in handleNFTTransfer", [
-    ev.params.tokenId.toString()
-  ])
+  // Call refresh - no try/catch since it's not supported
   refreshVeloCLPosition(ev.params.tokenId, ev.block, ev.transaction.hash)
 }
 
@@ -67,63 +60,27 @@ export function handleIncreaseLiquidity(ev: IncreaseLiquidity): void {
     owner = ownerResult.value
   }
   
-  log.info("VELODROME[{}]: handleIncreaseLiquidity called for tokenId: {}, tx: {}", [
-    owner.toHexString(),
-    ev.params.tokenId.toString(),
-    ev.transaction.hash.toHexString()
-  ])
-  
   let shouldProcess = false
   
   // PHASE 1 OPTIMIZATION: Use cache instead of ownerOf() RPC call
   const isSafeOwned = isSafeOwnedNFT("velodrome-cl", ev.params.tokenId)
   
-  log.info("VELODROME[{}]: isSafeOwned check result: {} for tokenId: {}", [
-    owner.toHexString(),
-    isSafeOwned.toString(),
-    ev.params.tokenId.toString()
-  ])
   
   if (isSafeOwned) {
     shouldProcess = true
   } else {
     // FALLBACK: Check actual ownership for positions not in cache (existing positions)
-    log.info("VELODROME[{}]: Cache miss for tokenId: {}, checking actual ownership", [
-      owner.toHexString(),
-      ev.params.tokenId.toString()
-    ])
     
     if (!ownerResult.reverted && getServiceByAgent(owner) != null) {
       shouldProcess = true
-      log.info("VELODROME[{}]: Actual ownership confirmed for tokenId: {}", [
-        owner.toHexString(),
-        ev.params.tokenId.toString()
-      ])
       
       // Ensure pool template exists and populate cache for future
       ensurePoolTemplate(ev.params.tokenId)
-    } else {
-      log.info("VELODROME[{}]: Actual ownership check failed for tokenId: {}", [
-        owner.toHexString(),
-        ev.params.tokenId.toString()
-      ])
     }
   }
   
-  log.info("VELODROME[{}]: shouldProcess value: {} for tokenId: {}", [
-    owner.toHexString(),
-    shouldProcess.toString(),
-    ev.params.tokenId.toString()
-  ])
   
   if (shouldProcess) {
-    log.info("VELODROME[{}]: Processing IncreaseLiquidity for tokenId: {}, amount0: {}, amount1: {}", [
-      owner.toHexString(),
-      ev.params.tokenId.toString(),
-      ev.params.amount0.toString(),
-      ev.params.amount1.toString()
-    ])
-    
     // Use event amounts for accurate entry tracking
     refreshVeloCLPositionWithEventAmounts(
       ev.params.tokenId, 
@@ -133,15 +90,6 @@ export function handleIncreaseLiquidity(ev: IncreaseLiquidity): void {
       ev.transaction.hash
     )
     
-    log.info("VELODROME[{}]: Completed processing IncreaseLiquidity for tokenId: {}", [
-      owner.toHexString(),
-      ev.params.tokenId.toString()
-    ])
-  } else {
-    log.info("VELODROME[{}]: Skipping IncreaseLiquidity for tokenId: {} - not owned by safe", [
-      owner.toHexString(),
-      ev.params.tokenId.toString()
-    ])
   }
 }
 
@@ -200,12 +148,7 @@ export function handleCollect(ev: Collect): void {
   const isSafeOwned = isSafeOwnedNFT("velodrome-cl", ev.params.tokenId)
   
   if (isSafeOwned) {
-    // Log fee collection
-    log.info("VELODROME CL: Collected fees for tokenId {}: {} token0, {} token1", [
-      ev.params.tokenId.toString(),
-      ev.params.amount0.toString(),
-      ev.params.amount1.toString()
-    ])
+    // Process fee collection
     
     // Refresh position and trigger portfolio update
     refreshVeloCLPosition(ev.params.tokenId, ev.block, ev.transaction.hash)

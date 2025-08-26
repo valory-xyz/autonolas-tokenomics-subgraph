@@ -1,4 +1,4 @@
-import { Address, BigDecimal, BigInt, log, Bytes, ethereum } from "@graphprotocol/graph-ts"
+import { Address, BigDecimal, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts"
 import { Token, PriceSource, PriceUpdate } from "../../../../generated/schema"
 import { getTokenConfig, TokenConfig, PriceSourceConfig } from "./tokenConfig"
 import { CRITICAL_STABLECOINS } from "./constants"
@@ -26,7 +26,6 @@ export function getTokenPriceUSD(
   
   // Quick validation check first
   if (!isTokenValidated(tokenAddress)) {
-    log.error("🚫 PRICE: Token not in whitelist: {}", [tokenAddress.toHexString()])
     return BigDecimal.fromString("0")
   }
 
@@ -42,11 +41,7 @@ export function getTokenPriceUSD(
   if (!forceRefresh && 
       currentTimestamp.minus(token.lastPriceUpdate).lt(PRICE_CACHE_DURATION) &&
       token.priceConfidence.gt(MIN_CONFIDENCE_THRESHOLD)) {
-    log.info("💾 PRICE: Using cached price for {} = ${} (confidence: {}%)", [
-      token.symbol, 
-      token.derivedUSD.toString(),
-      token.priceConfidence.times(BigDecimal.fromString("100")).toString()
-    ])
+    // Using cached price
     return token.derivedUSD
   }
   
@@ -65,17 +60,10 @@ export function getTokenPriceUSD(
     // Create price update record
     createPriceUpdate(token, priceResult, currentTimestamp)
     
-    log.info("✅ PRICE: Updated {} = ${} (confidence: {}% from {})", [
-      token.symbol, 
-      priceResult.price.toString(),
-      priceResult.confidence.times(BigDecimal.fromString("100")).toString(),
-      priceResult.source
-    ])
-    
     return priceResult.price
   }
   
-  log.error("❌ PRICE: No reliable price found for {} (tried all sources)", [token.symbol])
+  // No reliable price found for token
 
   // Fallback strategy based on token type
   let tokenHex = token.id.toHexString().toLowerCase()
@@ -83,7 +71,7 @@ export function getTokenPriceUSD(
   // For critical stablecoins (USDC, USDT, DAI, LUSD), use $1.00 with high confidence
   for (let i = 0; i < CRITICAL_STABLECOINS.length; i++) {
     if (tokenHex == CRITICAL_STABLECOINS[i]) {
-      log.warning("🚨 EMERGENCY: Using $1.00 fallback for critical stablecoin {}", [token.symbol])
+      // Using $1.00 fallback for critical stablecoin
       
       // Update token with fallback price
       token.derivedUSD = STABLECOIN_FALLBACK_PRICE
@@ -177,13 +165,6 @@ function getPriceFromSources(
     let result = getPriceFromSource(token, sourceConfig, timestamp)
     
     if (result.price.gt(BigDecimal.fromString("0"))) {
-      log.info("✅ PRICE: Got {} price ${} from {} (confidence: {}%)", [
-        token.symbol, 
-        result.price.toString(), 
-        sourceConfig.sourceType,
-        result.confidence.times(BigDecimal.fromString("100")).toString()
-      ])
-      
       validPrices.push(result.price)
       confidences.push(result.confidence)
       sourceTypes.push(result.source)
@@ -204,17 +185,9 @@ function getPriceFromSources(
   let weightedSum = BigDecimal.fromString("0")
   let totalConfidence = BigDecimal.fromString("0")
   
-  // Log all sources that contributed to the average
-  let sourcesList = ""
   for (let i = 0; i < validPrices.length; i++) {
     weightedSum = weightedSum.plus(validPrices[i].times(confidences[i]))
     totalConfidence = totalConfidence.plus(confidences[i])
-    
-    // Add to sources list for logging
-    sourcesList += sourceTypes[i]
-    if (i < validPrices.length - 1) {
-      sourcesList += ", "
-    }
   }
   
   // Avoid division by zero
@@ -227,23 +200,11 @@ function getPriceFromSources(
     let avgPrice = sum.div(BigDecimal.fromString(validPrices.length.toString()))
     let avgConfidence = BigDecimal.fromString("0.5") // Default to 50% confidence
     
-    log.info("📊 PRICE: Calculated unweighted average price for {}: ${} from sources: {}", [
-      token.symbol,
-      avgPrice.toString(),
-      sourcesList
-    ])
-    
     return new PriceResult(avgPrice, avgConfidence, "average_unweighted")
   }
   
   let weightedAvgPrice = weightedSum.div(totalConfidence)
   let avgConfidence = totalConfidence.div(BigDecimal.fromString(validPrices.length.toString()))
-  
-  log.info("📊 PRICE: Calculated weighted average price for {}: ${} from sources: {}", [
-    token.symbol,
-    weightedAvgPrice.toString(),
-    sourcesList
-  ])
   
   return new PriceResult(weightedAvgPrice, avgConfidence, "average_weighted")
 }
@@ -346,21 +307,6 @@ function createPriceUpdate(
   update.timestamp = timestamp
   update.block = BigInt.fromI32(0) // Would need block context
   update.save()
-  
-  // Enhanced logging for averaged prices
-  if (result.source == "average_weighted" || result.source == "average_unweighted") {
-    log.info("PRICE UPDATE: {} price ${} using {} from multiple sources", [
-      token.symbol,
-      result.price.toString(),
-      result.source
-    ])
-  } else {
-    log.info("PRICE UPDATE: {} price ${} from source {}", [
-      token.symbol,
-      result.price.toString(),
-      result.source
-    ])
-  }
 }
 
 function isValidPriceResult(price: BigDecimal, tokenSymbol: string): boolean {
@@ -385,13 +331,7 @@ function isValidPriceResult(price: BigDecimal, tokenSymbol: string): boolean {
     maxPrice = BigDecimal.fromString("100000") // $100,000
   }
   
-  if (price.le(minPrice)) {
-    log.warning("⚠️ PRICE: Price too low for {}: ${}", [tokenSymbol, price.toString()])
-    return false
-  }
-  
-  if (price.ge(maxPrice)) {
-    log.warning("⚠️ PRICE: Price too high for {}: ${}", [tokenSymbol, price.toString()])
+  if (price.le(minPrice) || price.ge(maxPrice)) {
     return false
   }
   

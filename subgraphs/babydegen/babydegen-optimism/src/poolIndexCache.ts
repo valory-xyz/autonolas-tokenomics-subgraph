@@ -112,11 +112,6 @@ export function isSafeOwnedNFT(protocol: string, tokenId: BigInt): bool {
   // Use the reverse lookup to check if Safe owns this NFT
   // Since we only track Safe-owned NFTs in the cache, if it's found, Safe owns it
   const isInCache = cache.isNFTInCache(protocol, tokenId)
-  log.info("{}: Cache lookup for tokenId {}: isInCache = {}", [
-    protocol.toUpperCase(),
-    tokenId.toString(),
-    isInCache.toString()
-  ])
   return isInCache
 }
 

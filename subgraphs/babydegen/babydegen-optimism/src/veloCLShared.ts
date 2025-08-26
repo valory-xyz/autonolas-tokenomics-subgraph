@@ -27,44 +27,23 @@ function getPoolAddress(token0: Address, token1: Address, tickSpacing: i32, toke
   if (tokenId !== null) {
     const cached = getCachedPoolAddress("velodrome-cl", tokenId)
     if (cached !== null) {
-      log.info("VELODROME: Pool address cache hit for tokenId: {} - pool: {}", [
-        tokenId.toString(),
-        cached.toHexString()
-      ])
       return cached
     }
   }
-  
-  // Log the parameters we're using for the factory call
-  log.info("VELODROME: Attempting factory.getPool with token0: {}, token1: {}, tickSpacing: {}", [
-    token0.toHexString(),
-    token1.toHexString(),
-    tickSpacing.toString()
-  ])
   
   // Factory call as last resort
   const factory = VelodromeCLFactory.bind(VELO_FACTORY)
   const poolResult = factory.try_getPool(token0, token1, tickSpacing)
   
   if (poolResult.reverted) {
-    log.error("VELODROME: Factory getPool REVERTED for token0: {}, token1: {}, tickSpacing: {} - Factory address: {}", [
-      token0.toHexString(),
-      token1.toHexString(),
-      tickSpacing.toString(),
-      VELO_FACTORY.toHexString()
-    ])
-    
     // Try with reversed token order
-    log.info("VELODROME: Trying with reversed token order", [])
     const reversedResult = factory.try_getPool(token1, token0, tickSpacing)
     
     if (reversedResult.reverted) {
-      log.error("VELODROME: Factory getPool ALSO REVERTED with reversed tokens", [])
       return Address.zero()
     }
     
     const poolAddress = reversedResult.value
-    log.info("VELODROME: Successfully got pool with REVERSED tokens: {}", [poolAddress.toHexString()])
     
     // Cache the result if we have a tokenId
     if (tokenId !== null) {
@@ -75,7 +54,6 @@ function getPoolAddress(token0: Address, token1: Address, tickSpacing: i32, toke
   }
   
   const poolAddress = poolResult.value
-  log.info("VELODROME: Successfully got pool address from factory: {}", [poolAddress.toHexString()])
   
   // Cache the result if we have a tokenId
   if (tokenId !== null) {
@@ -91,7 +69,6 @@ export function ensurePoolTemplate(tokenId: BigInt): void {
   const posResult = mgr.try_positions(tokenId)
   
   if (posResult.reverted) {
-    log.error("VELODROME: Failed to get position data for tokenId: {}", [tokenId.toString()])
     return
   }
   
@@ -101,7 +78,6 @@ export function ensurePoolTemplate(tokenId: BigInt): void {
   const poolAddress = getPoolAddress(pos.value2, pos.value3, pos.value4 as i32, tokenId)
   
   if (poolAddress.equals(Address.zero())) {
-    log.error("VELODROME: Failed to derive pool address for tokenId: {}", [tokenId.toString()])
     return
   }
   
@@ -110,11 +86,6 @@ export function ensurePoolTemplate(tokenId: BigInt): void {
   
   // Still maintain the NFT-to-pool mapping for cache purposes
   addAgentNFTToPool("velodrome-cl", poolAddress, tokenId)
-  
-  log.info("VELODROME: Registered NFT {} to pool {} (snapshot-based tracking)", [
-    tokenId.toString(),
-    poolAddress.toHexString()
-  ])
 }
 
 // Helper function to check if position is closed
@@ -138,108 +109,38 @@ export function refreshVeloCLPositionWithEventAmounts(
   // First, get the actual NFT owner
   const ownerResult = mgr.try_ownerOf(tokenId)
   if (ownerResult.reverted) {
-    log.error("VELODROME[unknown]: Failed to get owner for tokenId: {}", [tokenId.toString()])
     return
   }
   
   const nftOwner = ownerResult.value
-  
-  log.info("VELODROME[{}]: refreshVeloCLPositionWithEventAmounts ENTRY - tokenId: {}, eventAmount0: {}, eventAmount1: {}, tx: {}", [
-    nftOwner.toHexString(),
-    tokenId.toString(),
-    eventAmount0.toString(),
-    eventAmount1.toString(),
-    txHash.toHexString()
-  ])
 
   // AGENT FILTERING: Only process positions owned by a service
   if (!isServiceAgent(nftOwner)) {
-    log.info("VELODROME[{}]: Skipping position {} - not owned by a service", [
-      nftOwner.toHexString(),
-      tokenId.toString()
-    ])
     return
   }
-  
-  log.info("VELODROME[{}]: Agent validation passed for tokenId: {}", [
-    nftOwner.toHexString(),
-    tokenId.toString()
-  ])
-
-  log.info("VELODROME[{}]: Getting position data for tokenId: {}", [
-    nftOwner.toHexString(),
-    tokenId.toString()
-  ])
 
   const dataResult = mgr.try_positions(tokenId)
   
   if (dataResult.reverted) {
-    log.error("VELODROME[{}]: positions() call FAILED for tokenId: {}", [
-      nftOwner.toHexString(),
-      tokenId.toString()
-    ])
     return
   }
-
-  log.info("VELODROME[{}]: Got position data successfully for tokenId: {}", [
-    nftOwner.toHexString(),
-    tokenId.toString()
-  ])
   
   const data = dataResult.value
-
-  log.info("VELODROME[{}]: Getting pool address for tokenId: {}", [
-    nftOwner.toHexString(),
-    tokenId.toString()
-  ])
 
   // Derive pool address from position data with caching  
   const poolAddress = getPoolAddress(data.value2, data.value3, data.value4 as i32, tokenId)
   
   if (poolAddress.equals(Address.zero())) {
-    log.error("VELODROME[{}]: Failed to derive pool address for tokenId: {}", [
-      nftOwner.toHexString(),
-      tokenId.toString()
-    ])
     return
   }
 
-  log.info("VELODROME[{}]: Got pool address {} for tokenId: {}", [
-    nftOwner.toHexString(),
-    poolAddress.toHexString(),
-    tokenId.toString()
-  ])
-
   // USD pricing for event amounts
-  log.info("VELODROME[{}]: Getting token prices for tokenId: {}", [
-    nftOwner.toHexString(),
-    tokenId.toString()
-  ])
-  
   const token0Price = getTokenPriceUSD(data.value2, block.timestamp, false)
   const token1Price = getTokenPriceUSD(data.value3, block.timestamp, false)
-  
-  log.info("VELODROME[{}]: Token prices - token0: {}, token1: {} for tokenId: {}", [
-    nftOwner.toHexString(),
-    token0Price.toString(),
-    token1Price.toString(),
-    tokenId.toString()
-  ])
 
   // Convert event amounts from wei to human readable using proper decimals
   const eventAmount0Human = convertTokenAmount(eventAmount0, data.value2) // token0
   const eventAmount1Human = convertTokenAmount(eventAmount1, data.value3) // token1
-  
-  // Log the actual event amounts with transaction hash
-  log.info("VELODROME[{}]: Position {} event amounts from tx {} - amount0: {} ({}), amount1: {} ({})", [
-    nftOwner.toHexString(),
-    tokenId.toString(),
-    txHash.toHexString(),
-    eventAmount0.toString(),
-    eventAmount0Human.toString(),
-    eventAmount1.toString(), 
-    eventAmount1Human.toString()
-  ])
   
   const eventUsd0 = eventAmount0Human.times(token0Price)
   const eventUsd1 = eventAmount1Human.times(token1Price)
@@ -289,15 +190,6 @@ export function refreshVeloCLPositionWithEventAmounts(
     pp.entryAmount1USD = eventUsd1       // Use actual event amount
     pp.entryAmountUSD = eventUsd
     
-    // DEBUG: Log what we're setting as entry amounts
-    log.info("VELODROME[{}]: Position {} ENTRY AMOUNTS BEING SET - entryAmount0: {}, entryAmount1: {}, entryAmountUSD: {}", [
-      nftOwner.toHexString(),
-      tokenId.toString(),
-      pp.entryAmount0.toString(),
-      pp.entryAmount1.toString(),
-      pp.entryAmountUSD.toString()
-    ])
-    
     // For new positions, ensure usdCurrent is explicitly set to prevent "missing non-nullable field" errors
     // Initially set it to match the entry USD value
     pp.usdCurrent = eventUsd
@@ -319,15 +211,6 @@ export function refreshVeloCLPositionWithEventAmounts(
     refreshVeloCLPosition(tokenId, block, txHash) // This will update current amounts and save the entity again
     return // Exit early since refreshVeloCLPosition will save the entity
   } else {
-    // DEBUG: Log the BEFORE values to track accumulation
-    log.info("VELODROME[{}]: Position {} BEFORE UPDATE - entryAmount0: {}, entryAmount1: {}, entryAmountUSD: {}", [
-      nftOwner.toHexString(),
-      tokenId.toString(),
-      pp.entryAmount0.toString(),
-      pp.entryAmount1.toString(),
-      pp.entryAmountUSD.toString()
-    ])
-    
     // CRITICAL FIX: Check if this is the first IncreaseLiquidity event for this position
     // The first IncreaseLiquidity event after position creation should set entry amounts
     // Subsequent IncreaseLiquidity events should add to existing entry amounts
@@ -340,14 +223,6 @@ export function refreshVeloCLPositionWithEventAmounts(
       pp.entryAmount1 = eventAmount1Human
       pp.entryAmount1USD = eventUsd1
       pp.entryAmountUSD = eventUsd
-      
-      log.info("VELODROME[{}]: Position {} INITIAL ENTRY SET - entryAmount0: {}, entryAmount1: {}, entryAmountUSD: {}", [
-        nftOwner.toHexString(),
-        tokenId.toString(),
-        pp.entryAmount0.toString(),
-        pp.entryAmount1.toString(),
-        pp.entryAmountUSD.toString()
-      ])
     } else {
       // This is a subsequent IncreaseLiquidity event - add to existing entry amounts
       pp.entryAmount0 = pp.entryAmount0.plus(eventAmount0Human)
@@ -355,14 +230,6 @@ export function refreshVeloCLPositionWithEventAmounts(
       pp.entryAmount1 = pp.entryAmount1.plus(eventAmount1Human)
       pp.entryAmount1USD = pp.entryAmount1USD.plus(eventUsd1)
       pp.entryAmountUSD = pp.entryAmountUSD.plus(eventUsd)
-      
-      log.info("VELODROME[{}]: Position {} ENTRY INCREASED - entryAmount0: {}, entryAmount1: {}, entryAmountUSD: {}", [
-        nftOwner.toHexString(),
-        tokenId.toString(),
-        pp.entryAmount0.toString(),
-        pp.entryAmount1.toString(),
-        pp.entryAmountUSD.toString()
-      ])
     }
     
     // Save the updated entry amounts first
@@ -388,7 +255,6 @@ export function refreshVeloCLPositionWithExitAmounts(
   // First, get the actual NFT owner
   const ownerResult = mgr.try_ownerOf(tokenId)
   if (ownerResult.reverted) {
-    log.error("VELODROME: Failed to get owner for tokenId: {}", [tokenId.toString()])
     return
   }
   
@@ -396,17 +262,12 @@ export function refreshVeloCLPositionWithExitAmounts(
 
   // AGENT FILTERING: Only process positions owned by a service
   if (!isServiceAgent(nftOwner)) {
-    log.info("VELODROME: Skipping position {} - not owned by a service (owner: {})", [
-      tokenId.toString(),
-      nftOwner.toHexString()
-    ])
     return
   }
 
   const dataResult = mgr.try_positions(tokenId)
   
   if (dataResult.reverted) {
-    log.error("VELODROME: positions() call failed for tokenId: {}", [tokenId.toString()])
     return
   }
   
@@ -418,7 +279,6 @@ export function refreshVeloCLPositionWithExitAmounts(
   let pp = ProtocolPosition.load(id)
   
   if (pp == null) {
-    log.error("VELODROME: Position {} not found for exit processing", [tokenId.toString()])
     return
   }
   
@@ -427,11 +287,6 @@ export function refreshVeloCLPositionWithExitAmounts(
   const isFullExit = remainingLiquidity.equals(BigInt.zero())
   
   if (isFullExit) {
-    log.info("VELODROME: Processing FULL EXIT for position {} - using event amounts from tx {}", [
-      tokenId.toString(),
-      txHash.toHexString()
-    ])
-    
     // USD pricing for exit amounts
     const token0Price = getTokenPriceUSD(data.value2, block.timestamp, false)
     const token1Price = getTokenPriceUSD(data.value3, block.timestamp, false)
@@ -444,21 +299,6 @@ export function refreshVeloCLPositionWithExitAmounts(
     const exitUsd1 = exitAmount1Human.times(token1Price)
     const exitUsd = exitUsd0.plus(exitUsd1)
     
-    // Log raw exit values before conversion
-    log.info("VELODROME: Raw exit amounts for position {} - amount0: {}, amount1: {}", [
-      tokenId.toString(),
-      eventAmount0.toString(),
-      eventAmount1.toString()
-    ])
-    
-    // Enhanced logging to track exit amount setting
-    log.info("VELODROME: Setting exit amounts for position {} - exitAmount0: {}, exitAmount1: {}, exitAmountUSD: {}", [
-      tokenId.toString(),
-      exitAmount0Human.toString(),
-      exitAmount1Human.toString(),
-      exitUsd.toString()
-    ])
-    
     // Set exit data using ACTUAL EVENT AMOUNTS
     pp.isActive = false
     pp.exitTxHash = txHash
@@ -469,11 +309,6 @@ export function refreshVeloCLPositionWithExitAmounts(
     pp.exitAmount1USD = exitUsd1
     pp.exitAmountUSD = exitUsd
     
-    // Log confirmation that exit amounts have been set
-    log.info("VELODROME: CONFIRMED exit amounts set for position {} - this record will be used when NFT is burned", [
-      tokenId.toString()
-    ])
-    
     // Update current amounts to 0 (since position is closed)
     pp.amount0 = BigDecimal.zero()
     pp.amount1 = BigDecimal.zero()
@@ -481,13 +316,6 @@ export function refreshVeloCLPositionWithExitAmounts(
     pp.amount1USD = BigDecimal.zero()
     pp.usdCurrent = BigDecimal.zero()
     pp.liquidity = BigInt.zero()
-    
-    log.info("VELODROME: Position {} EXIT AMOUNTS SET - exitAmount0: {}, exitAmount1: {}, exitAmountUSD: {}", [
-      tokenId.toString(),
-      exitAmount0Human.toString(),
-      exitAmount1Human.toString(),
-      exitUsd.toString()
-    ])
     
     // Remove from cache
     const poolAddress = getPoolAddress(data.value2, data.value3, data.value4 as i32, tokenId)
@@ -497,7 +325,6 @@ export function refreshVeloCLPositionWithExitAmounts(
     refreshPortfolio(nftOwner, block)
   } else {
     // Partial withdrawal - just update current amounts normally
-    log.info("VELODROME: Processing partial withdrawal for position {}", [tokenId.toString()])
     refreshVeloCLPosition(tokenId, block, txHash)
   }
 }
@@ -509,7 +336,6 @@ export function refreshVeloCLPosition(tokenId: BigInt, block: ethereum.Block, tx
   // First, get the actual NFT owner
   const ownerResult = mgr.try_ownerOf(tokenId)
   if (ownerResult.reverted) {
-    log.error("VELODROME: Failed to get owner for tokenId: {}", [tokenId.toString()])
     return
   }
   
@@ -517,10 +343,6 @@ export function refreshVeloCLPosition(tokenId: BigInt, block: ethereum.Block, tx
 
   // AGENT FILTERING: Only process positions owned by a service
   if (!isServiceAgent(nftOwner)) {
-    log.info("VELODROME: Skipping position {} - not owned by a service (owner: {})", [
-      tokenId.toString(),
-      nftOwner.toHexString()
-    ])
     return
   }
 
@@ -536,7 +358,6 @@ export function refreshVeloCLPosition(tokenId: BigInt, block: ethereum.Block, tx
   const dataResult = mgr.try_positions(tokenId)
   
   if (dataResult.reverted) {
-    log.error("VELODROME: positions() call failed for tokenId: {}", [tokenId.toString()])
     return
   }
   
@@ -546,7 +367,6 @@ export function refreshVeloCLPosition(tokenId: BigInt, block: ethereum.Block, tx
   const poolAddress = getPoolAddress(data.value2, data.value3, data.value4 as i32, tokenId)
   
   if (poolAddress.equals(Address.zero())) {
-    log.error("VELODROME: Failed to derive pool address for tokenId: {}", [tokenId.toString()])
     return
   }
   
@@ -555,7 +375,6 @@ export function refreshVeloCLPosition(tokenId: BigInt, block: ethereum.Block, tx
   const slot0Result = pool.try_slot0()
   
   if (slot0Result.reverted) {
-    log.error("VELODROME: Failed to get slot0 from pool: {}", [poolAddress.toHexString()])
     return
   }
   
@@ -579,14 +398,7 @@ export function refreshVeloCLPosition(tokenId: BigInt, block: ethereum.Block, tx
   const amount0Human = convertTokenAmount(amounts.amount0, data.value2) // token0
   const amount1Human = convertTokenAmount(amounts.amount1, data.value3) // token1
   
-  // Add debugging logs to track the conversion
-  log.info("VELODROME: Position {} amounts - token0: {} ({}), token1: {} ({})", [
-    tokenId.toString(),
-    amounts.amount0.toString(),
-    amount0Human.toString(),
-    amounts.amount1.toString(), 
-    amount1Human.toString()
-  ])
+  // No conversion logging needed in production
   
   const usd0 = amount0Human.times(token0Price)
   const usd1 = amount1Human.times(token1Price)
@@ -636,9 +448,7 @@ export function refreshVeloCLPosition(tokenId: BigInt, block: ethereum.Block, tx
     pp.entryAmount1USD = BigDecimal.zero()
     pp.entryAmountUSD = BigDecimal.zero()
     
-    log.info("VELODROME: Position {} created with ZERO entry amounts - will be set by event processing", [
-      tokenId.toString()
-    ])
+    // Entry amounts will be set by event processing
   }
   
   // Update current state (for both new and existing positions)
@@ -680,7 +490,6 @@ export function handleNFTTransferForCache(tokenId: BigInt, from: Address, to: Ad
   const posResult = mgr.try_positions(tokenId)
   
   if (posResult.reverted) {
-    log.error("VELODROME: Failed to get position data for tokenId: {} in handleNFTTransferForCache", [tokenId.toString()])
     return
   }
   
@@ -690,7 +499,6 @@ export function handleNFTTransferForCache(tokenId: BigInt, from: Address, to: Ad
   const poolAddress = getPoolAddress(pos.value2, pos.value3, pos.value4 as i32, tokenId)
   
   if (poolAddress.equals(Address.zero())) {
-    log.error("VELODROME: Failed to derive pool address for tokenId: {} in handleNFTTransferForCache", [tokenId.toString()])
     return
   }
   

@@ -11,7 +11,7 @@ import {
   ensureVeloV2PoolTemplate
 } from "./veloV2Shared"
 
-import { log, BigInt, Bytes, store } from "@graphprotocol/graph-ts"
+import { BigInt, Bytes, store } from "@graphprotocol/graph-ts"
 import { getServiceByAgent } from "./config"
 import { PendingMintPosition, ProtocolPosition } from "../../../../generated/schema"
 import { getTokenPriceUSD } from "./priceDiscovery"
@@ -38,10 +38,6 @@ function storePendingPosition(txHash: Bytes, poolAddress: Bytes, positionId: Byt
   pending.recipient = recipient
   pending.save()
   
-  log.info("VELO V2: Stored pending position {} for tx {}", [
-    positionId.toHexString(),
-    txHash.toHexString()
-  ])
 }
 
 // Retrieve and remove pending position
@@ -51,7 +47,6 @@ function getPendingPosition(txHash: Bytes, poolAddress: Bytes): PendingMintPosit
   if (pending != null) {
     // Remove the data after retrieval to keep storage clean
     store.remove("PendingMintPosition", id)
-    log.info("VELO V2: Retrieved and removed pending position for tx {}", [txHash.toHexString()])
   }
   return pending
 }
@@ -62,25 +57,14 @@ export function handleVeloV2Transfer(event: Transfer): void {
   const to = event.params.to
   const value = event.params.value
   
-  log.warning("VELODROME V2 POOL: Transfer event - pool: {}, from: {}, to: {}, value: {}, txHash: {}", [
-    event.address.toHexString(),
-    from.toHexString(),
-    to.toHexString(),
-    value.toString(),
-    event.transaction.hash.toHexString()
-  ])
   
   // Handle minting (from zero address) - THIS IS WHERE WE CREATE THE POSITION
   if (from.toHexString() == "0x0000000000000000000000000000000000000000") {
-    log.warning("VELODROME V2 POOL: LP tokens minted to {}", [to.toHexString()])
     
     // Check if the recipient is a service
     const service = getServiceByAgent(to)
     
     if (service != null) {
-      log.warning("VELODROME V2 POOL: Recipient {} is a service, creating position and marking as pending", [
-        to.toHexString()
-      ])
       
       // Create the position with placeholder amounts (will be updated by Mint event)
       refreshVeloV2Position(to, event.address, event.block, event.transaction.hash)
@@ -93,8 +77,6 @@ export function handleVeloV2Transfer(event: Transfer): void {
         Bytes.fromUTF8(positionId),
         to
       )
-    } else {
-      log.warning("VELODROME V2 POOL: Recipient {} is not a service, skipping", [to.toHexString()])
     }
     return
   }
@@ -112,15 +94,6 @@ export function handleVeloV2Transfer(event: Transfer): void {
 
 // Handle VelodromeV2 Pool Mint events (liquidity additions) - THIS COMES SECOND
 export function handleVeloV2Mint(event: Mint): void {
-  log.warning("VELODROME V2 MINT: Event triggered - pool: {}, sender: {}, amount0: {}, amount1: {}, txFrom: {}, txHash: {}, block: {}", [
-    event.address.toHexString(),
-    event.params.sender.toHexString(),
-    event.params.amount0.toString(),
-    event.params.amount1.toString(),
-    event.transaction.from.toHexString(),
-    event.transaction.hash.toHexString(),
-    event.block.number.toString()
-  ])
   
   // Note: In Velodrome V2, the Mint event sender is the router contract, not the actual user
   // We need to look for the pending position to determine if this mint is for a tracked service
@@ -133,10 +106,6 @@ export function handleVeloV2Mint(event: Mint): void {
     const recipientService = getServiceByAgent(Address.fromBytes(pending.recipient))
     
     if (recipientService != null) {
-      log.warning("VELODROME V2 MINT: Found pending position {} for tracked service {}, updating with mint amounts", [
-        pending.positionId.toHexString(),
-        pending.recipient.toHexString()
-      ])
     
     // Load the position
     let position = ProtocolPosition.load(pending.positionId)
@@ -165,13 +134,6 @@ export function handleVeloV2Mint(event: Mint): void {
       position.entryAmount1USD = amount1USD
       position.entryAmountUSD = totalUSD
       
-      log.warning("VELODROME V2 MINT: Updated position entry amounts - amount0: {} {}, amount1: {} {}, total: {} USD", [
-        amount0Human.toString(),
-        position.token0Symbol ? position.token0Symbol! : "Unknown",
-        amount1Human.toString(),
-        position.token1Symbol ? position.token1Symbol! : "Unknown",
-        totalUSD.toString()
-      ])
       
       position.save()
       
@@ -182,42 +144,13 @@ export function handleVeloV2Mint(event: Mint): void {
         event.block,
         event.transaction.hash
       )
-    } else {
-      log.error("VELODROME V2 MINT: Position {} not found!", [pending.positionId.toHexString()])
     }
-    } else {
-      log.warning("VELODROME V2 MINT: Pending position recipient {} is not a tracked service, skipping", [
-        pending.recipient.toHexString()
-      ])
     }
-  } else {
-    log.info("VELODROME V2 MINT: No pending position found for tx {} - this mint is not for a tracked service", [
-      event.transaction.hash.toHexString()
-    ])
   }
 }
 
 // Handle VelodromeV2 Pool Burn events (liquidity removals)
 export function handleVeloV2Burn(event: Burn): void {
-  log.warning("===== VELODROME V2 BURN EVENT START =====", [])
-  log.warning("VELODROME V2 BURN: Block: {}, TxHash: {}, Timestamp: {}", [
-    event.block.number.toString(),
-    event.transaction.hash.toHexString(),
-    event.block.timestamp.toString()
-  ])
-  log.warning("VELODROME V2 BURN: Pool: {}, Sender: {}, To: {}", [
-    event.address.toHexString(),
-    event.params.sender.toHexString(),
-    event.params.to.toHexString()
-  ])
-  log.warning("VELODROME V2 BURN: Raw amounts - amount0: {}, amount1: {}", [
-    event.params.amount0.toString(),
-    event.params.amount1.toString()
-  ])
-  log.warning("VELODROME V2 BURN: Transaction details - from: {}, to: {}", [
-    event.transaction.from.toHexString(),
-    event.transaction.to ? event.transaction.to!.toHexString() : "null"
-  ])
   
   // The 'to' address is where the tokens are being sent (the actual user/recipient)
   // In VelodromeV2, the burn event's 'to' parameter indicates who receives the tokens
@@ -225,13 +158,8 @@ export function handleVeloV2Burn(event: Burn): void {
   
   // Check if the recipient is a tracked service
   const userService = getServiceByAgent(userAddress)
-  log.warning("VELODROME V2 BURN: Checking 'to' address: {} (Is service: {})", [
-    userAddress.toHexString(),
-    userService != null ? "YES" : "NO"
-  ])
   
   if (userService != null) {
-    log.warning("VELODROME V2 BURN: ✅ This burn is for a service - processing burn", [])
     
     refreshVeloV2PositionWithBurnAmounts(
       userAddress,
@@ -242,7 +170,6 @@ export function handleVeloV2Burn(event: Burn): void {
       event.transaction.hash
     )
     
-    log.warning("VELODROME V2 BURN: ✅ Burn processing completed successfully", [])
     return
   }
   
@@ -250,7 +177,6 @@ export function handleVeloV2Burn(event: Burn): void {
   // This handles cases where the service might be the sender instead of recipient
   const senderService = getServiceByAgent(event.params.sender)
   if (senderService != null) {
-    log.warning("VELODROME V2 BURN: ✅ Sender is a service - processing burn", [])
     
     refreshVeloV2PositionWithBurnAmounts(
       event.params.sender,
@@ -261,12 +187,9 @@ export function handleVeloV2Burn(event: Burn): void {
       event.transaction.hash
     )
     
-    log.warning("VELODROME V2 BURN: ✅ Burn processing completed successfully", [])
     return
   }
   
-  log.warning("VELODROME V2 BURN: ❌ Neither recipient nor sender is a service - skipping burn processing", [])
-  log.warning("===== VELODROME V2 BURN EVENT END =====", [])
 }
 
 // Swap and Sync events are completely removed - not needed for portfolio tracking
