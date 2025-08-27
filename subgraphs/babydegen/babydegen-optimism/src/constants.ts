@@ -57,6 +57,7 @@ export const OPTIMUS_AGENT_ID = BigInt.fromI32(40)
 // Whitelisted tokens array (for easy iteration)
 export const WHITELISTED_TOKENS: string[] = [
   USDC_NATIVE.toHexString(),
+  USDC_BRIDGED.toHexString(),  // USDC.e - Added to fix uninvested value calculation
   LUSD.toHexString(),
   WETH.toHexString(),
   USDT.toHexString(),
