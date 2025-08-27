@@ -1,4 +1,4 @@
-import { BigInt, BigDecimal, ethereum, Address } from "@graphprotocol/graph-ts"
+import { BigInt, BigDecimal, ethereum, Address, log } from "@graphprotocol/graph-ts"
 import {
   Safe,
   SafeReceived as SafeReceivedEvent,
@@ -15,13 +15,22 @@ import { updateETHBalance } from "./tokenBalances"
 // ETH transfers in are tracked via SafeReceived events.
 
 export function handleSafeReceived(event: SafeReceivedEvent): void {
-  
   // Handle funding balance update for ETH received
   let from = event.params.sender
   let to = event.address // The safe that received ETH (emitted the event)
   let value = event.params.value
   let txHash = event.transaction.hash.toHexString()
   
+  // ENTRY POINT LOGGING - Always log when this handler is triggered
+  let ethAmount = value.toBigDecimal().div(BigDecimal.fromString("1e18"))
+  log.info("🔍 SAFE RECEIVED: Handler triggered", [
+    "txHash", txHash,
+    "from", from.toHexString(),
+    "to", to.toHexString(),
+    "amount", ethAmount.toString(),
+    "block", event.block.number.toString(),
+    "timestamp", event.block.timestamp.toString()
+  ])
   
   // Check if the receiving safe is a service safe
   let toService = getServiceByAgent(to)
@@ -61,13 +70,21 @@ export function handleSafeReceived(event: SafeReceivedEvent): void {
         .times(ethPrice)
         .div(BigDecimal.fromString("1e18")) // ETH has 18 decimals
       
-    // Check if receiver is valid funding target for this service (for funding balance tracking)
-    let isValidFundingTarget = isFundingSource(to, from, event.block, txHash)
-    
-    if (isValidFundingTarget) {
-      // Update the funding balance for the SERVICE safe (outflow)
-      updateFundingBalance(from, usd, false, event.block.timestamp)
-    }
+      let ethAmount = value.toBigDecimal().div(BigDecimal.fromString("1e18"))
+      
+      // NEW LOGIC: Check if receiver is this service's operator safe
+      if (to.equals(Address.fromBytes(fromService.operatorSafe))) {
+        // This is Service Safe → Operator Safe transfer
+        
+        // Update funding balance for the SERVICE safe (outflow)
+        updateFundingBalance(from, usd, false, event.block.timestamp)
+        
+        // Update ETH balance for the service safe (outflow)
+        updateETHBalance(from, value, false, event.block)
+        
+        return // Exit early since we handled this case
+      }
+      
       
       // Always update ETH balance for the service safe (outflow)
       updateETHBalance(from, value, false, event.block)
@@ -130,7 +147,6 @@ function handleSafeEthTransfer(
 }
 
 export function handleExecutionSuccess(event: ExecutionSuccessEvent): void {
-  
   let serviceSafe = event.address
   let txHash = event.params.txHash.toHexString()
   let payment = event.params.payment

@@ -52,7 +52,6 @@ export function handleBlock(block: ethereum.Block): void {
     return
   }
   
-  
   // Check all services for snapshot requirements
   checkServicesForSnapshot(block)
 }

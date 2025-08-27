@@ -8,7 +8,7 @@ import {
   ServiceIndex
 } from "../../../../generated/schema"
 import { Safe } from "../../../../generated/templates"
-import { BigInt, Bytes, store, log } from "@graphprotocol/graph-ts"
+import { BigInt, Bytes, store, log, Address } from "@graphprotocol/graph-ts"
 import { OPTIMUS_AGENT_ID } from "./constants"
 import { registerServiceForSnapshots } from "./portfolioScheduler"
 
@@ -116,6 +116,10 @@ export function handleCreateMultisigWithAgents(event: CreateMultisigWithAgents):
   // Register service for portfolio snapshots
   registerServiceForSnapshots(multisig)
   
-  // Create Safe datasource instance to track ETH transfers
+  // Create Safe datasource instance to track ETH transfers for service safe
   Safe.create(multisig)
+  
+  // NEW: Also create Safe datasource for the operator safe to track ETH inflows
+  
+  Safe.create(Address.fromBytes(registration.operatorSafe)) // Dynamic operator safe tracking
 }

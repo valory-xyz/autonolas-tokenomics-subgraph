@@ -2,7 +2,7 @@ import { Address, Bytes } from "@graphprotocol/graph-ts"
 import { Service } from "../../../../generated/schema"
 
 // =============================================================================
-// DYNAMIC SERVICE CONFIGURATION - No hardcoded addresses
+// DYNAMIC SERVICE CONFIGURATION - Supports multiple services
 // =============================================================================
 
 // Token addresses (network-specific) - Keep these as they're protocol tokens, not service-specific
@@ -16,10 +16,9 @@ export const USDC_USD_FEED = Address.fromString("0x16a9FA2FDa030272Ce99B29CF780d
 // Other contract addresses
 export const VELO_NFT_MANAGER = Address.fromString("0x416b433906b1B72FA758e166e239c43d68dC6F29")
 
-
-// Service lookup functions
+// Service lookup functions - DYNAMIC (supports multiple services)
 export function getServiceByAgent(address: Address): Service | null {
-  // Normal service lookup
+  // Dynamic service lookup - works for any registered service
   return Service.load(address)
 }
 
