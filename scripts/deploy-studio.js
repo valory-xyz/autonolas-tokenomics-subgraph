@@ -207,6 +207,17 @@ const networkTypes = {
         buildCommand: 'yarn build-liquidity:ethereum'
       }
     }
+  },
+  '9': {
+    name: 'Babydegen',
+    description: 'Agent funding and portfolio tracking',
+    networks: {
+      'optimism': {
+        path: 'subgraphs/babydegen/babydegen-optimism/subgraph.yaml',
+        description: 'Optimism Network',
+        buildCommand: 'yarn build-babydegen-optimism'
+      }
+    }
   }
 };
 
@@ -367,4 +378,4 @@ async function main() {
   }
 }
 
-main(); 
+main();
