@@ -27,19 +27,18 @@ export const USDC = Address.fromString("0xd988097fb8612cc24eec14542bc03424c65600
 export const USDT = Address.fromString("0xf0f161fda2712db8b566946122a5af183995e2ed") // USDT
 export const OUSDT = Address.fromString("0x1217bfe6c773eec6cc4a38b5dc45b92292b6e189") // oUSDT
 
-// USDC variants for funding tracking
-export const USDC_NATIVE = Address.fromString("0xd988097fb8612cc24eec14542bc03424c656005f") // USDC (native)
-export const USDC_BRIDGED = Address.fromString("0xd988097fb8612cc24eec14542bc03424c656005f") // USDC (same as native on MODE)
+// Legacy aliases for compatibility with existing code
+export const USDC_NATIVE = USDC // MODE only has one USDC
+export const USDC_BRIDGED = USDC // MODE only has one USDC (no bridged version)
 
 // Chainlink price feeds (MODE mainnet) - TODO: Add when available
-export const ETH_USD_FEED = Address.fromString("0x0000000000000000000000000000000000000000") // TODO: Add MODE ETH/USD feed
-export const USDC_USD_FEED = Address.fromString("0x0000000000000000000000000000000000000000") // TODO: Add MODE USDC/USD feed
+// export const ETH_USD_FEED = Address.fromString("") // TODO: Add MODE ETH/USD feed
+// export const USDC_USD_FEED = Address.fromString("") // TODO: Add MODE USDC/USD feed
 
 // DeFi protocol addresses
 export const VELO_NFT_MANAGER = Address.fromString("0x991d5546C4B442B4c5fdc4c8B8d8d131DEB24702")
 export const VELO_V2_SUGAR = Address.fromString("0x9ECd2f44f72E969fa3F3C4e4F63bc61E0C08F31F")
-// TODO: Add Velodrome V2 Factory address when provided
-// export const VELO_V2_FACTORY = Address.fromString("") // TODO: Add MODE Velodrome V2 Factory
+export const VELO_V2_FACTORY = Address.fromString("0x31832f2a97Fd20664D76Cc421207669b55CE4BC0") // Velodrome V2 Factory on MODE
 
 // STURDY protocol addresses
 export const STURDY_YEARN_VAULT = Address.fromString("0x2dE57F6432Ac67A99aF5aB17017005048AE7A24C")
@@ -49,8 +48,7 @@ export const BALANCER_VAULT = Address.fromString("0xBA12222222228d8Ba445958a75a0
 
 // Velodrome CL (Concentrated Liquidity) addresses
 export const VELO_MANAGER = Address.fromString("0x991d5546C4B442B4c5fdc4c8B8d8d131DEB24702") // Velodrome CL NFT Position Manager
-// TODO: Add Velodrome CL Factory address when provided
-// export const VELO_FACTORY = Address.fromString("") // TODO: Add MODE Velodrome CL Factory
+export const VELO_FACTORY = Address.fromString("0x04625B046C69577EfC40e6c0Bb83CDBAfab5a55F") // Velodrome CL Factory on MODE
 
 // OLAS-related addresses (TODO: Update with MODE addresses when available)
 // export const OLAS_TOKEN = Address.fromString("") // TODO: Add MODE OLAS token address

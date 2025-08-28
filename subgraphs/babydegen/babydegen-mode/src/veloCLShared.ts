@@ -1,6 +1,6 @@
 import { Address, BigDecimal, BigInt, ethereum, Bytes, log } from "@graphprotocol/graph-ts"
 import { NonfungiblePositionManager } from "../../../../generated/VeloNFTManager/NonfungiblePositionManager"
-import { VelodromeCLPool }            from "../../../../generated/templates/VeloCLPool/VelodromeCLPool"
+import { VelodromeCLPool }            from "../generated/VeloNFTManager/VelodromeCLPool"
 import { VelodromeCLFactory }         from "../../../../generated/VeloNFTManager/VelodromeCLFactory"
 // import { VeloCLPool }                 from "../../../../generated/templates" // Removed - using snapshot approach instead of real-time tracking
 import { LiquidityAmounts }           from "./libraries/LiquidityAmounts"
@@ -168,8 +168,11 @@ export function refreshVeloCLPositionWithEventAmounts(
         service.positionIds = []
       }
       let positionIds = service.positionIds
-      positionIds.push(idString)
-      service.positionIds = positionIds
+      let positionIdString = tokenId.toString()
+      if (positionIds.indexOf(positionIdString) == -1) {
+        positionIds.push(positionIdString)
+        service.positionIds = positionIds
+      }
       service.save()
       
       // Update first trading timestamp
@@ -424,8 +427,11 @@ export function refreshVeloCLPosition(tokenId: BigInt, block: ethereum.Block, tx
         service.positionIds = []
       }
       let positionIds = service.positionIds
-      positionIds.push(idString)
-      service.positionIds = positionIds
+      let positionIdString = tokenId.toString()
+      if (positionIds.indexOf(positionIdString) == -1) {
+        positionIds.push(positionIdString)
+        service.positionIds = positionIds
+      }
       service.save()
       
       // Update first trading timestamp
