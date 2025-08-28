@@ -6,6 +6,7 @@ import { getServiceByAgent } from "./config"
 import { isFundingSource } from "./common"
 import { getTokenPriceUSD } from "./priceDiscovery"
 import { WETH, WHITELISTED_TOKENS, USDC_NATIVE, USDC_BRIDGED } from "./constants"
+import { ensureAgentPortfolio } from "./helpers"
 
 // NOTE: This subgraph is configured to track USDC Native and ETH transfers for funding balance calculations.
 // While all token transfers are tracked for token balance purposes, only USDC Native and ETH flows affect
@@ -263,4 +264,6 @@ export function updateFundingBalance(
   fb.lastChangeTs = ts
   fb.save()
   
+  // Ensure AgentPortfolio exists when funding balance is updated
+  ensureAgentPortfolio(serviceSafe, ts)
 }

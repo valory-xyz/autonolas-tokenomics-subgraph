@@ -1,7 +1,7 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts"
 import { Token, PriceSource, PriceUpdate } from "../../../../generated/schema"
 import { getTokenConfig, TokenConfig, PriceSourceConfig } from "./tokenConfig"
-import { CRITICAL_STABLECOINS } from "./constants"
+import { CRITICAL_STABLECOINS, DOLA } from "./constants"
 
 // Cache duration: 5 minutes
 const PRICE_CACHE_DURATION = BigInt.fromI32(300)
@@ -24,6 +24,33 @@ export function getTokenPriceUSD(
   forceRefresh: boolean = false
 ): BigDecimal {
   
+  if (tokenAddress.equals(DOLA)) {
+    // Load or initialize DOLA token
+    let token = Token.load(tokenAddress)
+    if (token == null) {
+      token = initializeToken(tokenAddress)
+      if (token == null) {
+        return BigDecimal.fromString("1.0") // Fallback even if initialization fails
+      }
+    }
+    
+    // Set hardcoded price with high confidence
+    let hardcodedPrice = BigDecimal.fromString("1.0")
+    let hardcodedConfidence = BigDecimal.fromString("0.99") // 99% confidence
+    
+    // Update token with hardcoded values
+    token.derivedUSD = hardcodedPrice
+    token.priceConfidence = hardcodedConfidence
+    token.lastPriceUpdate = currentTimestamp
+    token.save()
+    
+    // Create price update record for tracking
+    let hardcodedResult = new PriceResult(hardcodedPrice, hardcodedConfidence, "hardcoded")
+    createPriceUpdate(token, hardcodedResult, currentTimestamp)
+    
+    return hardcodedPrice
+  }
+
   // Quick validation check first
   if (!isTokenValidated(tokenAddress)) {
     return BigDecimal.fromString("0")

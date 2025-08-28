@@ -56,19 +56,8 @@ export function calculatePortfolioMetrics(
     return
   }
   
-  // Load or create AgentPortfolio
-  let portfolioId = serviceSafe as Bytes
-  let portfolio = AgentPortfolio.load(portfolioId)
-  
-  if (portfolio == null) {
-    portfolio = new AgentPortfolio(portfolioId)
-    portfolio.service = serviceSafe
-    portfolio.firstTradingTimestamp = BigInt.zero() // Will be set on first position
-    portfolio.lastSnapshotTimestamp = BigInt.zero() // Initialize snapshot tracking
-    portfolio.lastSnapshotBlock = BigInt.zero()     // Initialize snapshot tracking
-    portfolio.totalPositions = 0
-    portfolio.totalClosedPositions = 0
-  }
+  // Ensure portfolio exists (replaces the existing if/else logic)
+  let portfolio = ensureAgentPortfolio(serviceSafe, block.timestamp)
   
   // 1. Get initial investment from FundingBalance
   let fundingBalance = FundingBalance.load(serviceSafe as Bytes)
@@ -124,9 +113,26 @@ export function calculatePortfolioMetrics(
     // Iterate through all position IDs
     let positionIds = serviceEntity.positionIds
     for (let i = 0; i < positionIds.length; i++) {
-      // Position IDs are stored as strings, convert to Bytes
-      let positionId = Bytes.fromUTF8(positionIds[i])
-      let position = ProtocolPosition.load(positionId)
+      let positionIdString = positionIds[i]
+      let position: ProtocolPosition | null = null
+      
+      // Try loading position with different ID formats for robustness
+      
+      // Method 1: Try as direct UTF8 string (standard format)
+      let directId = Bytes.fromUTF8(positionIdString)
+      position = ProtocolPosition.load(directId)
+      
+      if (position == null) {
+        // Method 2: Try as hex-decoded string (for any legacy hex-encoded IDs)
+        // Check if the string looks like hex (starts with 0x and has even length)
+        if (positionIdString.startsWith("0x") && positionIdString.length % 2 == 0) {
+          // Convert hex string back to original string, then to Bytes
+          let hexBytes = Bytes.fromHexString(positionIdString)
+          let decodedString = hexBytes.toString()
+          let decodedId = Bytes.fromUTF8(decodedString)
+          position = ProtocolPosition.load(decodedId)
+        }
+      }
       
       if (position != null) {
         if (position.isActive) {
@@ -168,10 +174,28 @@ function calculatePositionsValue(serviceSafe: Address): BigDecimal {
   let positionIds = service.positionIds
   
   for (let i = 0; i < positionIds.length; i++) {
-    // Position IDs are stored as strings, convert to Bytes
-    let positionId = Bytes.fromUTF8(positionIds[i])
-    let position = ProtocolPosition.load(positionId)
+    let positionIdString = positionIds[i]
+    let position: ProtocolPosition | null = null
     
+    // Try loading position with different ID formats for robustness
+    
+    // Method 1: Try as direct UTF8 string (standard format)
+    let directId = Bytes.fromUTF8(positionIdString)
+    position = ProtocolPosition.load(directId)
+    
+    if (position == null) {
+      // Method 2: Try as hex-decoded string (for any legacy hex-encoded IDs)
+      // Check if the string looks like hex (starts with 0x and has even length)
+      if (positionIdString.startsWith("0x") && positionIdString.length % 2 == 0) {
+        // Convert hex string back to original string, then to Bytes
+        let hexBytes = Bytes.fromHexString(positionIdString)
+        let decodedString = hexBytes.toString()
+        let decodedId = Bytes.fromUTF8(decodedString)
+        position = ProtocolPosition.load(decodedId)
+      }
+    }
+    
+    // If position found and active, add to total value
     if (position != null && position.isActive) {
       totalValue = totalValue.plus(position.usdCurrent)
     }
@@ -211,10 +235,38 @@ function createPortfolioSnapshot(portfolio: AgentPortfolio, block: ethereum.Bloc
   snapshot.save()
 }
 
+// Ensure AgentPortfolio exists, create if it doesn't
+export function ensureAgentPortfolio(serviceSafe: Address, timestamp: BigInt): AgentPortfolio {
+  let portfolioId = serviceSafe as Bytes
+  let portfolio = AgentPortfolio.load(portfolioId)
+  
+  if (portfolio == null) {
+    portfolio = new AgentPortfolio(portfolioId)
+    portfolio.service = serviceSafe
+    portfolio.firstTradingTimestamp = BigInt.zero() // Will be set by updateFirstTradingTimestamp
+    portfolio.lastSnapshotTimestamp = BigInt.zero()
+    portfolio.lastSnapshotBlock = BigInt.zero()
+    portfolio.totalPositions = 0
+    portfolio.totalClosedPositions = 0
+    // Initialize with default values
+    portfolio.finalValue = BigDecimal.zero()
+    portfolio.initialValue = BigDecimal.zero()
+    portfolio.positionsValue = BigDecimal.zero()
+    portfolio.uninvestedValue = BigDecimal.zero()
+    portfolio.roi = BigDecimal.zero()
+    portfolio.apr = BigDecimal.zero()
+    portfolio.lastUpdated = timestamp
+    portfolio.save()
+  }
+  
+  return portfolio
+}
+
 // Update first trading timestamp when a position is created
 export function updateFirstTradingTimestamp(serviceSafe: Address, timestamp: BigInt): void {
-  let portfolio = AgentPortfolio.load(serviceSafe as Bytes)
-  if (portfolio != null && portfolio.firstTradingTimestamp.equals(BigInt.zero())) {
+  let portfolio = ensureAgentPortfolio(serviceSafe, timestamp)
+  
+  if (portfolio.firstTradingTimestamp.equals(BigInt.zero())) {
     portfolio.firstTradingTimestamp = timestamp
     portfolio.save()
   }
