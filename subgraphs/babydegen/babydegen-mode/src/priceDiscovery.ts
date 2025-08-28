@@ -239,14 +239,14 @@ function getPriceFromSource(
   // Uniswap V3 support removed for MODE chain
   
   if (sourceType == "velodrome_slipstream") {
-    // For Velodrome Slipstream/CL (Concentrated Liquidity) pools
+    // For Velodrome V3/CL (Concentrated Liquidity) pools
     let price = getVelodromePrice(
       Address.fromBytes(token.id),
       sourceConfig.address,
       sourceConfig.pairToken!
     )
     if (price.gt(BigDecimal.fromString("0")) && isValidPriceResult(price, token.symbol)) {
-      return new PriceResult(price, baseConfidence, "velodrome_cl")
+      return new PriceResult(price, baseConfidence, "velodrome_slipstream")
     }
   }
   
@@ -259,6 +259,18 @@ function getPriceFromSource(
     )
     if (price.gt(BigDecimal.fromString("0")) && isValidPriceResult(price, token.symbol)) {
       return new PriceResult(price, baseConfidence, "velodrome_v2")
+    }
+  }
+  
+  if (sourceType == "balancer") {
+    // For Balancer weighted pools
+    let price = getBalancerPrice(
+      Address.fromBytes(token.id),
+      sourceConfig.address,
+      sourceConfig.pairToken!
+    )
+    if (price.gt(BigDecimal.fromString("0")) && isValidPriceResult(price, token.symbol)) {
+      return new PriceResult(price, baseConfidence, "balancer")
     }
   }
   
@@ -332,5 +344,6 @@ function isValidPriceResult(price: BigDecimal, tokenSymbol: string): boolean {
 import {
   getChainlinkPrice,
   getVelodromePrice,
-  getVelodromeV2Price
+  getVelodromeV2Price,
+  getBalancerPrice
 } from "./priceAdapters"

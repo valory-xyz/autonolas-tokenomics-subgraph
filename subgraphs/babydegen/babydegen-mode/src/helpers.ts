@@ -8,8 +8,6 @@ import {
 } from "../../../../generated/schema"
 import { calculateUninvestedValue, updateFundingBalance } from "./tokenBalances"
 import { getServiceByAgent } from "./config"
-import { updateSturdyPositionValue } from "./sturdyVault"
-import { updateBalancerPositionValue} from "./balancerVault"
 
 // Use the single source of truth for funding balance updates
 export function updateFunding(
@@ -199,12 +197,6 @@ function calculatePositionsValue(serviceSafe: Address): BigDecimal {
 
     // If position found and active, add to total value
     if (position != null && position.isActive) {
-      // Update position values based on protocol before calculating total (same as Velodrome)
-      if (position.protocol == "sturdy") {
-        updateSturdyPositionValue(position, BigInt.fromI32(0)) // Use current timestamp
-      } else if (position.protocol == "balancer") {
-        updateBalancerPositionValue(position, BigInt.fromI32(0)) // Use current timestamp
-      }
       // Velodrome positions are updated via their own refresh mechanisms
       
       totalValue = totalValue.plus(position.usdCurrent)

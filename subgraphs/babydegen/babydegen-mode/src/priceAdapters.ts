@@ -2,8 +2,10 @@ import { Address, BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts"
 import { VelodromeCLPool } from "../../../../generated/VeloNFTManager/VelodromeCLPool"
 import { VelodromeV2Pool } from "../../../../generated/templates/VeloV2Pool/VelodromeV2Pool"
 import { AggregatorV3Interface } from "../../../../generated/templates/Safe/AggregatorV3Interface"
+import { BalancerV2WeightedPool } from "../../../../generated/BalancerVault/BalancerV2WeightedPool"
+import { BalancerV2Vault } from "../../../../generated/BalancerVault/BalancerV2Vault"
 import { getTokenConfig } from "./tokenConfig"
-import { USDC, USDT, OUSDT, WETH, Q96 } from "./constants"
+import { USDC, USDT, OUSDT, WETH, Q96, WETH_USDC_VELOV3_POOL, BALANCER_VAULT } from "./constants"
 
 // Chainlink price adapter with validation
 export function getChainlinkPrice(feedAddress: Address, blockTimestamp: BigInt = BigInt.fromI32(0)): BigDecimal {
@@ -229,6 +231,89 @@ export function getVelodromeV2Price(
   return BigDecimal.fromString("0")
 }
 
+// Balancer price adapter for weighted pools
+export function getBalancerPrice(
+  token: Address,
+  poolAddress: Address,
+  pairToken: Address
+): BigDecimal {
+  
+  let pool = BalancerV2WeightedPool.bind(poolAddress)
+  
+  // Get token info
+  let targetTokenConfig = getTokenConfig(token)
+  let pairTokenConfig = getTokenConfig(pairToken)
+  
+  if (targetTokenConfig == null || pairTokenConfig == null) {
+    return BigDecimal.fromString("0")
+  }
+  
+  // Get pool ID from the pool contract
+  let poolIdResult = pool.try_getPoolId()
+  if (poolIdResult.reverted) {
+    return BigDecimal.fromString("0")
+  }
+  
+  let poolId = poolIdResult.value
+  
+  // Query the Balancer Vault for pool tokens and balances
+  let vaultContract = BalancerV2Vault.bind(BALANCER_VAULT)
+  let poolTokensResult = vaultContract.try_getPoolTokens(poolId)
+  
+  if (poolTokensResult.reverted) {
+    return BigDecimal.fromString("0")
+  }
+  
+  let poolTokens = poolTokensResult.value.value0
+  let poolBalances = poolTokensResult.value.value1
+  
+  // Find the indices of our target token and pair token
+  let targetTokenIndex = -1
+  let pairTokenIndex = -1
+  
+  for (let i = 0; i < poolTokens.length; i++) {
+    if (poolTokens[i].equals(token)) {
+      targetTokenIndex = i
+    }
+    if (poolTokens[i].equals(pairToken)) {
+      pairTokenIndex = i
+    }
+  }
+  
+  // Both tokens must be in the pool
+  if (targetTokenIndex == -1 || pairTokenIndex == -1) {
+    return BigDecimal.fromString("0")
+  }
+  
+  // Get balances for our tokens
+  let targetTokenBalance = poolBalances[targetTokenIndex]
+  let pairTokenBalance = poolBalances[pairTokenIndex]
+  
+  // Prevent division by zero
+  if (targetTokenBalance.equals(BigInt.fromI32(0))) {
+    return BigDecimal.fromString("0")
+  }
+  
+  // Convert to human-readable amounts
+  let targetTokenBalanceHuman = targetTokenBalance.toBigDecimal().div(
+    BigInt.fromI32(10).pow(targetTokenConfig.decimals as u8).toBigDecimal()
+  )
+  let pairTokenBalanceHuman = pairTokenBalance.toBigDecimal().div(
+    BigInt.fromI32(10).pow(pairTokenConfig.decimals as u8).toBigDecimal()
+  )
+  
+  // Calculate price: pairTokenBalance / targetTokenBalance
+  let rawPrice = pairTokenBalanceHuman.div(targetTokenBalanceHuman)
+  
+  // Get pair token price in USD
+  let pairPrice = getPairTokenPrice(pairToken, BigInt.fromI32(0))
+  
+  // Calculate final USD price
+  let finalPrice = rawPrice.times(pairPrice)
+  
+  return finalPrice
+}
+
 function getPairTokenPrice(pairToken: Address, blockTimestamp: BigInt = BigInt.fromI32(0)): BigDecimal {
   let tokenHex = pairToken.toHexString().toLowerCase()
   
@@ -245,13 +330,13 @@ function getPairTokenPrice(pairToken: Address, blockTimestamp: BigInt = BigInt.f
     }
   }
   
-  // WETH - TODO: Add MODE ETH/USD Chainlink feed when available
+  // WETH - Use WETH/USDC Velodrome V3 pool for pricing
   if (tokenHex == WETH.toHexString().toLowerCase()) {
-    // TODO: Replace with MODE ETH/USD feed address
-    // let ethFeed = Address.fromString("") // MODE ETH/USD feed
-    // let ethPrice = getChainlinkPrice(ethFeed, blockTimestamp)
-    // return ethPrice.gt(BigDecimal.fromString("0")) ? ethPrice : BigDecimal.fromString("3000.0")
-    return BigDecimal.fromString("3000.0") // Fallback price for now
+    // Get WETH price from WETH/USDC Velodrome V3 pool
+    let wethPrice = getVelodromePrice(WETH, WETH_USDC_VELOV3_POOL, USDC)
+    
+    // Return pool price or zero if it fails (no fallback)
+    return wethPrice
   }
   
   // Safe fallback for unknown tokens

@@ -1,5 +1,10 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts"
-import { WETH, MODE, OLAS, EZETH, UNIBTC, WEETH_MODE, STONE, WRSETH, WMLT, BMX, XVELO, USDC, USDT, OUSDT } from "./constants"
+import { 
+  WETH, MODE, OLAS, EZETH, UNIBTC, WEETH_MODE, STONE, WRSETH, WMLT, BMX, XVELO, USDC, USDT, OUSDT,
+  WETH_USDC_VELOV3_POOL, VELO_WETH_VELOV3_POOL, OUSDT_USDC_VELOV3_POOL,
+  EZETH_WETH_VELOV2_POOL, WEETH_WETH_VELOV2_POOL, STONE_WETH_VELOV2_POOL, USDT_USDC_VELOV2_POOL,
+  OLAS_USDC_BALANCER_POOL, MODE_WETH_BALANCER_POOL
+} from "./constants"
 
 // Token configurations with empty price sources for MODE chain
 export const TOKENS = new Map<string, TokenConfig>()
@@ -60,116 +65,134 @@ export function getTokenConfig(address: Address): TokenConfig | null {
 // Initialize token configurations with empty price sources
 function initializeTokens(): void {
   
-  // WETH - Empty price sources for now
+  // WETH - Direct USDC pair via Velodrome V3
   TOKENS.set(WETH.toHexString().toLowerCase(), new TokenConfig(
     WETH,
     "WETH",
     18,
-    [] // Empty price sources
+    [
+      new PriceSourceConfig(WETH_USDC_VELOV3_POOL, "velodrome_slipstream", 1, 95, USDC, 500)
+    ]
   ))
 
-  // MODE - Empty price sources for now
+  // MODE - WETH pair via Balancer, requires multi-hop pricing (MODE → WETH → USDC)
   TOKENS.set(MODE.toHexString().toLowerCase(), new TokenConfig(
     MODE,
     "MODE",
     18,
-    [] // Empty price sources
+    [
+      new PriceSourceConfig(MODE_WETH_BALANCER_POOL, "balancer", 1, 90, WETH, 0)
+    ]
   ))
 
-  // OLAS - Empty price sources for now
+  // OLAS - Direct USDC pair via Balancer
   TOKENS.set(OLAS.toHexString().toLowerCase(), new TokenConfig(
     OLAS,
     "OLAS",
     18,
-    [] // Empty price sources
+    [
+      new PriceSourceConfig(OLAS_USDC_BALANCER_POOL, "balancer", 1, 95, USDC, 0)
+    ]
   ))
 
-  // ezETH - Empty price sources for now
+  // ezETH - WETH pair via Velodrome V2, requires multi-hop pricing (ezETH → WETH → USDC)
   TOKENS.set(EZETH.toHexString().toLowerCase(), new TokenConfig(
     EZETH,
     "ezETH",
     18,
-    [] // Empty price sources
+    [
+      new PriceSourceConfig(EZETH_WETH_VELOV2_POOL, "velodrome_v2", 1, 90, WETH, 0)
+    ]
   ))
 
-  // uniBTC - Empty price sources for now
+  // uniBTC - No price sources configured (not in requirements)
   TOKENS.set(UNIBTC.toHexString().toLowerCase(), new TokenConfig(
     UNIBTC,
     "uniBTC",
     8,
-    [] // Empty price sources
+    [] // No price sources configured
   ))
 
-  // weETH.mode - Empty price sources for now
+  // weETH.mode - WETH pair via Velodrome V2, requires multi-hop pricing (weETH → WETH → USDC)
   TOKENS.set(WEETH_MODE.toHexString().toLowerCase(), new TokenConfig(
     WEETH_MODE,
     "weETH.mode",
     18,
-    [] // Empty price sources
+    [
+      new PriceSourceConfig(WEETH_WETH_VELOV2_POOL, "velodrome_v2", 1, 90, WETH, 0)
+    ]
   ))
 
-  // STONE - Empty price sources for now
+  // STONE - WETH pair via Velodrome V2, requires multi-hop pricing (STONE → WETH → USDC)
   TOKENS.set(STONE.toHexString().toLowerCase(), new TokenConfig(
     STONE,
     "STONE",
     18,
-    [] // Empty price sources
+    [
+      new PriceSourceConfig(STONE_WETH_VELOV2_POOL, "velodrome_v2", 1, 90, WETH, 0)
+    ]
   ))
 
-  // wrsETH - Empty price sources for now
+  // wrsETH - No price sources configured (not in requirements)
   TOKENS.set(WRSETH.toHexString().toLowerCase(), new TokenConfig(
     WRSETH,
     "wrsETH",
     18,
-    [] // Empty price sources
+    [] // No price sources configured
   ))
 
-  // wMLT - Empty price sources for now
+  // wMLT - No price sources configured (not in requirements)
   TOKENS.set(WMLT.toHexString().toLowerCase(), new TokenConfig(
     WMLT,
     "wMLT",
     18,
-    [] // Empty price sources
+    [] // No price sources configured
   ))
 
-  // BMX - Empty price sources for now
+  // BMX - No price sources configured (not in requirements)
   TOKENS.set(BMX.toHexString().toLowerCase(), new TokenConfig(
     BMX,
     "BMX",
     18,
-    [] // Empty price sources
+    [] // No price sources configured
   ))
 
-  // XVELO - Empty price sources for now
+  // XVELO - WETH pair via Velodrome V3, requires multi-hop pricing (VELO → WETH → USDC)
   TOKENS.set(XVELO.toHexString().toLowerCase(), new TokenConfig(
     XVELO,
     "XVELO",
     18,
-    [] // Empty price sources
+    [
+      new PriceSourceConfig(VELO_WETH_VELOV3_POOL, "velodrome_slipstream", 1, 90, WETH, 500)
+    ]
   ))
 
-  // USDC - Empty price sources for now
+  // USDC - Stablecoin, uses fallback pricing (no pool needed)
   TOKENS.set(USDC.toHexString().toLowerCase(), new TokenConfig(
     USDC,
     "USDC",
     6,
-    [] // Empty price sources
+    [] // Stablecoin - uses fallback pricing
   ))
 
-  // USDT - Empty price sources for now
+  // USDT - USDC pair via Velodrome V2
   TOKENS.set(USDT.toHexString().toLowerCase(), new TokenConfig(
     USDT,
     "USDT",
     6,
-    [] // Empty price sources
+    [
+      new PriceSourceConfig(USDT_USDC_VELOV2_POOL, "velodrome_v2", 1, 95, USDC, 0)
+    ]
   ))
 
-  // oUSDT - Empty price sources for now
+  // oUSDT - USDC pair via Velodrome V3
   TOKENS.set(OUSDT.toHexString().toLowerCase(), new TokenConfig(
     OUSDT,
     "oUSDT",
     6,
-    [] // Empty price sources
+    [
+      new PriceSourceConfig(OUSDT_USDC_VELOV3_POOL, "velodrome_slipstream", 1, 95, USDC, 500)
+    ]
   ))
 }
 

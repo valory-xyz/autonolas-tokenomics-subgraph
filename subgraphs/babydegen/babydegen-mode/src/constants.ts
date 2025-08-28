@@ -40,15 +40,35 @@ export const VELO_NFT_MANAGER = Address.fromString("0x991d5546C4B442B4c5fdc4c8B8
 export const VELO_V2_SUGAR = Address.fromString("0x9ECd2f44f72E969fa3F3C4e4F63bc61E0C08F31F")
 export const VELO_V2_FACTORY = Address.fromString("0x31832f2a97Fd20664D76Cc421207669b55CE4BC0") // Velodrome V2 Factory on MODE
 
-// STURDY protocol addresses
-export const STURDY_YEARN_VAULT = Address.fromString("0x2dE57F6432Ac67A99aF5aB17017005048AE7A24C")
-
-// Balancer protocol addresses
-export const BALANCER_VAULT = Address.fromString("0xBA12222222228d8Ba445958a75a0704d566BF2C8")
 
 // Velodrome CL (Concentrated Liquidity) addresses
 export const VELO_MANAGER = Address.fromString("0x991d5546C4B442B4c5fdc4c8B8d8d131DEB24702") // Velodrome CL NFT Position Manager
 export const VELO_FACTORY = Address.fromString("0x04625B046C69577EfC40e6c0Bb83CDBAfab5a55F") // Velodrome CL Factory on MODE
+
+// STURDY protocol addresses
+export const STURDY_VAULT = Address.fromString("0x2dE57F6432Ac67A99aF5aB17017005048AE7A24C") // STURDY Yearn V3 Vault on MODE
+
+// Balancer protocol addresses
+export const BALANCER_VAULT = Address.fromString("0xBA12222222228d8Ba445958a75a0704d566BF2C8") // Balancer V2 Vault (universal address)
+
+// =============================================================================
+// POOL ADDRESSES FOR PRICE DISCOVERY
+// =============================================================================
+
+// Velodrome V3 (Concentrated Liquidity) pools
+export const WETH_USDC_VELOV3_POOL = Address.fromString("0x3Adf15f77F2911f84b0FE9DbdfF43ef60D40012c") // WETH/USDC Velodrome V3
+export const VELO_WETH_VELOV3_POOL = Address.fromString("0xc2026f3fb6fc51F4EcAE40a88b4509cB6C143ed4") // VELO/WETH Velodrome V3
+export const OUSDT_USDC_VELOV3_POOL = Address.fromString("0xEfe134Dc2BE0943A51C52bb2B2baC09Ab1152F95") // oUSDT/USDC Velodrome V3
+
+// Velodrome V2 pools
+export const EZETH_WETH_VELOV2_POOL = Address.fromString("0x44C6ccEA1f549Dc28bAceC12Edec580F8E1B64cd") // ezETH/WETH Velodrome V2
+export const WEETH_WETH_VELOV2_POOL = Address.fromString("0x53E85d00F2C6578a1205b842255AB9DF9D053744") // weETH.mode/WETH Velodrome V2
+export const STONE_WETH_VELOV2_POOL = Address.fromString("0x5613B76Ed4CF65D771bAa5E68ceA787a8FF43cAD") // STONE/WETH Velodrome V2
+export const USDT_USDC_VELOV2_POOL = Address.fromString("0x4B1BC95478826F6bC42d0471C68eEA6526576D85") // USDT/USDC Velodrome V2
+
+// Balancer pools
+export const OLAS_USDC_BALANCER_POOL = Address.fromString("0xd1dbea51c7f23f61d020e2602d0d157d132faafc") // OLAS/USDC Balancer
+export const MODE_WETH_BALANCER_POOL = Address.fromString("0x7c86a44778c52a0aad17860924b53bf3f35dc932") // MODE/WETH Balancer
 
 // OLAS-related addresses (TODO: Update with MODE addresses when available)
 // export const OLAS_TOKEN = Address.fromString("") // TODO: Add MODE OLAS token address

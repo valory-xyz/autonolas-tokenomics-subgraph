@@ -1,244 +1,286 @@
-import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts"
-import { Deposit, Withdraw, YearnV3Vault } from "../generated/SturdyYearnVault/YearnV3Vault"
-import { ProtocolPosition, Service } from "../generated/schema"
+import { 
+  Address, 
+  BigInt, 
+  BigDecimal, 
+  Bytes, 
+  ethereum,
+  log
+} from "@graphprotocol/graph-ts"
+
+import { 
+  ProtocolPosition,
+  Service
+} from "../../../../generated/schema"
+
+import { 
+  calculatePortfolioMetrics,
+  updateFirstTradingTimestamp
+} from "./helpers"
+
 import { getServiceByAgent } from "./config"
 import { getTokenPriceUSD } from "./priceDiscovery"
-import { refreshPortfolio } from "./common"
-import { updateFirstTradingTimestamp } from "./helpers"
-import { WETH, STURDY_YEARN_VAULT } from "./constants"
+import { getTokenDecimals } from "./tokenUtils"
+import { STURDY_VAULT } from "./constants"
 
-// Handle Deposit events - position entries
-export function handleDeposit(event: Deposit): void {
-  let sender = event.params.sender
-  let owner = event.params.owner
-  let assets = event.params.assets
-  let shares = event.params.shares
-  
-  // Check if owner is a service safe
-  let service = getServiceByAgent(owner)
-  if (service == null) {
-    log.debug("STURDY: Deposit owner {} is not a tracked service safe", [owner.toHexString()])
-    return
+// Import the generated call types
+import { DepositCall, WithdrawCall, YearnV3Vault } from "../../../../generated/SturdyVault/YearnV3Vault"
+import { ERC20 } from "../../../../generated/SturdyVault/ERC20"
+
+// Helper function to convert token amount to human readable format
+function toHumanAmount(amount: BigInt, decimals: i32): BigDecimal {
+  if (amount.equals(BigInt.zero())) {
+    return BigDecimal.zero()
   }
-
-  log.info("STURDY: Processing deposit for service safe: {}, assets: {}, shares: {}", [
-    owner.toHexString(),
-    assets.toString(),
-    shares.toString()
-  ])
-
-  // Create position ID: "<serviceSafe>-sturdy-<blockTimestamp>"
-  let positionId = owner
-    .concat(Bytes.fromUTF8("-sturdy-"))
-    .concat(Bytes.fromUTF8(event.block.timestamp.toString()))
-
-  // Create new STURDY position
-  let position = new ProtocolPosition(positionId)
-  position.agent = owner
-  position.service = service.id
-  position.protocol = "sturdy"
-  position.pool = STURDY_YEARN_VAULT
   
-  // Position status
-  position.isActive = true
-  
-  // Token information (WETH)
-  position.token0 = WETH
-  position.token0Symbol = "WETH"
-  position.token1 = null
-  position.token1Symbol = null
-  
-  // Convert WETH assets to USD for entry amounts (production-level calculations)
-  let wethPriceUSD = getTokenPriceUSD(WETH, event.block.timestamp)
-  let assetsDecimal = assets.toBigDecimal().div(BigDecimal.fromString("1000000000000000000")) // WETH has 18 decimals
-  let entryAmountUSD = assetsDecimal.times(wethPriceUSD)
-  
-  // Entry tracking with proper USD calculations
-  position.entryTxHash = event.transaction.hash
-  position.entryTimestamp = event.block.timestamp
-  position.entryAmount0 = assetsDecimal
-  position.entryAmount0USD = entryAmountUSD
-  position.entryAmount1 = BigDecimal.fromString("0")
-  position.entryAmount1USD = BigDecimal.fromString("0")
-  position.entryAmountUSD = entryAmountUSD
-  
-  // Current state (same as entry initially)
-  position.amount0 = assetsDecimal
-  position.amount0USD = entryAmountUSD
-  position.amount1 = BigDecimal.fromString("0")
-  position.amount1USD = BigDecimal.fromString("0")
-  position.usdCurrent = entryAmountUSD
-  
-  // Store vault shares for value calculation
-  position.liquidity = shares
-  
-  // STURDY-specific: no ticks or fees
-  position.tickLower = 0
-  position.tickUpper = 0
-  position.tickSpacing = 0
-  position.fee = 0
-  position.tokenId = BigInt.fromI32(0) // Not an NFT position
-  
-  // Clear exit data
-  position.exitTxHash = null
-  position.exitTimestamp = null
-  position.exitAmount0 = null
-  position.exitAmount0USD = null
-  position.exitAmount1 = null
-  position.exitAmount1USD = null
-  position.exitAmountUSD = null
-  
-  // Add position ID to service's position list
-  let positionIds = service.positionIds
-  positionIds.push(positionId.toHexString())
-  service.positionIds = positionIds
-  service.save()
-  
-  // Update first trading timestamp
-  updateFirstTradingTimestamp(owner, event.block.timestamp)
-  
-  position.save()
-  
-  // Refresh portfolio (same as Velodrome pattern)
-  refreshPortfolio(owner, event.block)
-  
-  log.info("STURDY: Created position {} for agent {} with {} WETH (${} USD)", [
-    positionId.toHexString(),
-    owner.toHexString(),
-    assetsDecimal.toString(),
-    entryAmountUSD.toString()
-  ])
+  let divisor = BigInt.fromI32(10).pow(decimals as u8)
+  return amount.toBigDecimal().div(divisor.toBigDecimal())
 }
 
-// Handle Withdraw events - position exits
-export function handleWithdraw(event: Withdraw): void {
-  let sender = event.params.sender
-  let receiver = event.params.receiver
-  let owner = event.params.owner
-  let assets = event.params.assets
-  let shares = event.params.shares
+// Handle STURDY Yearn V3 Vault deposit function calls
+export function handleSturdyDepositCall(call: DepositCall): void {
+  const receiver = call.inputs.receiver
+  const assets = call.inputs.assets
   
-  // Check if owner is a service safe
-  let service = getServiceByAgent(owner)
-  if (service == null) {
-    log.debug("STURDY: Withdraw owner {} is not a tracked service safe", [owner.toHexString()])
-    return
-  }
-
-  log.info("STURDY: Processing withdraw for service safe: {}, assets: {}, shares: {}", [
-    owner.toHexString(),
-    assets.toString(),
-    shares.toString()
+  log.info("STURDY DEPOSIT CALL: receiver={}, assets={}", [
+    receiver.toHexString(),
+    assets.toString()
   ])
-
-  // Find the most recent active STURDY position for this agent
-  let activePosition = findMostRecentActiveSturdyPosition(owner)
   
-  if (activePosition == null) {
-    log.warning("STURDY: No active position found for agent {} during withdraw", [owner.toHexString()])
-    return
-  }
-
-  // Convert WETH assets to USD for exit amounts (production-level calculations)
-  let wethPriceUSD = getTokenPriceUSD(WETH, event.block.timestamp)
-  let assetsDecimal = assets.toBigDecimal().div(BigDecimal.fromString("1000000000000000000")) // WETH has 18 decimals
-  let exitAmountUSD = assetsDecimal.times(wethPriceUSD)
+  // Check if the receiver is a tracked service
+  const service = getServiceByAgent(receiver)
   
-  // Update position with exit data
-  activePosition.exitTxHash = event.transaction.hash
-  activePosition.exitTimestamp = event.block.timestamp
-  activePosition.exitAmount0 = assetsDecimal
-  activePosition.exitAmount0USD = exitAmountUSD
-  activePosition.exitAmount1 = BigDecimal.fromString("0")
-  activePosition.exitAmount1USD = BigDecimal.fromString("0")
-  activePosition.exitAmountUSD = exitAmountUSD
-  
-  // Mark position as inactive
-  activePosition.isActive = false
-  
-  // Update current amounts to zero (position closed)
-  activePosition.amount0 = BigDecimal.fromString("0")
-  activePosition.amount0USD = BigDecimal.fromString("0")
-  activePosition.amount1 = BigDecimal.fromString("0")
-  activePosition.amount1USD = BigDecimal.fromString("0")
-  activePosition.usdCurrent = BigDecimal.fromString("0")
-  activePosition.liquidity = BigInt.fromI32(0)
-  
-  activePosition.save()
-  
-  // Refresh portfolio (same as Velodrome pattern)
-  refreshPortfolio(owner, event.block)
-  
-  log.info("STURDY: Updated position {} for agent {} with exit of {} WETH (${} USD)", [
-    activePosition.id.toHexString(),
-    owner.toHexString(),
-    assetsDecimal.toString(),
-    exitAmountUSD.toString()
-  ])
-}
-
-// Helper function to find the most recent active STURDY position for an agent
-function findMostRecentActiveSturdyPosition(agent: Address): ProtocolPosition | null {
-  let service = getServiceByAgent(agent)
-  if (service == null) {
-    return null
-  }
-  
-  // Iterate through the service's position IDs to find active STURDY positions
-  let positionIds = service.positionIds
-  for (let i = 0; i < positionIds.length; i++) {
-    let positionId = Bytes.fromUTF8(positionIds[i])
-    let position = ProtocolPosition.load(positionId)
+  if (service != null) {
+    log.info("STURDY DEPOSIT: Tracked service {} depositing {} assets", [
+      receiver.toHexString(),
+      assets.toString()
+    ])
     
-    if (position != null && 
-        position.protocol == "sturdy" && 
-        position.agent.equals(agent) && 
-        position.isActive) {
-      return position
+    // Create or update STURDY position
+    refreshSturdyPosition(
+      receiver,
+      call.block,
+      call.transaction.hash,
+      assets,
+      true // isDeposit
+    )
+  }
+}
+
+// Handle STURDY Yearn V3 Vault withdraw function calls
+export function handleSturdyWithdrawCall(call: WithdrawCall): void {
+  const owner = call.inputs.owner
+  const receiver = call.inputs.receiver
+  const assets = call.inputs.assets
+  
+  log.info("STURDY WITHDRAW CALL: owner={}, receiver={}, assets={}", [
+    owner.toHexString(),
+    receiver.toHexString(),
+    assets.toString()
+  ])
+  
+  // Check if the owner is a tracked service (owner is the one withdrawing)
+  const service = getServiceByAgent(owner)
+  
+  if (service != null) {
+    log.info("STURDY WITHDRAW: Tracked service {} withdrawing {} assets", [
+      owner.toHexString(),
+      assets.toString()
+    ])
+    
+    // Update STURDY position
+    refreshSturdyPosition(
+      owner,
+      call.block,
+      call.transaction.hash,
+      assets,
+      false // isDeposit
+    )
+  }
+}
+
+// Create or update STURDY position
+function refreshSturdyPosition(
+  agent: Address,
+  block: ethereum.Block,
+  txHash: Bytes,
+  assets: BigInt,
+  isDeposit: boolean
+): void {
+  // Position ID format: <agent>-sturdy
+  // For STURDY, we use a single position per agent (similar to Velodrome V2 pattern)
+  const positionId = agent.toHex() + "-sturdy"
+  const positionIdBytes = Bytes.fromUTF8(positionId)
+  
+  let position = ProtocolPosition.load(positionIdBytes)
+  
+  // Get vault contract to access underlying asset
+  let vaultContract = YearnV3Vault.bind(STURDY_VAULT)
+  let underlyingAsset = vaultContract.asset()
+  
+  if (position == null) {
+    // Create new position
+    position = new ProtocolPosition(positionIdBytes)
+    position.agent = agent
+    position.protocol = "STURDY"
+    position.pool = STURDY_VAULT
+    position.isActive = true
+    
+    // Initialize amounts
+    position.entryAmount0 = BigDecimal.zero()
+    position.entryAmount0USD = BigDecimal.zero()
+    position.entryAmount1 = BigDecimal.zero()
+    position.entryAmount1USD = BigDecimal.zero()
+    position.entryAmountUSD = BigDecimal.zero()
+    
+    position.amount0 = BigDecimal.zero()
+    position.amount0USD = BigDecimal.zero()
+    position.amount1 = BigDecimal.zero()
+    position.amount1USD = BigDecimal.zero()
+    position.usdCurrent = BigDecimal.zero()
+    
+    // Entry tracking
+    position.entryTxHash = txHash
+    position.entryTimestamp = block.timestamp
+    
+    // Required fields for schema
+    position.tokenId = BigInt.zero() // Not applicable for vault positions
+    position.tickLower = 0 // Not applicable for vault positions
+    position.tickUpper = 0 // Not applicable for vault positions
+    position.liquidity = BigInt.zero() // Store vault shares in liquidity field
+    
+    // Set token0 as the underlying asset (e.g., WETH), token1 as null
+    position.token0 = underlyingAsset
+    position.token1 = null
+    
+    // Add position to service
+    let service = Service.load(agent)
+    if (service != null) {
+      let positionIds = service.positionIds
+      if (positionIds == null) {
+        positionIds = []
+      }
+      positionIds.push(positionId)
+      service.positionIds = positionIds
+      service.save()
+    }
+    
+    // Update first trading timestamp
+    updateFirstTradingTimestamp(agent, block.timestamp)
+    
+    log.info("STURDY: Created new position {} for agent {} with underlying asset {}", [
+      positionId,
+      agent.toHexString(),
+      underlyingAsset.toHexString()
+    ])
+  }
+  
+  // Get underlying asset decimals
+  let assetContract = ERC20.bind(underlyingAsset)
+  let assetDecimals = assetContract.decimals()
+  let assetsHuman = toHumanAmount(assets, assetDecimals)
+  
+  // Get USD price of underlying asset (not vault shares)
+  let assetPrice = getTokenPriceUSD(underlyingAsset, block.timestamp, false)
+  let assetsUSD = assetPrice.times(assetsHuman)
+  
+  if (isDeposit) {
+    // Handle deposit - increase position
+    position.amount0 = position.amount0!.plus(assetsHuman)
+    position.amount0USD = position.amount0USD.plus(assetsUSD)
+    
+    // Update entry amounts if this is the first deposit or position was closed
+    if (position.entryAmountUSD.equals(BigDecimal.zero())) {
+      position.entryAmount0 = assetsHuman
+      position.entryAmount0USD = assetsUSD
+      position.entryAmountUSD = assetsUSD
+    } else {
+      // Add to existing entry amounts
+      position.entryAmount0 = position.entryAmount0.plus(assetsHuman)
+      position.entryAmount0USD = position.entryAmount0USD.plus(assetsUSD)
+      position.entryAmountUSD = position.entryAmountUSD.plus(assetsUSD)
+    }
+    
+    // Ensure position is active
+    position.isActive = true
+    
+    log.info("STURDY DEPOSIT: Added {} {} (${} USD) to position {}", [
+      assetsHuman.toString(),
+      underlyingAsset.toHexString(),
+      assetsUSD.toString(),
+      positionId
+    ])
+  } else {
+    // Handle withdraw - decrease position
+    position.amount0 = position.amount0!.minus(assetsHuman)
+    position.amount0USD = position.amount0USD.minus(assetsUSD)
+    
+    // Check if position should be closed
+    if (position.amount0!.le(BigDecimal.fromString("0.001"))) {
+      position.isActive = false
+      position.amount0 = BigDecimal.zero()
+      position.amount0USD = BigDecimal.zero()
+      
+      log.info("STURDY WITHDRAW: Closed position {} (remaining balance too small)", [
+        positionId
+      ])
+    } else {
+      log.info("STURDY WITHDRAW: Removed {} {} (${} USD) from position {}", [
+        assetsHuman.toString(),
+        underlyingAsset.toHexString(),
+        assetsUSD.toString(),
+        positionId
+      ])
     }
   }
   
-  return null
-}
-
-// Function to update STURDY position values (called during portfolio snapshots)
-export function updateSturdyPositionValue(position: ProtocolPosition, blockTimestamp: BigInt): void {
-  if (position.protocol != "sturdy" || !position.isActive) {
-    return
-  }
-  
-  // Get current vault shares
-  let shares = position.liquidity
-  if (shares == null || shares.equals(BigInt.fromI32(0))) {
-    return
-  }
-  
-  // Get current asset value using vault's convertToAssets function
-  let vault = YearnV3Vault.bind(STURDY_YEARN_VAULT)
-  let assetsResult = vault.try_convertToAssets(shares)
-  
-  if (assetsResult.reverted) {
-    log.warning("STURDY: Failed to get convertToAssets for position {}", [position.id.toHexString()])
-    return
-  }
-  
-  let currentAssets = assetsResult.value
-  let currentAssetsDecimal = currentAssets.toBigDecimal().div(BigDecimal.fromString("1000000000000000000"))
-  
-  // Convert to USD
-  let wethPriceUSD = getTokenPriceUSD(WETH, blockTimestamp)
-  let currentValueUSD = currentAssetsDecimal.times(wethPriceUSD)
-  
-  // Update position current values
-  position.amount0 = currentAssetsDecimal
-  position.amount0USD = currentValueUSD
-  position.usdCurrent = currentValueUSD
+  // Calculate current USD value by getting current vault balance and converting to assets
+  let currentUSDValue = calculateSturdyPositionValue(agent, underlyingAsset, block.timestamp)
+  position.usdCurrent = currentUSDValue
+  position.amount0USD = currentUSDValue // Update current amount0USD to match
   
   position.save()
   
-  log.debug("STURDY: Updated position {} value to {} WETH (${} USD)", [
-    position.id.toHexString(),
-    currentAssetsDecimal.toString(),
-    currentValueUSD.toString()
+  // Update portfolio metrics
+  calculatePortfolioMetrics(agent, block)
+  
+  log.info("STURDY: Updated position {} - Current: {} {} (${} USD)", [
+    positionId,
+    position.amount0!.toString(),
+    underlyingAsset.toHexString(),
+    position.usdCurrent.toString()
   ])
+}
+
+// Calculate current USD value of STURDY position
+function calculateSturdyPositionValue(agent: Address, underlyingAsset: Address, timestamp: BigInt): BigDecimal {
+  let vaultContract = YearnV3Vault.bind(STURDY_VAULT)
+  
+  // Get agent's vault share balance
+  let shareBalance = vaultContract.balanceOf(agent)
+  
+  if (shareBalance.equals(BigInt.zero())) {
+    return BigDecimal.zero()
+  }
+  
+  // Convert shares to underlying assets using convertToAssets
+  let underlyingAmount = vaultContract.convertToAssets(shareBalance)
+  
+  // Get underlying asset decimals and convert to human readable
+  let assetContract = ERC20.bind(underlyingAsset)
+  let assetDecimals = assetContract.decimals()
+  let underlyingHuman = toHumanAmount(underlyingAmount, assetDecimals)
+  
+  // Get USD price of underlying asset
+  let assetPrice = getTokenPriceUSD(underlyingAsset, timestamp, false)
+  let usdValue = assetPrice.times(underlyingHuman)
+  
+  log.info("STURDY VALUE: Agent {} has {} shares = {} {} = ${} USD", [
+    agent.toHexString(),
+    shareBalance.toString(),
+    underlyingHuman.toString(),
+    underlyingAsset.toHexString(),
+    usdValue.toString()
+  ])
+  
+  return usdValue
 }

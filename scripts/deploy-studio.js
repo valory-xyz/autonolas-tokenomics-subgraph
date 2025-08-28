@@ -209,13 +209,24 @@ const networkTypes = {
     }
   },
   '9': {
-    name: 'Babydegen',
-    description: 'Agent funding and portfolio tracking',
+    name: 'Babydegen-Optimism',
+    description: 'Agent funding and portfolio tracking for Optimus',
     networks: {
       'optimism': {
         path: 'subgraphs/babydegen/babydegen-optimism/subgraph.yaml',
         description: 'Optimism Network',
         buildCommand: 'yarn build-babydegen-optimism'
+      }
+    }
+  },
+  '10': {
+    name: 'Babydegen-Mode',
+    description: 'Agent funding and portfolio tracking for Modius',
+    networks: {
+      'mode': {
+        path: 'subgraphs/babydegen/babydegen-mode/subgraph.yaml',
+        description: 'Mode Network',
+        buildCommand: 'yarn build-babydegen-mode'
       }
     }
   }

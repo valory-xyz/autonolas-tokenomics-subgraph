@@ -44,6 +44,7 @@
     "build-governance:mainnet": "yarn codegen-governance && graph build subgraphs/governance/subgraph.yaml",
     "build-liquidity:ethereum": "yarn codegen-liquidity-eth && graph build subgraphs/liquidity/liquidity-eth/subgraph.yaml",
     "build-babydegen-optimism": "yarn codegen-babydegen-optimism && graph build subgraphs/babydegen/babydegen-optimism/subgraph.yaml",
+    "build-babydegen-mode": "yarn codegen-babydegen-mode && graph build subgraphs/babydegen/babydegen-mode/subgraph.yaml",
     "deploy-studio": "node scripts/deploy-studio.js",
     "test": "graph test"
   },

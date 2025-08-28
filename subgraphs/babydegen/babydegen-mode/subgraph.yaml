@@ -11,7 +11,7 @@ dataSources:
     source:
       address: "0x3C1fF68f5aa342D296d4DEe4Bb1cACCA912D95fE"
       abi: ServiceRegistryL2
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -43,7 +43,7 @@ dataSources:
     source:
       address: "0xd988097fb8612cc24eec14542bc03424c656005f"
       abi: ERC20
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -71,7 +71,7 @@ dataSources:
     source:
       address: "0x4200000000000000000000000000000000000006"
       abi: ERC20
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -97,7 +97,7 @@ dataSources:
     source:
       address: "0xdfc7c877a950e49d2610114102175a06c2e3167a"
       abi: ERC20
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -123,7 +123,7 @@ dataSources:
     source:
       address: "0xcfd1d50ce23c46d3cf6407487b2f8934e96dc8f9"
       abi: ERC20
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -149,7 +149,7 @@ dataSources:
     source:
       address: "0x2416092f143378750bb29b79ed961ab195cceea5"
       abi: ERC20
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -175,7 +175,7 @@ dataSources:
     source:
       address: "0x6b2a01a5f79deb4c2f3c0eda7b01df456fbd726a"
       abi: ERC20
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -201,7 +201,7 @@ dataSources:
     source:
       address: "0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A"
       abi: ERC20
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -227,7 +227,7 @@ dataSources:
     source:
       address: "0x80137510979822322193FC997d400D5A6C747bf7"
       abi: ERC20
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -253,7 +253,7 @@ dataSources:
     source:
       address: "0xe7903B1F75C534Dd8159b313d92cDCfbC62cB3Cd"
       abi: ERC20
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -279,7 +279,7 @@ dataSources:
     source:
       address: "0x8b2EeA0999876AAB1E7955fe01A5D261b570452C"
       abi: ERC20
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -305,7 +305,7 @@ dataSources:
     source:
       address: "0x66eEd5FF1701E6ed8470DC391F05e27B1d0657eb"
       abi: ERC20
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -331,7 +331,7 @@ dataSources:
     source:
       address: "0x7f9AdFbd38b669F03d1d11000Bc76b9AaEA28A81"
       abi: ERC20
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -357,7 +357,7 @@ dataSources:
     source:
       address: "0xf0f161fda2712db8b566946122a5af183995e2ed"
       abi: ERC20
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -384,7 +384,7 @@ dataSources:
     source:
       address: "0x1217bfe6c773eec6cc4a38b5dc45b92292b6e189"
       abi: ERC20
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -412,7 +412,7 @@ dataSources:
     source:
       address: "0x991d5546C4B442B4c5fdc4c8B8b8d131DEB24702"
       abi: NonfungiblePositionManager
-      startBlock: 136774000
+      startBlock: 24900000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -447,7 +447,7 @@ dataSources:
     source:
       address: '0x9ECd2f44f72E969fa3F3C4e4F63bc61E0C08F31F'
       abi: Sugar
-      startBlock: 136772000
+      startBlock: 24900000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -474,7 +474,7 @@ dataSources:
     source:
       address: '0x31832f2a97Fd20664D76Cc421207669b55CE4BC0' # MODE Velodrome V2 Factory address
       abi: PoolFactory
-      startBlock: 136774000
+      startBlock: 24900000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -498,7 +498,7 @@ dataSources:
     source:
       address: "0x3C1fF68f5aa342D296d4DEe4Bb1cACCA912D95fE"  # ServiceRegistryL2 address
       abi: ServiceRegistryL2
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -517,10 +517,6 @@ dataSources:
           file: ../../../abis/oracles/AggregatorV3Interface.json
         - name: ERC20
           file: ../../../abis/ERC20.json
-        - name: YearnV3Vault
-          file: ../../../abis/defi/YearnV3Vault.json
-        - name: BalancerV2WeightedPool
-          file: ../../../abis/BalancerV2WeightedPool.json
       blockHandlers:
         - handler: handleBlock
           filter:
@@ -534,7 +530,7 @@ dataSources:
     source:
       address: "0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE"
       abi: LiFiDiamond
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -550,14 +546,14 @@ dataSources:
         - event: LiFiGenericSwapCompleted(indexed bytes32,string,string,address,address,address,uint256,uint256)
           handler: handleLiFiGenericSwapCompleted
       file: ./src/lifiDiamond.ts
-  # STURDY Yearn V3 Vault for tracking agent positions
+  # STURDY Yearn V3 Vault for tracking deposit/withdraw function calls
   - kind: ethereum
-    name: SturdyYearnVault
+    name: SturdyVault
     network: mode-mainnet
     source:
       address: "0x2dE57F6432Ac67A99aF5aB17017005048AE7A24C"
       abi: YearnV3Vault
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -570,22 +566,26 @@ dataSources:
           file: ../../../abis/defi/YearnV3Vault.json
         - name: AggregatorV3Interface
           file: ../../../abis/oracles/AggregatorV3Interface.json
+        - name: VelodromeCLPool
+          file: ../../../abis/defi/VelodromeCLPool.json
+        - name: VelodromeV2Pool
+          file: ../../../abis/defi/VelodromeV2Pool.json
         - name: ERC20
           file: ../../../abis/ERC20.json
-      eventHandlers:
-        - event: Deposit(indexed address,indexed address,uint256,uint256)
-          handler: handleDeposit
-        - event: Withdraw(indexed address,indexed address,indexed address,uint256,uint256)
-          handler: handleWithdraw
+      callHandlers:
+        - function: deposit(uint256,address)
+          handler: handleSturdyDepositCall
+        - function: withdraw(uint256,address,address)
+          handler: handleSturdyWithdrawCall
       file: ./src/sturdyVault.ts
-  # Balancer Vault for tracking agent pool positions
+  # Balancer V2 Vault for tracking pool position entries/exits
   - kind: ethereum
     name: BalancerVault
     network: mode-mainnet
     source:
       address: "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
       abi: BalancerV2Vault
-      startBlock: 136774000
+      startBlock: 17800000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -598,10 +598,14 @@ dataSources:
           file: ../../../abis/BalancerV2Vault.json
         - name: BalancerV2WeightedPool
           file: ../../../abis/BalancerV2WeightedPool.json
-        - name: AggregatorV3Interface
-          file: ../../../abis/oracles/AggregatorV3Interface.json
         - name: ERC20
           file: ../../../abis/ERC20.json
+        - name: AggregatorV3Interface
+          file: ../../../abis/oracles/AggregatorV3Interface.json
+        - name: VelodromeCLPool
+          file: ../../../abis/defi/VelodromeCLPool.json
+        - name: VelodromeV2Pool
+          file: ../../../abis/defi/VelodromeV2Pool.json
       eventHandlers:
         - event: PoolBalanceChanged(indexed bytes32,indexed address,address[],int256[],uint256[])
           handler: handlePoolBalanceChanged
