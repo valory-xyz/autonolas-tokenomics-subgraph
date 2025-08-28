@@ -1,11 +1,10 @@
 import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts"
-import { PoolBalanceChanged } from "../generated/BalancerVault/BalancerV2Vault"
-import { BalancerV2Vault } from "../generated/BalancerVault/BalancerV2Vault"
+import { PoolBalanceChanged, BalancerV2Vault } from "../generated/BalancerVault/BalancerV2Vault"
 import { BalancerV2WeightedPool } from "../generated/BalancerVault/BalancerV2WeightedPool"
 import { ProtocolPosition, Service } from "../generated/schema"
 import { getServiceByAgent } from "./config"
-import { getTokenPriceUSD } from "./priceDiscovery"
 import { getTokenConfig } from "./tokenConfig"
+import { getTokenPriceUSD } from "./priceDiscovery"
 import { refreshPortfolio } from "./common"
 import { updateFirstTradingTimestamp } from "./helpers"
 import { BALANCER_VAULT } from "./constants"
@@ -26,8 +25,8 @@ export function handlePoolBalanceChanged(event: PoolBalanceChanged): void {
   }
 
   // Extract pool address from poolId (first 20 bytes)
-  let poolAddressHex = poolId.toHexString().slice(0, 42) // "0x" + 40 hex chars = 20 bytes
-  let poolAddress = Address.fromString(poolAddressHex)
+  let poolAddressBytes = Bytes.fromUint8Array(poolId.subarray(0, 20))
+  let poolAddress = Address.fromBytes(poolAddressBytes)
   
   log.info("BALANCER: Processing PoolBalanceChanged for service safe: {}, pool: {}, tokens: {}", [
     liquidityProvider.toHexString(),
@@ -113,7 +112,7 @@ function handleBalancerEntry(
     position.token1Symbol = null
   }
   
-  // Calculate entry amounts and USD values
+  // Calculate entry amounts and USD values (production-level calculations)
   let entryAmount0 = BigDecimal.fromString("0")
   let entryAmount0USD = BigDecimal.fromString("0")
   let entryAmount1 = BigDecimal.fromString("0")
@@ -165,7 +164,7 @@ function handleBalancerEntry(
   position.amount1USD = entryAmount1USD
   position.usdCurrent = totalEntryUSD
   
-  // Get BPT balance via RPC call
+  // Get BPT balance via RPC call (production-level)
   let pool = BalancerV2WeightedPool.bind(poolAddress)
   let bptBalanceResult = pool.try_balanceOf(liquidityProvider)
   
@@ -207,7 +206,7 @@ function handleBalancerEntry(
   
   position.save()
   
-  // Refresh portfolio metrics (same as Velodrome)
+  // Refresh portfolio (same as Velodrome pattern)
   refreshPortfolio(liquidityProvider, event.block)
   
   log.info("BALANCER: Created position {} for agent {} with ${} USD total entry", [
@@ -304,7 +303,7 @@ function handleBalancerExit(
   
   activePosition.save()
   
-  // Refresh portfolio metrics (same as Velodrome)
+  // Refresh portfolio (same as Velodrome pattern)
   refreshPortfolio(liquidityProvider, event.block)
   
   log.info("BALANCER: Updated position {} for agent {} with exit of ${} USD", [

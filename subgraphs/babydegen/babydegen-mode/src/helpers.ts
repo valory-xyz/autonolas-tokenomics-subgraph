@@ -8,7 +8,8 @@ import {
 } from "../../../../generated/schema"
 import { calculateUninvestedValue, updateFundingBalance } from "./tokenBalances"
 import { getServiceByAgent } from "./config"
-import { updateSturdyPositionValue, updateBalancerPositionValue } from "./positionUpdates"
+import { updateSturdyPositionValue } from "./sturdyVault"
+import { updateBalancerPositionValue} from "./balancerVault"
 
 // Use the single source of truth for funding balance updates
 export function updateFunding(

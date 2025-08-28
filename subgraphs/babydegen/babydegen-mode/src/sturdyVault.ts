@@ -1,6 +1,5 @@
 import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts"
-import { Deposit, Withdraw } from "../generated/SturdyYearnVault/YearnV3Vault"
-import { YearnV3Vault } from "../generated/SturdyYearnVault/YearnV3Vault"
+import { Deposit, Withdraw, YearnV3Vault } from "../generated/SturdyYearnVault/YearnV3Vault"
 import { ProtocolPosition, Service } from "../generated/schema"
 import { getServiceByAgent } from "./config"
 import { getTokenPriceUSD } from "./priceDiscovery"
@@ -49,12 +48,12 @@ export function handleDeposit(event: Deposit): void {
   position.token1 = null
   position.token1Symbol = null
   
-  // Convert WETH assets to USD for entry amounts
+  // Convert WETH assets to USD for entry amounts (production-level calculations)
   let wethPriceUSD = getTokenPriceUSD(WETH, event.block.timestamp)
-  let assetsDecimal = assets.toBigDecimal().div(BigDecimal.fromString("1e18")) // WETH has 18 decimals
+  let assetsDecimal = assets.toBigDecimal().div(BigDecimal.fromString("1000000000000000000")) // WETH has 18 decimals
   let entryAmountUSD = assetsDecimal.times(wethPriceUSD)
   
-  // Entry tracking
+  // Entry tracking with proper USD calculations
   position.entryTxHash = event.transaction.hash
   position.entryTimestamp = event.block.timestamp
   position.entryAmount0 = assetsDecimal
@@ -100,7 +99,7 @@ export function handleDeposit(event: Deposit): void {
   
   position.save()
   
-  // Refresh portfolio metrics (same as Velodrome)
+  // Refresh portfolio (same as Velodrome pattern)
   refreshPortfolio(owner, event.block)
   
   log.info("STURDY: Created position {} for agent {} with {} WETH (${} USD)", [
@@ -140,9 +139,9 @@ export function handleWithdraw(event: Withdraw): void {
     return
   }
 
-  // Convert WETH assets to USD for exit amounts
+  // Convert WETH assets to USD for exit amounts (production-level calculations)
   let wethPriceUSD = getTokenPriceUSD(WETH, event.block.timestamp)
-  let assetsDecimal = assets.toBigDecimal().div(BigDecimal.fromString("1e18")) // WETH has 18 decimals
+  let assetsDecimal = assets.toBigDecimal().div(BigDecimal.fromString("1000000000000000000")) // WETH has 18 decimals
   let exitAmountUSD = assetsDecimal.times(wethPriceUSD)
   
   // Update position with exit data
@@ -167,7 +166,7 @@ export function handleWithdraw(event: Withdraw): void {
   
   activePosition.save()
   
-  // Refresh portfolio metrics (same as Velodrome)
+  // Refresh portfolio (same as Velodrome pattern)
   refreshPortfolio(owner, event.block)
   
   log.info("STURDY: Updated position {} for agent {} with exit of {} WETH (${} USD)", [
@@ -180,8 +179,6 @@ export function handleWithdraw(event: Withdraw): void {
 
 // Helper function to find the most recent active STURDY position for an agent
 function findMostRecentActiveSturdyPosition(agent: Address): ProtocolPosition | null {
-  // Since we can't easily query by agent and protocol in AssemblyScript,
-  // we'll use the service's position IDs to find active STURDY positions
   let service = getServiceByAgent(agent)
   if (service == null) {
     return null
@@ -226,7 +223,7 @@ export function updateSturdyPositionValue(position: ProtocolPosition, blockTimes
   }
   
   let currentAssets = assetsResult.value
-  let currentAssetsDecimal = currentAssets.toBigDecimal().div(BigDecimal.fromString("1e18"))
+  let currentAssetsDecimal = currentAssets.toBigDecimal().div(BigDecimal.fromString("1000000000000000000"))
   
   // Convert to USD
   let wethPriceUSD = getTokenPriceUSD(WETH, blockTimestamp)

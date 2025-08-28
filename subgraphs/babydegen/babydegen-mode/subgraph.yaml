@@ -406,40 +406,40 @@ dataSources:
       file: ./src/tokenBalances.ts
   # Temporarily disabled Velodrome CL support due to compilation issues
   # TODO: Re-enable after fixing template imports
-  # - kind: ethereum
-  #   name: VeloNFTManager
-  #   network: mode-mainnet
-  #   source:
-  #     address: "0x991d5546C4B442B4c5fdc4c8B8d8d131DEB24702"
-  #     abi: NonfungiblePositionManager
-  #     startBlock: 136774000
-  #   mapping:
-  #     kind: ethereum/events
-  #     apiVersion: 0.0.9
-  #     language: wasm/assemblyscript
-  #     entities:
-  #       - ProtocolPosition
-  #     abis:
-  #       - name: NonfungiblePositionManager
-  #         file: ../../../abis/nft/NonfungiblePositionManager.json
-  #       - name: VelodromeCLPool
-  #         file: ../../../abis/defi/VelodromeCLPool.json
-  #       - name: VelodromeCLFactory
-  #         file: ../../../abis/defi/VelodromeCLFactory.json
-  #       - name: VelodromeV2Pool
-  #         file: ../../../abis/defi/VelodromeV2Pool.json
-  #       - name: AggregatorV3Interface
-  #         file: ../../../abis/oracles/AggregatorV3Interface.json
-  #     eventHandlers:
-  #       - event: IncreaseLiquidity(indexed uint256,uint128,uint256,uint256)
-  #         handler: handleIncreaseLiquidity
-  #       - event: DecreaseLiquidity(indexed uint256,uint128,uint256,uint256)
-  #         handler: handleDecreaseLiquidity
-  #       - event: Collect(indexed uint256,address,uint256,uint256)
-  #         handler: handleCollect
-  #       - event: Transfer(indexed address,indexed address,indexed uint256)
-  #         handler: handleNFTTransfer
-  #     file: ./src/veloNFTManager.ts
+  - kind: ethereum
+    name: VeloNFTManager
+    network: mode-mainnet
+    source:
+      address: "0x991d5546C4B442B4c5fdc4c8B8b8d131DEB24702"
+      abi: NonfungiblePositionManager
+      startBlock: 136774000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - ProtocolPosition
+      abis:
+        - name: NonfungiblePositionManager
+          file: ../../../abis/nft/NonfungiblePositionManager.json
+        - name: VelodromeCLPool
+          file: ../../../abis/defi/VelodromeCLPool.json
+        - name: VelodromeCLFactory
+          file: ../../../abis/defi/VelodromeCLFactory.json
+        - name: VelodromeV2Pool
+          file: ../../../abis/defi/VelodromeV2Pool.json
+        - name: AggregatorV3Interface
+          file: ../../../abis/oracles/AggregatorV3Interface.json
+      eventHandlers:
+        - event: IncreaseLiquidity(indexed uint256,uint128,uint256,uint256)
+          handler: handleIncreaseLiquidity
+        - event: DecreaseLiquidity(indexed uint256,uint128,uint256,uint256)
+          handler: handleDecreaseLiquidity
+        - event: Collect(indexed uint256,address,uint256,uint256)
+          handler: handleCollect
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleNFTTransfer
+      file: ./src/veloNFTManager.ts
   # VelodromeV2 Sugar Bootstrap
   - kind: ethereum/contract
     name: VeloV2Sugar

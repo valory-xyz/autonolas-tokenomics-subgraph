@@ -4,12 +4,12 @@ import {
   Collect,
   Transfer,
   NonfungiblePositionManager
-} from "../generated/VeloNFTManager/NonfungiblePositionManager"
+} from "../../../../generated/VeloNFTManager/NonfungiblePositionManager"
 import { VELO_NFT_MANAGER, getServiceByAgent } from "./config"
 import { ensurePoolTemplate, refreshVeloCLPosition, refreshVeloCLPositionWithEventAmounts, refreshVeloCLPositionWithExitAmounts, handleNFTTransferForCache } from "./veloCLShared"
 import { isSafeOwnedNFT } from "./poolIndexCache"
 import { log, Address, Bytes, BigDecimal } from "@graphprotocol/graph-ts"
-import { ProtocolPosition } from "../generated/schema"
+import { ProtocolPosition } from "../../../../generated/schema"
 import { calculatePortfolioMetrics } from "./helpers"
 
 const MANAGER = VELO_NFT_MANAGER
