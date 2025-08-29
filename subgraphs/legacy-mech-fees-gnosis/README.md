@@ -94,7 +94,7 @@ All fee amounts in this subgraph are denominated in:
 ### Get Global Statistics
 ```graphql
 {
-  global(id: "global") {
+  global(id: "") {
     totalFeesIn
     totalFeesOut
     totalFeesInLegacyMech

@@ -10,7 +10,7 @@ import {
 } from "./constants";
 import { USDC_DECIMALS } from "../../../shared/constants";
 
-const GLOBAL_ID = "1";
+const GLOBAL_ID = "";
 const FEE_IN = "FEE_IN";
 const FEE_OUT = "FEE_OUT";
 
