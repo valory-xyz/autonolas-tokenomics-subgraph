@@ -79,12 +79,36 @@ export function isSafe(addr: Address, txHash: string = ""): boolean {
 
 function fetchFeedUsd(feed: Address): BigDecimal {
   let oracle = AggregatorV3Interface.bind(feed)
-  let round = oracle.latestRoundData()
-  return round.value1.toBigDecimal().div(BigDecimal.fromString("1e8"))
+  let roundResult = oracle.try_latestRoundData()
+  
+  if (roundResult.reverted) {
+    log.warning("[CHAINLINK_FEED] Failed to fetch price from feed: {}", [feed.toHexString()])
+    return BigDecimal.fromString("0")
+  }
+  
+  let round = roundResult.value
+  let price = round.value1.toBigDecimal().div(BigDecimal.fromString("1e8"))
+  
+  // Validate price is reasonable (not zero, not negative)
+  if (price.le(BigDecimal.fromString("0"))) {
+    log.warning("[CHAINLINK_FEED] Invalid price from feed {}: {}", [feed.toHexString(), price.toString()])
+    return BigDecimal.fromString("0")
+  }
+  
+  return price
 }
 
-export function getEthUsd(_b: ethereum.Block): BigDecimal {
-  return fetchFeedUsd(ETH_USD_FEED)
+export function getEthUsd(block: ethereum.Block): BigDecimal {
+  // Try Chainlink feed first
+  let chainlinkPrice = fetchFeedUsd(ETH_USD_FEED)
+  
+  if (chainlinkPrice.gt(BigDecimal.fromString("0"))) {
+    return chainlinkPrice
+  }
+  
+  // Fallback to Velodrome pool pricing
+  log.info("[ETH_PRICE] Chainlink feed failed, using Velodrome pool fallback", [])
+  return getUsd(Address.fromString("0x4200000000000000000000000000000000000006"), block) // WETH address from constants
 }
 
 export function getUsdcUsd(_b: ethereum.Block): BigDecimal {

@@ -288,6 +288,13 @@ function createPriceUpdate(
   update.priceUSD = result.price
   update.confidence = result.confidence
   
+  // Safety check: ensure priceSources array is not empty
+  if (token.priceSources.length == 0) {
+    // If no price sources exist, skip creating the price update
+    // This prevents the "Index out of range" error
+    return
+  }
+  
   // For averaged prices, we'll use the first source as a reference
   // Since we can't modify the schema to store multiple sources
   let sourceIndex = 0
@@ -303,6 +310,11 @@ function createPriceUpdate(
         break
       }
     }
+  }
+  
+  // Final safety check: ensure sourceIndex is within bounds
+  if (sourceIndex >= token.priceSources.length) {
+    sourceIndex = 0 // Fallback to first source
   }
   
   update.source = token.priceSources[sourceIndex]

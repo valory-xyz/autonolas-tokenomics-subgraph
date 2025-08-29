@@ -285,6 +285,11 @@ export function getBalancerPrice(
     return BigDecimal.fromString("0")
   }
   
+  // Safety check: ensure indices are within bounds of poolBalances array
+  if (targetTokenIndex >= poolBalances.length || pairTokenIndex >= poolBalances.length) {
+    return BigDecimal.fromString("0")
+  }
+  
   // Get balances for our tokens
   let targetTokenBalance = poolBalances[targetTokenIndex]
   let pairTokenBalance = poolBalances[pairTokenIndex]

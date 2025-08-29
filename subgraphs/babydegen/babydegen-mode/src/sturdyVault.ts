@@ -22,8 +22,8 @@ import { getTokenPriceUSD } from "./priceDiscovery"
 import { getTokenDecimals } from "./tokenUtils"
 import { STURDY_VAULT } from "./constants"
 
-// Import the generated call types
-import { DepositCall, WithdrawCall, YearnV3Vault } from "../../../../generated/SturdyVault/YearnV3Vault"
+// Import the generated event types
+import { Deposit, Withdraw, YearnV3Vault } from "../../../../generated/SturdyVault/YearnV3Vault"
 import { ERC20 } from "../../../../generated/SturdyVault/ERC20"
 
 // Helper function to convert token amount to human readable format
@@ -36,46 +36,54 @@ function toHumanAmount(amount: BigInt, decimals: i32): BigDecimal {
   return amount.toBigDecimal().div(divisor.toBigDecimal())
 }
 
-// Handle STURDY Yearn V3 Vault deposit function calls
-export function handleSturdyDepositCall(call: DepositCall): void {
-  const receiver = call.inputs.receiver
-  const assets = call.inputs.assets
+// Handle STURDY Yearn V3 Vault deposit events
+export function handleSturdyDeposit(event: Deposit): void {
+  const sender = event.params.sender
+  const owner = event.params.owner
+  const assets = event.params.assets
+  const shares = event.params.shares
   
-  log.info("STURDY DEPOSIT CALL: receiver={}, assets={}", [
-    receiver.toHexString(),
-    assets.toString()
+  log.info("STURDY DEPOSIT EVENT: sender={}, owner={}, assets={}, shares={}", [
+    sender.toHexString(),
+    owner.toHexString(),
+    assets.toString(),
+    shares.toString()
   ])
   
-  // Check if the receiver is a tracked service
-  const service = getServiceByAgent(receiver)
+  // Check if the owner is a tracked service
+  const service = getServiceByAgent(owner)
   
   if (service != null) {
     log.info("STURDY DEPOSIT: Tracked service {} depositing {} assets", [
-      receiver.toHexString(),
+      owner.toHexString(),
       assets.toString()
     ])
     
     // Create or update STURDY position
     refreshSturdyPosition(
-      receiver,
-      call.block,
-      call.transaction.hash,
+      owner,
+      event.block,
+      event.transaction.hash,
       assets,
       true // isDeposit
     )
   }
 }
 
-// Handle STURDY Yearn V3 Vault withdraw function calls
-export function handleSturdyWithdrawCall(call: WithdrawCall): void {
-  const owner = call.inputs.owner
-  const receiver = call.inputs.receiver
-  const assets = call.inputs.assets
+// Handle STURDY Yearn V3 Vault withdraw events
+export function handleSturdyWithdraw(event: Withdraw): void {
+  const sender = event.params.sender
+  const receiver = event.params.receiver
+  const owner = event.params.owner
+  const assets = event.params.assets
+  const shares = event.params.shares
   
-  log.info("STURDY WITHDRAW CALL: owner={}, receiver={}, assets={}", [
-    owner.toHexString(),
+  log.info("STURDY WITHDRAW EVENT: sender={}, receiver={}, owner={}, assets={}, shares={}", [
+    sender.toHexString(),
     receiver.toHexString(),
-    assets.toString()
+    owner.toHexString(),
+    assets.toString(),
+    shares.toString()
   ])
   
   // Check if the owner is a tracked service (owner is the one withdrawing)
@@ -90,8 +98,8 @@ export function handleSturdyWithdrawCall(call: WithdrawCall): void {
     // Update STURDY position
     refreshSturdyPosition(
       owner,
-      call.block,
-      call.transaction.hash,
+      event.block,
+      event.transaction.hash,
       assets,
       false // isDeposit
     )

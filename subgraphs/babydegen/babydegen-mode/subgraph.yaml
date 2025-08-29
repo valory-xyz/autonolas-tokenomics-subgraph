@@ -1,4 +1,6 @@
-specVersion: 0.0.8
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
 schema:
   file: ./schema.graphql
 # NOTE: This subgraph is configured to track USDC and USDT transfers for funding balance calculations.
@@ -87,6 +89,10 @@ dataSources:
           file: ../../../abis/defi/VelodromeCLPool.json
         - name: VelodromeV2Pool
           file: ../../../abis/defi/VelodromeV2Pool.json
+        - name: BalancerV2WeightedPool
+          file: ../../../abis/BalancerV2WeightedPool.json
+        - name: BalancerV2Vault
+          file: ../../../abis/BalancerV2Vault.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleERC20Transfer
@@ -113,6 +119,10 @@ dataSources:
           file: ../../../abis/defi/VelodromeCLPool.json
         - name: VelodromeV2Pool
           file: ../../../abis/defi/VelodromeV2Pool.json
+        - name: BalancerV2WeightedPool
+          file: ../../../abis/BalancerV2WeightedPool.json
+        - name: BalancerV2Vault
+          file: ../../../abis/BalancerV2Vault.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleERC20Transfer
@@ -139,6 +149,10 @@ dataSources:
           file: ../../../abis/defi/VelodromeCLPool.json
         - name: VelodromeV2Pool
           file: ../../../abis/defi/VelodromeV2Pool.json
+        - name: BalancerV2WeightedPool
+          file: ../../../abis/BalancerV2WeightedPool.json
+        - name: BalancerV2Vault
+          file: ../../../abis/BalancerV2Vault.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleERC20Transfer
@@ -165,6 +179,10 @@ dataSources:
           file: ../../../abis/defi/VelodromeCLPool.json
         - name: VelodromeV2Pool
           file: ../../../abis/defi/VelodromeV2Pool.json
+        - name: BalancerV2WeightedPool
+          file: ../../../abis/BalancerV2WeightedPool.json
+        - name: BalancerV2Vault
+          file: ../../../abis/BalancerV2Vault.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleERC20Transfer
@@ -191,6 +209,10 @@ dataSources:
           file: ../../../abis/defi/VelodromeCLPool.json
         - name: VelodromeV2Pool
           file: ../../../abis/defi/VelodromeV2Pool.json
+        - name: BalancerV2WeightedPool
+          file: ../../../abis/BalancerV2WeightedPool.json
+        - name: BalancerV2Vault
+          file: ../../../abis/BalancerV2Vault.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleERC20Transfer
@@ -217,6 +239,10 @@ dataSources:
           file: ../../../abis/defi/VelodromeCLPool.json
         - name: VelodromeV2Pool
           file: ../../../abis/defi/VelodromeV2Pool.json
+        - name: BalancerV2WeightedPool
+          file: ../../../abis/BalancerV2WeightedPool.json
+        - name: BalancerV2Vault
+          file: ../../../abis/BalancerV2Vault.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleERC20Transfer
@@ -243,6 +269,10 @@ dataSources:
           file: ../../../abis/defi/VelodromeCLPool.json
         - name: VelodromeV2Pool
           file: ../../../abis/defi/VelodromeV2Pool.json
+        - name: BalancerV2WeightedPool
+          file: ../../../abis/BalancerV2WeightedPool.json
+        - name: BalancerV2Vault
+          file: ../../../abis/BalancerV2Vault.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleERC20Transfer
@@ -269,6 +299,10 @@ dataSources:
           file: ../../../abis/defi/VelodromeCLPool.json
         - name: VelodromeV2Pool
           file: ../../../abis/defi/VelodromeV2Pool.json
+        - name: BalancerV2WeightedPool
+          file: ../../../abis/BalancerV2WeightedPool.json
+        - name: BalancerV2Vault
+          file: ../../../abis/BalancerV2Vault.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleERC20Transfer
@@ -295,6 +329,10 @@ dataSources:
           file: ../../../abis/defi/VelodromeCLPool.json
         - name: VelodromeV2Pool
           file: ../../../abis/defi/VelodromeV2Pool.json
+        - name: BalancerV2WeightedPool
+          file: ../../../abis/BalancerV2WeightedPool.json
+        - name: BalancerV2Vault
+          file: ../../../abis/BalancerV2Vault.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleERC20Transfer
@@ -321,6 +359,10 @@ dataSources:
           file: ../../../abis/defi/VelodromeCLPool.json
         - name: VelodromeV2Pool
           file: ../../../abis/defi/VelodromeV2Pool.json
+        - name: BalancerV2WeightedPool
+          file: ../../../abis/BalancerV2WeightedPool.json
+        - name: BalancerV2Vault
+          file: ../../../abis/BalancerV2Vault.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleERC20Transfer
@@ -347,6 +389,10 @@ dataSources:
           file: ../../../abis/defi/VelodromeCLPool.json
         - name: VelodromeV2Pool
           file: ../../../abis/defi/VelodromeV2Pool.json
+        - name: BalancerV2WeightedPool
+          file: ../../../abis/BalancerV2WeightedPool.json
+        - name: BalancerV2Vault
+          file: ../../../abis/BalancerV2Vault.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleERC20Transfer
@@ -400,6 +446,10 @@ dataSources:
           file: ../../../abis/defi/VelodromeCLPool.json
         - name: VelodromeV2Pool
           file: ../../../abis/defi/VelodromeV2Pool.json
+        - name: BalancerV2WeightedPool
+          file: ../../../abis/BalancerV2WeightedPool.json
+        - name: BalancerV2Vault
+          file: ../../../abis/BalancerV2Vault.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleERC20Transfer
@@ -542,11 +592,15 @@ dataSources:
           file: ../../../abis/defi/LiFiDiamond.json
         - name: AggregatorV3Interface
           file: ../../../abis/oracles/AggregatorV3Interface.json
+        - name: VelodromeCLPool
+          file: ../../../abis/defi/VelodromeCLPool.json
+        - name: VelodromeV2Pool
+          file: ../../../abis/defi/VelodromeV2Pool.json
       eventHandlers:
         - event: LiFiGenericSwapCompleted(indexed bytes32,string,string,address,address,address,uint256,uint256)
           handler: handleLiFiGenericSwapCompleted
       file: ./src/lifiDiamond.ts
-  # STURDY Yearn V3 Vault for tracking deposit/withdraw function calls
+  # STURDY Yearn V3 Vault for tracking deposit/withdraw events
   - kind: ethereum
     name: SturdyVault
     network: mode-mainnet
@@ -572,11 +626,11 @@ dataSources:
           file: ../../../abis/defi/VelodromeV2Pool.json
         - name: ERC20
           file: ../../../abis/ERC20.json
-      callHandlers:
-        - function: deposit(uint256,address)
-          handler: handleSturdyDepositCall
-        - function: withdraw(uint256,address,address)
-          handler: handleSturdyWithdrawCall
+      eventHandlers:
+        - event: Deposit(indexed address,indexed address,uint256,uint256)
+          handler: handleSturdyDeposit
+        - event: Withdraw(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleSturdyWithdraw
       file: ./src/sturdyVault.ts
   # Balancer V2 Vault for tracking pool position entries/exits
   - kind: ethereum
