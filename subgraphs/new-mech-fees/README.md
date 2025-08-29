@@ -194,7 +194,7 @@ This query retrieves all fee transactions for a specific mech within a given tim
 This query returns the total fees processed by the subgraph across all mechs.
 ```graphql
 {
-  global(id: "1") {
+  global(id: "") {
     totalFeesInUSD
     totalFeesOutUSD
   }
