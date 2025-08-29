@@ -2,9 +2,9 @@ import { BigInt, Bytes } from '@graphprotocol/graph-ts';
 import { Global, DailyFees, MechDaily } from '../generated/schema';
 
 export function getOrCreateGlobal(): Global {
-  let global = Global.load('global');
+  let global = Global.load('');
   if (global == null) {
-    global = new Global('global');
+    global = new Global('');
     global.totalFeesIn = BigInt.fromI32(0);
     global.totalFeesOut = BigInt.fromI32(0);
     global.totalFeesInLegacyMech = BigInt.fromI32(0);
